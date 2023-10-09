@@ -1215,7 +1215,7 @@ local function iconFieldUpdateFileList(iconField)
 		end
 
 		-- Updating sizes
-		iconField.yOffset = iconField.yOffsetInitial
+		iconField.yOffset = iconField.initialYOffset
 
 		iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
 
@@ -1712,9 +1712,9 @@ local function iconFieldBackgroundObjectDraw(object)
 		local y1, y2
 		
 		if selection.y1Raw < selection.y2Raw then
-			y1, y2 = selection.y1 + object.parent.yOffset - object.parent.yOffsetInitial, selection.y2
+			y1, y2 = selection.y1 + object.parent.yOffset - object.parent.initialYOffset, selection.y2
 		else
-			y1, y2 = selection.y1, selection.y2 + object.parent.yOffset - object.parent.yOffsetInitial
+			y1, y2 = selection.y1, selection.y2 + object.parent.yOffset - object.parent.initialYOffset
 		end
 
 		if userSettings.interfaceTransparencyEnabled then	
@@ -1753,6 +1753,12 @@ local function anyIconFieldAddInfo(iconField, path)
 	end
 end
 
+local function gridIconFieldSetVerticalScroll(iconField, value)
+	iconField.verticalScroll = math.max(
+
+	)
+end
+
 function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, selectionBackgroundColor, selectionTextColor, selectionFrameColor, selectionTransparency)
 	local iconField = GUI.container(x, y, width, height)
 
@@ -1765,7 +1771,7 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 	}
 	iconField.iconConfigEnabled = false
 	iconField.xOffset = xOffset
-	iconField.yOffsetInitial = yOffset
+	iconField.initialYOffset = yOffset
 	iconField.yOffset = yOffset
 	iconField.iconCount = {}
 	iconField.iconConfig = {}
@@ -2791,6 +2797,7 @@ function system.updateDesktop()
 	end
 
 	local lastWindowHandled
+	
 	workspace.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "key_down" then
 			local windowCount = #desktopWindowsContainer.children

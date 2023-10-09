@@ -321,6 +321,7 @@ end
 
 local function tryToDownload(...)
 	local success, reason = internet.download(...)
+	
 	if not success then
 		GUI.alert(reason)
 	end
@@ -666,7 +667,8 @@ local function addApplicationInfo(container, publication, limit)
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and number.round(publication.average_rating) or 0))
 
 	local updateState = getUpdateState(publication.file_id, publication.version)
-	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
+	
+	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
 	
 	container.downloadButton.onTouch = function()
 		download(publication)
@@ -677,8 +679,7 @@ local function addApplicationInfo(container, publication, limit)
 	container.downloadButton.disabled = updateState == 4
 
 	if updateState > 2 then
-		container.downloadButton.width = container.downloadButton.width + 1
-		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width, container.downloadButton.localY, 1, 0, 0xF0F0F0, 0x969696, 0x969696, 0xFFFFFF, "x")).onTouch = function()
+		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width - 2, container.downloadButton.localY, 1, 0, 0xF0F0F0, 0x969696, 0x969696, 0xFFFFFF, "  x")).onTouch = function()
 			local versionsTable = getVersionsTable(publication.file_id)
 			filesystem.remove(getApplicationPathFromVersions(versionsTable[publication.file_id].path))
 			filesystem.remove(paths.user.desktop .. publication.publication_name .. ".lnk")
@@ -688,6 +689,8 @@ local function addApplicationInfo(container, publication, limit)
 			computer.pushSignal("system", "updateFileList")
 			saveVersions()
 		end
+
+		container.downloadButton:moveToFront()
 	end
 end
 
@@ -1030,7 +1033,7 @@ local function settings()
 
 			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
 			
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
+			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
 				addAccountShit(false, false, true)
 			end
 
@@ -1068,11 +1071,11 @@ local function settings()
 				end
 
 				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
 					newPublicationInfo(result[comboBox.selectedItem].file_id)
 				end
 
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
 					local result = fieldAPIRequest("result", "publication", {
 						file_id = result[comboBox.selectedItem].file_id,
 						language_id = config.language_id,
@@ -1262,8 +1265,6 @@ newPublicationInfo = function(file_id)
 	})
 
 	if publication then
-		workspace:draw()
-
 		local reviews = fieldAPIRequest("result", "reviews", {
 			file_id = file_id,
 			offset = 0,
@@ -1324,15 +1325,15 @@ newPublicationInfo = function(file_id)
 				local buttonsLayout = ratingsContainer:addChild(GUI.layout(1, y, ratingsContainer.width, 3, 1, 1))
 
 				if publication.user_name == user.name then
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
 						editPublication(publication)
 					end
 
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
 						deletePublication(publication)
 					end
 				else
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper)).onTouch = function()
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper)).onTouch = function()
 						dialogGUI(publication.user_name)
 					end
 
@@ -1346,7 +1347,7 @@ newPublicationInfo = function(file_id)
 						end
 					end
 
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
 						local container = GUI.addBackgroundContainer(workspace, true, true, existingReviewText and localization.changeReview or localization.writeReview)
 
 						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
@@ -1549,6 +1550,8 @@ newPublicationInfo = function(file_id)
 
 			layout:update()
 			layout.height = layout.children[#layout.children].localY + layout.children[#layout.children].height - 1
+
+			workspace:draw()
 		end
 	end
 end
@@ -1952,7 +1955,7 @@ updateFileList = function(category_id, updates)
 				orderDirectionComboBox.onItemSelected = orderByComboBox.onItemSelected
 
 				if user.token then
-					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
+					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
 						editPublication(nil, category_id)
 					end
 				end
@@ -1969,7 +1972,7 @@ updateFileList = function(category_id, updates)
 				updateFileList(category_id, updates)
 			end
 
-			local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
+			local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
 			backButton.colors.disabled.background = 0xE1E1E1
 			backButton.colors.disabled.text = 0xC3C3C3
 			backButton.disabled = currentPage == 0
@@ -1978,7 +1981,7 @@ updateFileList = function(category_id, updates)
 			end
 
 			navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
-			local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
+			local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
 			nextButton.colors.disabled = backButton.colors.disabled
 			nextButton.disabled = #result <= appsPerPage
 			nextButton.onTouch = function()

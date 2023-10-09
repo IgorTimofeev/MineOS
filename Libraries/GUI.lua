@@ -4854,6 +4854,29 @@ local function tableDraw(self)
 	layoutDraw(self)
 end
 
+local function tableGetVerticalScroll(self)
+	local horizontalMargin, verticalMargin = self:getMargin(1, 2)
+	return verticalMargin
+end
+
+local function tableSetVerticalScroll(self, value)
+	local horizontalMargin = self:getMargin(1, 2)
+	local columnCount = #self.columnSizes
+	local maxValue = -self.itemHeight * (#self.children - columnCount) / columnCount + 1
+
+	for i = 1, columnCount do
+		self:setMargin(i, 2, horizontalMargin,
+			math.max(
+				maxValue,
+				math.min(
+					0,
+					value
+				)
+			)
+		)
+	end
+end
+
 function GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
 		local itemTouched = false
@@ -4868,22 +4891,9 @@ function GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 		if not itemTouched then
 			self.onBackgroundTouch(workspace, self, e1, e2, e3, e4, e5, ...)
 		end
+
 	elseif e1 == "scroll" then
-		local columnCount = #self.columnSizes
-		local horizontalMargin, verticalMargin = self:getMargin(1, 2)
-
-		for i = 1, columnCount do
-			self:setMargin(i, 2, horizontalMargin,
-				math.max(
-					-self.itemHeight * (#self.children - columnCount) / columnCount + 1,
-					math.min(
-						0,
-						verticalMargin + e5
-					)
-				)
-			)
-		end
-
+		self:setVerticalScroll(self:getVerticalScroll() + e5)
 		workspace:draw()
 	end
 end
@@ -4902,6 +4912,8 @@ function GUI.table(x, y, width, height, itemHeight, backgroundColor, headerBackg
 
 	table.addColumn = tableAddColumn
 	table.addRow = tableAddRow
+	table.setVerticalScroll = tableSetVerticalScroll
+	table.getVerticalScroll = tableGetVerticalScroll
 	table.clear = tableClear
 	table.draw = tableDraw
 	table.eventHandler = GUI.tableEventHandler
