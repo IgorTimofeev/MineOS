@@ -1753,12 +1753,6 @@ local function anyIconFieldAddInfo(iconField, path)
 	end
 end
 
-local function gridIconFieldSetVerticalScroll(iconField, value)
-	iconField.verticalScroll = math.max(
-
-	)
-end
-
 function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, selectionBackgroundColor, selectionTextColor, selectionFrameColor, selectionTransparency)
 	local iconField = GUI.container(x, y, width, height)
 
