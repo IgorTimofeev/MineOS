@@ -4387,7 +4387,10 @@ end
 
 local function windowDraw(window)
 	containerDraw(window)
-	GUI.drawShadow(window.x, window.y, window.width, window.height, GUI.WINDOW_SHADOW_TRANSPARENCY, true)
+
+	if window.drawShadow then
+		GUI.drawShadow(window.x, window.y, window.width, window.height, GUI.WINDOW_SHADOW_TRANSPARENCY, true)
+	end
 
 	return window
 end
@@ -4535,6 +4538,7 @@ function GUI.window(x, y, width, height)
 	
 	window.passScreenEvents = false
 	window.movingEnabled = true
+	window.drawShadow = true
 
 	window.resize = windowResize
 	window.maximize = GUI.windowMaximize
