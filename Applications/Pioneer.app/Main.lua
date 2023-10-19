@@ -29,8 +29,7 @@ local speedMax = 1.75
 local bpmMin = 40
 local bpmMax = 200
 
-
---------------------------------------------------------------------------------
+local powerButton
 
 local tapes
 local tapeIndex
@@ -99,22 +98,104 @@ local function getIsPlaying()
 	return tape.proxy.getState() == "PLAYING"
 end
 
-
 -------------------------------- Background ------------------------------------------------
 
+local windowBackground = window:addChild(GUI.object(1, 1, window.width, window.height))
 
 local currentJogIndex = 1
+local displayWidth, displayHeight = 33, 9
 
-local windowBackground = window:addChild(GUI.object(1, 1, window.width, window.height))
+local function displayDrawProgressBar(x, y, width, progress)
+	local progressActiveWidth = math.floor(progress * width)
+
+	screen.drawText(x, y, 0xE1E1E1, string.rep("━", progressActiveWidth))
+	screen.drawText(x + progressActiveWidth, y, 0x4B4B4B, string.rep("━", width - progressActiveWidth))
+end
 
 windowBackground.draw = function(windowBackground)
 	-- Background
 	screen.drawImage(windowBackground.x, windowBackground.y, backgroundImage)
 
+	
+	-- Speed slider indicator
+	screen.drawText(windowBackground.x + 68, windowBackground.y + 39, powerButton.pressed and 0xFFDB40 or 0x332400, "⠆")
+
+	-- Ignoring if power is off
+	if not powerButton.pressed then
+		return
+	end
+
 	-- Jog
 	screen.drawImage(windowBackground.x + 33, windowBackground.y + 29, jogImages[currentJogIndex])
+
+	-- Display
+	local displayX, displayY = windowBackground.x + 22, windowBackground.y + 3
+	local displayUpperText
+
+	if tapeWritingProgress then
+		displayUpperText = "Writing in progress"
+
+		local progressWidth = displayWidth - 4
+
+		displayDrawProgressBar(
+			math.floor(displayX + displayWidth / 2 - progressWidth / 2),
+			math.floor(displayY + displayHeight / 2),
+			progressWidth,
+			tapeWritingProgress
+		)
+	else
+		-- UpperText
+		displayUpperText = tape.proxy.getLabel()
+
+		if not displayUpperText or #displayUpperText == 0 then
+			displayUpperText = "Untitled tape"
+		end
+
+		-- BPM
+		local bpmText = tostring(math.floor(bpmMin + speedSlider.value * (bpmMax - bpmMin))) .. " bpm"
+		local bpmWidth = #bpmText + 4
+		
+		local bpmX = displayX + displayWidth - 2 - bpmWidth
+		local bpmY = displayY + displayHeight - 5
+
+		screen.drawFrame(bpmX, bpmY, bpmWidth, 3, 0xE1E1E1)
+		screen.drawText(bpmX + 2, bpmY + 1, 0xE1E1E1, bpmText)
+
+		-- Lower track
+		local progressWidth = displayWidth - 4
+		local tapeSize = tape.proxy.getSize()
+
+		displayDrawProgressBar(
+			math.floor(displayX + displayWidth / 2 - progressWidth / 2),
+			displayY + displayHeight - 2,
+			progressWidth,
+			tapeSize == 0 and 0 or tape.proxy.getPosition() / tapeSize
+		)
+	end
+
+	-- UpperText
+	displayUpperText = text.limit(displayUpperText, displayWidth - 2)
+	screen.drawText(math.floor(displayX + displayWidth / 2 - #displayUpperText / 2), displayY + 1, 0xE1E1E1, displayUpperText)
 end
 
+-------------------------------- Power button ------------------------------------------------
+
+powerButton = window:addChild(GUI.object(75, 2, 4, 2))
+
+powerButton.pressed = false
+
+powerButton.draw = function()
+	screen.drawText(powerButton.x, powerButton.y, 0x1E1E1E, powerButton.pressed and "⣠⣤⣄" or "⣸⣿⣇")
+end
+
+powerButton.eventHandler = function(workspace, powerButton, e1)
+	if e1 == "touch" then
+		powerButton.pressed = not powerButton.pressed
+		workspace:draw()
+
+		computer.beep(20, 0.01)
+	end
+end
 
 -------------------------------- ImageButton ------------------------------------------------
 
@@ -123,7 +204,7 @@ local imageButtonBlinkUptime = 0
 local imageButtonBlinkInterval = 0.5
 
 local function imageButtonDraw(button)
-	screen.drawImage(button.x, button.y, (not button.blinking or imageButtonBlink) and button.imageOn or button.imageOff)
+	screen.drawImage(button.x, button.y, (powerButton.pressed and (not button.blinking or imageButtonBlink)) and button.imageOn or button.imageOff)
 end
 
 local function newImageButton(x, y, width, height, name)
@@ -164,12 +245,10 @@ speedSlider.eventHandler = function(workspace, speedSlider, e1, e2, e3, e4)
 	end
 end
 
-
-
 -------------------------------- UpperButtons ------------------------------------------------
 
 local function upperButtonDraw(button)
-	local bg, fg = button.animationCurrentBackground, button.animationCurrentText
+	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x0
 
 	-- Background
 	screen.drawRectangle(button.x + 1, button.y + 1, button.width - 2, button.height - 2, bg, fg, " ")
@@ -192,7 +271,7 @@ local function upperButtonDraw(button)
 end
 
 local function upperButtonEventHandler(workspace, button, e1, e2, e3, e4, e5)
-	if e1 == "touch" then
+	if e1 == "touch" and powerButton.pressed then
 		button:press()
 	end
 end
@@ -259,11 +338,11 @@ writeUpperButton.onTouch = function()
 	end
 end
 
--------------------------------- Write upper button ------------------------------------------------
+-------------------------------- Label upper button ------------------------------------------------
 
-local writeUpperButton = window:addChild(newUpperButton(33, 1, 9, "Label"))
+local labelUpperButton = window:addChild(newUpperButton(33, 1, 9, "Label"))
 
-writeUpperButton.onTouch = function()
+labelUpperButton.onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, title)
 	
 	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, tape.proxy.getLabel() or "", "New label", false))
@@ -283,80 +362,20 @@ writeUpperButton.onTouch = function()
 	return container
 end
 
-
--------------------------------- Display ------------------------------------------------
-
-local display = window:addChild(GUI.object(23, 4, 33, 9))
-
-local function displayDrawProgressBar(x, y, width, progress)
-	local progressActiveWidth = math.floor(progress * width)
-
-	screen.drawText(x, y, 0xE1E1E1, string.rep("━", progressActiveWidth))
-	screen.drawText(x + progressActiveWidth, y, 0x4B4B4B, string.rep("━", width - progressActiveWidth))
-end
-
-display.draw = function(display)
-	local upperText
-
-	if tapeWritingProgress then
-		upperText = "Writing in progress"
-
-		local progressWidth = display.width - 4
-
-		displayDrawProgressBar(
-			math.floor(display.x + display.width / 2 - progressWidth / 2),
-			math.floor(display.y + display.height / 2),
-			progressWidth,
-			tapeWritingProgress
-		)
-
-	else
-		-- UpperText
-		upperText = tape.proxy.getLabel()
-
-		if not upperText or #upperText == 0 then
-			upperText = "Untitled tape"
-		end
-
-
-		-- BPM
-		local bpmText = tostring(math.floor(bpmMin + speedSlider.value * (bpmMax - bpmMin))) .. " bpm"
-		local bpmWidth = #bpmText + 4
-		
-		local bpmX = display.x + display.width - 2 -bpmWidth
-		local bpmY = display.y + display.height - 5
-
-		screen.drawFrame(bpmX, bpmY, bpmWidth, 3, 0xE1E1E1)
-		screen.drawText(bpmX + 2, bpmY + 1, 0xE1E1E1, bpmText)
-
-		-- Lower track
-		local progressWidth = display.width - 4
-		local tapeSize = tape.proxy.getSize()
-
-		displayDrawProgressBar(
-			math.floor(display.x + display.width / 2 - progressWidth / 2),
-			display.y + display.height - 2,
-			progressWidth,
-			tapeSize == 0 and 0 or tape.proxy.getPosition() / tapeSize
-		)
-	end
-
-	-- UpperText
-	upperText = text.limit(upperText, display.width - 2)
-	screen.drawText(math.floor(display.x + display.width / 2 - #upperText / 2), display.y + 1, 0xE1E1E1, upperText)
-end
-
-
 -------------------------------- Needle search ------------------------------------------------
 
 local needleSearch = window:addChild(GUI.object(25, 15, 29, 2))
 
--- needleSearch.draw = function()
--- 	screen.drawRectangle(needleSearch.x, needleSearch.y, needleSearch.width, needleSearch.height, 0xFF0000, 0x0, " ")
--- end
+needleSearch.draw = function()
+	-- screen.drawRectangle(needleSearch.x, needleSearch.y, needleSearch.width, needleSearch.height, 0xFF0000, 0x0, " ")
+
+	if powerButton.pressed then
+		screen.drawText(needleSearch.x, needleSearch.y, 0xE1E1E1, "▲ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ▲")
+	end
+end
 
 needleSearch.eventHandler = function(workspace, needleSearch, e1, e2, e3, e4)
-	if e1 == "touch" and tape then
+	if e1 == "touch" and powerButton.pressed and tape then
 		local position = tape.proxy.getPosition()
 		local newPosition = math.floor((e3 - needleSearch.x) / needleSearch.width * tape.proxy.getSize())
 
@@ -364,10 +383,10 @@ needleSearch.eventHandler = function(workspace, needleSearch, e1, e2, e3, e4)
 	end
 end
 
--------------------------------- Left mini button ------------------------------------------------
+-------------------------------- Round mini button ------------------------------------------------
 
-local function leftMiniButtonDraw(button)
-	local bg, fg = button.animationCurrentBackground, button.animationCurrentText
+local function roundMiniButtonDraw(button)
+	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x0
 
 	-- Background
 	screen.drawRectangle(button.x + 1, button.y + 1, button.width - 2, button.height - 2, bg, fg, " ")
@@ -386,20 +405,47 @@ local function leftMiniButtonDraw(button)
 
 	-- Lower
 	screen.drawText(button.x + 1, button.y + button.height - 1, bg, string.rep("⠉", button.width - 2))
-
 end
 
-local function leftMiniButtonEventHandler(workspace, button, e1, e2, e3, e4, e5)
+
+local function roundMiniButtonEventHandler(workspace, button, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		button:press()
 	end
 end
 
-local function newLeftMiniButton(x, y, text)
-	local button = GUI.button(x, y, 4, 3, 0x4B4B4B, 0xFFB600, 0x2D2D2D, 0xCC9200, text)
+local function newRoundMiniButton(x, y, ...)
+	local button = GUI.button(x, y, 4, 3, ...)
 
-	button.draw = leftMiniButtonDraw
-	button.eventHandler = leftMiniButtonEventHandler
+	button.draw = roundMiniButtonDraw
+	button.eventHandler = roundMiniButtonEventHandler
+
+	return button
+end
+
+
+local function roundTinyButtonDraw(button)
+	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x0
+
+	-- Left
+	screen.drawText(button.x, button.y, bg, "⢰")
+
+	-- Middle
+	screen.drawRectangle(button.x + 1, button.y, 2, 1, bg, fg, " ")
+	screen.drawText(button.x + 1, button.y, fg, button.text)
+
+	-- Right
+	screen.drawText(button.x + 3, button.y, bg, "⡆")
+
+	-- Lower
+	screen.drawText(button.x, button.y + 1, bg, "⠈⠛⠛⠁")
+end
+
+local function newRoundTinyButton(x, y, ...)
+	local button = GUI.button(x, y, 4, 2, ...)
+
+	button.draw = roundTinyButtonDraw
+	button.eventHandler = roundMiniButtonEventHandler
 
 	return button
 end
@@ -407,8 +453,8 @@ end
 
 -------------------------------- Pref/next tape button ------------------------------------------------
 
-local previousTapeButton = window:addChild(newLeftMiniButton(2, 30, "<<"))
-local nextTapeButton = window:addChild(newLeftMiniButton(7, 30, ">>"))
+local previousTapeButton = window:addChild(newRoundMiniButton(2, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
+local nextTapeButton = window:addChild(newRoundMiniButton(7, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
 
 previousTapeButton.onTouch = function()
 	incrementTape(false)
@@ -420,8 +466,8 @@ end
 
 -------------------------------- Pref/next search button ------------------------------------------------
 
-local previousSearchButton = window:addChild(newLeftMiniButton(2, 34, "<<"))
-local nextSearchButton = window:addChild(newLeftMiniButton(7, 34, ">>"))
+local previousSearchButton = window:addChild(newRoundMiniButton(2, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
+local nextSearchButton = window:addChild(newRoundMiniButton(7, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
 
 previousSearchButton.onTouch = function()
 	
@@ -449,7 +495,7 @@ local playButton = window:addChild(newImageButton(2, window.height - 5, 9, 5, "P
 playButton.blinking = true
 
 playButton.eventHandler = function(workspace, playButton, e1)
-	if e1 == "touch" then
+	if e1 == "touch" and powerButton.pressed then
 		playButton.blinking = not playButton.blinking
 
 		if playButton.blinking then
@@ -460,6 +506,23 @@ playButton.eventHandler = function(workspace, playButton, e1)
 
 		workspace:draw()
 	end
+end
+
+-------------------------------- Right beat buttons ------------------------------------------------
+
+local beatSyncButton = window:addChild(newRoundMiniButton(70, 24, 0xB4B4B4, 0x0F0F0F, 0x787878, 0x0F0F0F, "Sy"))
+local beatSyncMasterButton = window:addChild(newRoundMiniButton(74, 24, 0xB4B4B4, 0x0F0F0F, 0x787878, 0x0F0F0F, "Ms"))
+
+-------------------------------- Right tempo buttons ------------------------------------------------
+
+local tempoButton = window:addChild(newRoundTinyButton(72, 28, 0x0F0F0F, 0x2D2D2D, 0x0, 0xFF2440, " "))
+
+local masterTempoButton = window:addChild(newRoundTinyButton(72, 31, 0x0F0F0F, 0x2D2D2D, 0x0F0F0F, 0xFF2440, "⢠⡄"))
+masterTempoButton.switchMode = true
+masterTempoButton:press()
+
+tempoButton.onTouch = function()
+	
 end
 
 
