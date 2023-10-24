@@ -80,7 +80,7 @@ itemsLayout:setMargin(1, 1, 0, 0)
 
 local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
 
-local iconField 
+local iconField
 
 local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
 local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
@@ -97,8 +97,42 @@ local function saveConfig()
 	filesystem.writeTable(configPath, config)
 end
 
+local function getVerticalScroll()
+	return config.gridMode and iconField.yOffset or iconField:getVerticalScroll()
+end
+
+local function setVerticalScroll(value)
+	if config.gridMode then
+		local iconsCount = #iconField.children
+		local rows = math.ceil((iconsCount - 1) / iconField.iconCount.horizontal)
+		local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
+		
+		value = math.max(-minimumOffset + 1, math.min(iconField.initialYOffset, value))
+
+		local delta = iconField.yOffset - value
+		iconField.yOffset = value
+
+		local iconsCount, child = #iconField.children
+
+		if iconsCount < 2 then
+			return
+		end
+
+		for i = 1, iconsCount do
+			child = iconField.children[i]
+
+			if child ~= iconField.backgroundObject then
+				child.localY = child.localY - delta
+			end
+		end
+	else
+		iconField:setVerticalScroll(value)
+	end
+end
+
 local function updateFileListAndDraw()
 	iconField:updateFileList()
+	setVerticalScroll(config.gridMode and iconField.initialYOffset or 0)
 	workspace:draw()
 end
 
@@ -124,9 +158,11 @@ local function prevOrNextpath(next)
 	updateFileListAndDraw()
 end
 
-local function addpath(path)
+local function addPath(path)
 	pathHistoryCurrent = pathHistoryCurrent + 1
+	
 	table.insert(pathHistory, pathHistoryCurrent, path)
+	
 	for i = pathHistoryCurrent + 1, #pathHistory do
 		pathHistory[i] = nil
 	end
@@ -187,7 +223,7 @@ local function addSidebarSeparator()
 end
 
 local function onFavouriteTouch(path)
-	addpath(path)
+	addPath(path)
 	updateFileListAndDraw()
 end
 
@@ -196,7 +232,7 @@ local openFTP, updateSidebar
 openFTP = function(...)
 	local mountPath = FTPMountPath .. network.getFTPProxyName(...) .. "/"
 	
-	addpath(mountPath)
+	addPath(mountPath)
 	workspace:draw()
 
 	local proxy, reason = network.connectToFTP(...)
@@ -243,7 +279,7 @@ updateSidebar = function()
 			end
 
 			addSidebarItem(" " .. network.getModemProxyName(proxy), path).onTouch = function()
-				addpath(path)
+				addPath(path)
 				updateFileListAndDraw()
 			end
 		end
@@ -436,59 +472,47 @@ local function updateIconField()
 		) or
 		system.listIconField(
 			1, 4, 1, 1, path,
+			
 			0xF0F0F0,
+
 			0xFFFFFF,
-			0x000000
+			0x000000,
+			
+			nil,
+			0x3C3C3C,
+			
+			0xE1E1E1,
+			0x3C3C3C,
+
+			0xCC2440,
+			0xFFFFFF
 		)
 	)
 
 	iconField.launchers.directory = function(icon)
-		addpath(icon.path)
+		addPath(icon.path)
 		updateFileListAndDraw()
 	end
 
 	iconField.launchers.showPackageContent = function(icon)
-		addpath(icon.path)
+		addPath(icon.path)
 		updateFileListAndDraw()
 	end
 
 	iconField.launchers.showContainingFolder = function(icon)
-		addpath(filesystem.path(system.readShortcut(icon.path)))
+		addPath(filesystem.path(system.readShortcut(icon.path)))
 		updateFileListAndDraw()
 	end
 
 	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
-			if config.gridMode then
-				local iconsCount = #iconField.children
+			setVerticalScroll(getVerticalScroll() + (config.gridMode and e5 * 2 or e5))
 
-				if iconsCount < 2 then
-					return
-				end
-
-				local rows = math.ceil((iconsCount - 1) / iconField.iconCount.horizontal)
-				local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
-				
-				iconField.yOffset = math.max(-minimumOffset + 1, math.min(iconField.yOffsetInitial, iconField.yOffset + e5 * 2))
-
-				-- Moving icons upper or lower
-				local delta, child = iconField.yOffset - iconField.children[2].localY
-
-				for i = 1, iconsCount do
-					child = iconField.children[i]
-
-					if child ~= iconField.backgroundObject then
-						child.localY = child.localY + delta
-					end
-				end
-
-				workspace:draw()
-			else
-				GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5)
-			end
+			workspace:draw()
 		elseif e1 == "system" or e1 == "Finder" then
 			if e2 == "updateFileList" then
 				updateFileListAndDraw()
+			
 			elseif e2 == "updateFavourites" then
 				if e3 then
 					table.insert(config.favourites, e3)
@@ -511,7 +535,7 @@ local function updateIconField()
 
 		local function addNode(text, path)
 			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xC3C3C3, nil, 0xFFFFFF, text)).onTouch = function()
-				addpath(path)
+				addPath(path)
 				updateFileListAndDraw()
 			end
 
@@ -550,7 +574,7 @@ gotoButton.onTouch = function()
 		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
 
 		if filesystem.exists(input.text) and filesystem.isDirectory(input.text) then
-			addpath(input.text)
+			addPath(input.text)
 			iconField:updateFileList()
 		end
 
@@ -617,9 +641,9 @@ modeList.selectedItem = config.gridMode == nil and 2 or (config.gridMode and 1 o
 updateIconField()
 
 if (options.o or options.open) and args[1] and filesystem.isDirectory(args[1]) then
-	addpath(args[1])
+	addPath(args[1])
 else
-	addpath("/")
+	addPath("/")
 end
 
 updateSidebar()

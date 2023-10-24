@@ -1289,22 +1289,31 @@ local function listIconFieldUpdateFileList(iconField)
 		-- Removing old rows
 		iconField:clear()
 
-		local function cell1Draw(self)
+		local function firstCell(self)
 			local foreground = GUI.tableCellDraw(self)
 
 			screen.drawText(self.x, self.y, self.pizda, " ■ ")
 			screen.drawText(self.x + 3, self.y, foreground, self.name)
 		end
 
-		local function newCell1(path)
-			local icon = GUI.tableCell(iconField.cell1Colors)
-			
-			anyIconAddInfo(icon, path)
-			anyIconFieldAddIcon(iconField, icon)
+		local function newFirstCell(path)
+			local cell = GUI.tableCell()
 
-			icon.draw = cell1Draw
+			anyIconAddInfo(cell, path)
+			anyIconFieldAddIcon(iconField, cell)
 
-			return icon
+			cell.draw = firstCell
+
+			return cell
+		end
+
+		local function newOtherCell(text)
+			local cell = GUI.tableTextCell(text)
+
+			cell.colors.defaultForeground = 0xA5A5A5
+			cell.colors.alternativeForeground = 0xA5A5A5
+
+			return cell
 		end
 
 		local file
@@ -1314,22 +1323,23 @@ local function listIconFieldUpdateFileList(iconField)
 			if file then
 				file = iconField.path .. file
 
-				local icon = newCell1(file)
+				local firstCell = newFirstCell(file)
 
-				-- Adding a single-pixel representation of icon
-				for i = 3, #icon.image, 4 do
-					if icon.image[i + 2] == 0 then
-						icon.pizda = icon.image[i]
+				-- Adding a single-pixel representation of firstCell
+				for i = 3, #firstCell.image, 4 do
+					if firstCell.image[i + 2] == 0 then
+						firstCell.pizda = firstCell.image[i]
 						break
 					end
 				end
-				icon.pizda = icon.pizda or 0x0
+
+				firstCell.pizda = firstCell.pizda or 0x0
 				
 				iconField:addRow(
-					icon,
-					GUI.tableTextCell(iconField.cell2Colors, os.date(userSettings.timeFormat, math.floor(filesystem.lastModified(file) / 1000 + userSettings.timeTimezone))),
-					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and "-" or number.roundToDecimalPlaces(filesystem.size(file) / 1024, 2) .. " KB"),
-					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and localization.folder or(icon.extension and icon.extension:sub(2, 2):upper() .. icon.extension:sub(3, -1) or "-"))
+					firstCell,
+					newOtherCell(os.date(userSettings.timeFormat, math.floor(filesystem.lastModified(file) / 1000 + userSettings.timeTimezone))),
+					newOtherCell(firstCell.isDirectory and "-" or number.roundToDecimalPlaces(filesystem.size(file) / 1024, 2) .. " KB"),
+					newOtherCell(firstCell.isDirectory and localization.folder or(firstCell.extension and firstCell.extension:sub(2, 2):upper() .. firstCell.extension:sub(3, -1) or "-"))
 				)
 			else
 				break
@@ -1802,23 +1812,6 @@ end
 
 function system.listIconField(x, y, width, height, path, ...)
 	local iconField = GUI.table(x, y, width, height, 1, ...)
-
-	-- First cell colors
-	iconField.cell1Colors = {
-		defaultBackground = nil,
-		defaultText = 0x3C3C3C,
-		alternativeBackground = 0xE1E1E1,
-		alternativeText = 0x3C3C3C,
-		selectionBackground = 0xCC2440,
-		selectionText = 0xFFFFFF,
-	}
-
-	-- Other cells colors
-	iconField.cell2Colors = {}
-	for key, value in pairs(iconField.cell1Colors) do
-		iconField.cell2Colors[key] = value
-	end
-	iconField.cell2Colors.defaultText, iconField.cell2Colors.alternativeText = 0xA5A5A5, 0xA5A5A5
 
 	iconField:addColumn(localization.name, GUI.SIZE_POLICY_RELATIVE, 0.6)
 	iconField:addColumn(localization.date, GUI.SIZE_POLICY_RELATIVE, 0.4)

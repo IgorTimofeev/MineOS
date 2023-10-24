@@ -192,8 +192,8 @@ selector.draw = function()
 	screen.drawText(selector.x + selector.width - 1, selector.y, 0x0, "┓")
 	screen.drawText(selector.x, selector.y + selector.height - 1, 0x0, "┗")
 
-	screen.drawText(selector.x, selector.y, 0x66FF80, "⬤")
-	screen.drawText(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x66FF80, "⬤")
+	screen.drawText(selector.x, selector.y, 0x66FF80, "●")
+	screen.drawText(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x66FF80, "●")
 end
 
 ------------------------------------------------------

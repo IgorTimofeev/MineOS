@@ -611,11 +611,13 @@ local function buttonPlayAnimation(button, onFinish)
 				if button.colors.default.background and button.colors.pressed.background then
 					button.animationCurrentBackground = color.transition(button.colors.pressed.background, button.colors.default.background, animation.position)
 				end
+				
 				button.animationCurrentText = color.transition(button.colors.pressed.text, button.colors.default.text, animation.position)
 			else
 				if button.colors.default.background and button.colors.pressed.background then
 					button.animationCurrentBackground = color.transition(button.colors.default.background, button.colors.pressed.background, animation.position)
 				end
+
 				button.animationCurrentText = color.transition(button.colors.default.text, button.colors.pressed.text, animation.position)
 			end
 		end,
@@ -4728,8 +4730,8 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function tableHeaderDraw(self)
-	screen.drawRectangle(self.x, self.y, self.width, self.height, self.parent.colors.headerBackground, self.parent.colors.headerText, " ")
-	screen.drawText(self.x + 1, self.y, self.parent.colors.headerText, self.text)
+	screen.drawRectangle(self.x, self.y, self.width, self.height, self.parent.colors.headerBackground, self.parent.colors.headerForeground, " ")
+	screen.drawText(self.x + 1, self.y, self.parent.colors.headerForeground, self.text)
 end
 
 local function tableAddColumn(self, headerText, sizePolicy, size)
@@ -4810,28 +4812,34 @@ end
 
 function GUI.tableCellDraw(self)
 	local background, foreground
+
 	if self.selected then
-		background, foreground = self.colors.selectionBackground, self.colors.selectionText
+		background, foreground =
+			self.colors.selectionBackground or self.parent.colors.itemSelectionBackground,
+			self.colors.selectionForeground or self.parent.colors.itemSelectionForeground
+	
 	elseif self.alternative then
-		background, foreground = self.colors.alternativeBackground, self.colors.alternativeText
+		background, foreground =
+			self.colors.alternativeBackground or self.parent.colors.itemAlternativeBackground,
+			self.colors.alternativeForeground or self.parent.colors.itemAlternativeForeground
+	
 	else
-		background, foreground = self.colors.defaultBackground, self.colors.defaultText
+		background, foreground =
+			self.colors.defaultBackground or self.parent.colors.itemDefaultBackground,
+			self.colors.defaultForeground or self.parent.colors.itemDefaultForeground
 	end
 
 	if background then
-		screen.drawRectangle(self.x, self.y, self.width, self.height,
-			background,
-			foreground,
-		" ")
+		screen.drawRectangle(self.x, self.y, self.width, self.height, background, foreground or 0x0, " ")
 	end
 
-	return foreground
+	return foreground or 0x0
 end
 
-function GUI.tableCell(colors)
+function GUI.tableCell()
 	local cell = GUI.object(1, 1, 1, 1)
 
-	cell.colors = colors
+	cell.colors = {}
 	cell.draw = GUI.tableCellDraw
 	cell.eventHandler = GUI.tableCellEventHandler
 
@@ -4839,11 +4847,11 @@ function GUI.tableCell(colors)
 end
 
 local function tableTextCellDraw(self)
-	screen.drawText(self.x + 1, self.y, GUI.tableCellDraw(self), self.text)
+	screen.drawText(self.x + 1, self.y, GUI.tableCellDraw(self) or 0x0, self.text)
 end
 
-function GUI.tableTextCell(colors, text)
-	local cell = GUI.tableCell(colors)
+function GUI.tableTextCell(text)
+	local cell = GUI.tableCell()
 
 	cell.text = text
 	cell.draw = tableTextCellDraw
@@ -4893,7 +4901,9 @@ function GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 		end
 
 		if not itemTouched then
-			self.onBackgroundTouch(workspace, self, e1, e2, e3, e4, e5, ...)
+			if self.onBackgroundTouch then
+				self.onBackgroundTouch(workspace, self, e1, e2, e3, e4, e5, ...)
+			end
 		end
 
 	elseif e1 == "scroll" then
@@ -4902,13 +4912,43 @@ function GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 	end
 end
 
-function GUI.table(x, y, width, height, itemHeight, backgroundColor, headerBackgroundColor, headerTextColor)
+function GUI.table(
+	x,
+	y,
+	width,
+	height,
+	itemHeight,
+
+	background,
+	
+	headerBackground,
+	headerForeground,
+
+	itemDefaultBackground,
+	itemDefaultForeground,
+
+	itemAlternativeBackground,
+	itemAlternativeForeground,
+
+	itemSelectionBackground,
+	itemSelectionForeground
+)
 	local table = GUI.layout(x, y, width, height, 0, 2)
 
 	table.colors = {
-		background = backgroundColor,
-		headerBackground = headerBackgroundColor,
-		headerText = headerTextColor
+		background = background,
+
+		headerBackground = headerBackground,
+		headerForeground = headerForeground,
+
+		itemDefaultBackground = itemDefaultBackground,
+		itemDefaultForeground = itemDefaultForeground,
+
+		itemAlternativeBackground = itemAlternativeBackground,
+		itemAlternativeForeground = itemAlternativeForeground,
+
+		itemSelectionBackground = itemSelectionBackground,
+		itemSelectionForeground = itemSelectionForeground
 	}
 
 	table.itemHeight = itemHeight
@@ -4927,51 +4967,6 @@ function GUI.table(x, y, width, height, itemHeight, backgroundColor, headerBackg
 
 	return table
 end
-
----------------------------------------------------------------------------------------------------
-
--- local workspace = GUI.workspace()
-
--- workspace:addChild(GUI.panel(1, 1, workspace.width, workspace.height, 0x2D2D2D))
-
--- local t = workspace:addChild(GUI.table(3, 2, 80, 30, 1,
--- 	0xF0F0F0,
--- 	0xFFFFFF,
--- 	0x000000
--- ))
-
--- t:addColumn("Name", GUI.SIZE_POLICY_RELATIVE, 0.6)
--- t:addColumn("Date", GUI.SIZE_POLICY_RELATIVE, 0.4)
--- t:addColumn("Size", GUI.SIZE_POLICY_ABSOLUTE, 16)
--- t:addColumn("Type", GUI.SIZE_POLICY_ABSOLUTE, 10)
-
--- local colors1 = {
--- 	defaultBackground = nil,
--- 	defaultText = 0x3C3C3C,
--- 	alternativeBackground = 0xE1E1E1,
--- 	alternativeText = 0x3C3C3C,
--- 	selectionBackground = 0xCC2440,
--- 	selectionText = 0xFFFFFF,
--- }
-
--- local colors2 = {}
--- for key, value in pairs(colors1) do
--- 	colors2[key] = value
--- end
--- colors2.defaultText, colors2.alternativeText = 0xA5A5A5, 0xA5A5A5
-
--- for i = 1, 10 do
--- 	t:addRow(
--- 		GUI.tableTextCell(colors1, "Ehehehe " .. i),
--- 		GUI.tableTextCell(colors2, "12.02.2018"),
--- 		GUI.tableTextCell(colors2, "114.23 KB"),
--- 		GUI.tableTextCell(colors2, ".lua")
--- 	)
--- end
-
--- workspace:draw()
--- workspace:start()
-
 
 ---------------------------------------------------------------------------------------------------
 
