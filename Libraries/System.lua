@@ -609,41 +609,70 @@ local function iconDeselectAndSelect(icon)
 	if not keyboard.isKeyDown(29) and not keyboard.isKeyDown(219) then
 		icon.parent:clearSelection()
 	end
-	icon.selected = true
 
-	workspace:draw()
+	icon.selected = true
 end
 
-local function moveToTrash(path)
-	local ext = filesystem.extension(path)
-	local name = filesystem.name(path)
-	local dir = filesystem.path(path)
-	if dir == paths.user.trash or ext == ".lnk" then
+local function moveToTrash(pathsToMove)
+	local path, extension
+
+	for i = 1, #pathsToMove do
+		path = pathsToMove[i]
+
+		extension = filesystem.extension(path)
+
+		-- If file is in trash or it's a shortcut - we can safely delete it
+		if filesystem.path(path) == paths.user.trash or extension == ".lnk" then
 			filesystem.remove(path)
-	else
-		local name = filesystem.name(path)
-		local clearName = filesystem.hideExtension(name)
-		local newPath = paths.user.trash .. name
-		local repeats = 1
+		else
+			local name = filesystem.name(path)
+			local newPath = paths.user.trash .. name
+			local counter = 1
 
-		while filesystem.exists(newPath) do
-			newPath, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (ext or ""), repeats + 1
+			while filesystem.exists(newPath) do
+				newPath, counter = paths.user.trash .. filesystem.hideExtension(name) .. string.rep("-copy", counter) .. (extension or ""), counter + 1
+			end
+
+			filesystem.rename(path, newPath)
 		end
-
-		filesystem.rename(path, newPath)
 	end
 
 	computer.pushSignal("system", "updateFileList")
 end
 
+local function emptyTrash()
+	local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure)
+
+	container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK")).onTouch = function()
+		local list = filesystem.list(paths.user.trash)
+		
+		for i = 1, #list do
+			filesystem.remove(paths.user.trash .. list[i])
+		end
+		
+		container:remove()
+
+		computer.pushSignal("system", "updateFileList")
+	end
+
+	container.panel.onTouch = function()
+		container:remove()
+		workspace:draw()
+	end
+
+	workspace:draw()
+end
+
 local function moveSelectedIconsToTrash(selectedIcons)
-	local icon
+	local pathsToMove = {}
 
 	for i = 1, #selectedIcons do
-		icon = selectedIcons[i]
-		moveToTrash(icon.path)
-		icon.selected = false
+		table.insert(pathsToMove, selectedIcons[i].path)
 	end
+
+	moveToTrash(pathsToMove)
+
+	workspace:draw()
 end
 
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
@@ -905,14 +934,22 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		end
 	end
 
-	contextMenu:addItem(localization.delete).onTouch = function()
-		moveSelectedIconsToTrash(selectedIcons)
+
+	if icon.path == paths.user.trash then
+		contextMenu:addItem(localization.emptyTrash).onTouch = emptyTrash
+	else
+		contextMenu:addItem(localization.delete).onTouch = function()
+			moveSelectedIconsToTrash(selectedIcons)
+		end
 	end
+	
 
 	if icon.isShortcut then
 		contextMenu:addItem(localization.deleteWithSource).onTouch = function()
-			moveToTrash(icon.shortcutPath)
-			moveToTrash(icon.path)
+			moveToTrash({
+				icon.shortcutPath,
+				icon.path
+			})
 		end
 	end
 
@@ -945,6 +982,8 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 
 		if e5 == 0 then
 			iconDeselectAndSelect(icon)
+
+			workspace:draw()
 		else
 			-- Если иконка выбрана - похуй, все ок
 			if icon.selected then
@@ -2603,28 +2642,7 @@ function system.updateDesktop()
 			workspace:draw()
 		end
 		
-		contextMenu:addItem(localization.emptyTrash).onTouch = function()
-			local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure)
-
-			container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK")).onTouch = function()
-				local list = filesystem.list(paths.user.trash)
-				
-				for i = 1, #list do
-					filesystem.remove(paths.user.trash .. list[i])
-				end
-				
-				container:remove()
-
-				computer.pushSignal("system", "updateFileList")
-			end
-
-			container.panel.onTouch = function()
-				container:remove()
-				workspace:draw()
-			end
-
-			workspace:draw()
-		end
+		contextMenu:addItem(localization.emptyTrash).onTouch = emptyTrash
 
 		workspace:draw()
 	end
