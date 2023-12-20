@@ -6,7 +6,7 @@ local image = require("Image")
 local filesystem = require("Filesystem")
 
 if not component.isAvailable("camera") then
-	GUI.alert("This program reqiures camera from computronix mod")
+	GUI.alert("This program reqiures camera from computrix mod")
 	return
 end
 
