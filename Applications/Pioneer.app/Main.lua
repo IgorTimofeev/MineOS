@@ -22,12 +22,14 @@ if filesystem.exists(configPath) then
 
 	-- Older versions support
 	config.timeMode = config.timeMode or 0
+	config.jogSpeed = config.jogSpeed or 0
 else
 	config = {
 		tapes = {
 
 		},
-		timeMode = 0
+		timeMode = 0,
+		jogSpeed = 0
 	}
 end
 
@@ -222,16 +224,30 @@ for i = 1, 12 do
 	jogImages[i] = loadImage("Jog" .. i)
 end
 
+local knobImages = {}
+
+for i = 1, 8 do
+	knobImages[i] = loadImage("Knob" .. i)
+end
+
 local jogIndex = 1
+local jogIncrementSpeedMin = 0.05
+local jogIncrementSpeedMax = 2
+local jogIncrementUptime = 0
 
 local function incrementJogIndex(value)
 	jogIndex = jogIndex + value
 
 	if jogIndex > #jogImages then
 		jogIndex = 1
+
 	elseif jogIndex < 1 then
 		jogIndex = #jogImages
 	end
+end
+
+local function invalidateJogIncrementUptime(uptime)
+	jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
 end
 
 local function displayDrawProgressBar(x, y, width, progress)
@@ -367,6 +383,7 @@ powerButton.eventHandler = function(workspace, powerButton, e1)
 		-- Stopping playback
 		if powerButton.pressed then
 			jogIndex = 1
+		
 		else
 			for i = 1, #tapes do
 				component.invoke(tapes[i].address, "stop")
@@ -395,7 +412,6 @@ local function newImageButton(x, y, width, height, name)
 
 	return button
 end
-
 
 -------------------------------- Speed slider ------------------------------------------------
 
@@ -732,39 +748,28 @@ end
 
 -------------------------------- Jog ------------------------------------------------
 
--- Center 40, 32
 local jog = window:addChild(GUI.object(15, 20, 52, 26))
 local jogAngleOld
-
--- local jogText = ""
-
--- jog.draw = function()
--- 	screen.drawText(jog.x, jog.y, 0x00FF00, jogText)
--- end
 
 jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
 	if not tape or not powerButton.pressed then
 		return
 	end
 
-	if e1 == "touch" then
-		
-	
-	elseif e1 == "drag" then
+	if e1 == "drag" then
 		local angleNew = math.atan2(
 			e3 - jog.x - jog.width / 2,
 			e4 - jog.y - jog.height / 2
 		)
 
 		if jogAngleOld then
-			local angleDelta = jogAngleOld - angleNew
-			local bytesPerRadian = 1 * sampleRate
-			local seek = bytesPerRadian * angleDelta
+			local direction = jogAngleOld - angleNew >= 0 and 1 or -1
 
-			-- jogText = "delta: " .. math.deg(angleDelta) .. ", seek: " .. seek
+			incrementJogIndex(direction)
+			invalidateJogIncrementUptime(computer.uptime())
 
-			incrementJogIndex(angleDelta >= 0 and 1 or -1)
-			invoke("seek", seek)
+			-- Min seek speed is 100 msec & max is 10 sec
+			invoke("seek", math.floor((0.1 + (10 * (1 - config.jogSpeed))) * sampleRate * direction))
 
 			workspace:draw()
 		end
@@ -775,6 +780,66 @@ jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
 		jogAngleOld = nil
 	end
 end
+
+-------------------------------- Knobs ------------------------------------------------
+
+local function knobDraw(knob)
+	screen.drawImage(knob.x, knob.y, knobImages[1 + math.floor(knob.value * (#knobImages - 1))])
+end
+
+local function knobEventHandler(workspace, knob, e1, e2, e3, e4, e5, ...)
+	local function increment(upper)
+		local speed = 0.1
+
+		knob.value = math.max(0, math.min(1, knob.value + (upper and speed or -speed)))
+
+		if knob.onValueChanged then
+			knob.onValueChanged(knob)
+		end
+
+		workspace:draw()
+	end
+
+	if e1 == "touch" then
+		knob.touchX, knob.touchY = e3, e4
+
+	elseif e1 == "drag" and knob.touchX then
+		local dx, dy = e3 - knob.touchX, e4 - knob.touchY
+		knob.touchX, knob.touchY = e3, e4
+
+		increment((math.abs(dx) > math.abs(dy) and dx or dy) >= 0)
+
+	elseif e1 == "drop" then
+		knob.touchX, knob.touchY = nil, nil
+
+	elseif e1 == "scroll" then
+		increment(e5 >= 0)
+	end
+end
+
+local function newKnob(x, y, value)
+	local knob = GUI.object(x, y, 5, 3)
+
+	knob.value = value
+	knob.draw = knobDraw
+	knob.eventHandler = knobEventHandler
+
+	return knob
+end
+
+-- Jog speed
+local jogSpeedKnob = window:addChild(newKnob(61, 21, config.jogSpeed))
+
+jogSpeedKnob.onValueChanged = function()
+	config.jogSpeed = jogSpeedKnob.value
+	saveConfig()
+end
+
+-- Speed adjust
+local speedAdjustKnob = window:addChild(newKnob(72, 12, 0))
+
+-- Release start
+local releaseStartKnob = window:addChild(newKnob(72, 16, 0))
 
 -------------------------------- Pref/next tape button ------------------------------------------------
 
@@ -1147,11 +1212,7 @@ tempoButton.onTouch = function()
 	saveConfig()
 end
 
--------------------------------- Events ------------------------------------------------
-
-local jogIncrementSpeedMin = 0.05
-local jogIncrementSpeedMax = 1
-local jogIncrementUptime = 0
+-------------------------------- Cyka ------------------------------------------------
 
 local overrideWindowEventHandler = window.eventHandler
 
@@ -1167,12 +1228,12 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 
 		local shouldDraw = false
 		local isPlaying = invoke("getState") == "PLAYING"
-		local position = invoke("getPosition")
 		local uptime = computer.uptime()
 
 		-- Cheching if play button state was changed
 		if isPlaying == playButton.blinking then
 			playButton.blinking = not playButton.blinking
+			invalidateJogIncrementUptime(uptime)
 			shouldDraw = true
 		end
 
@@ -1184,19 +1245,14 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 			shouldDraw = true
 		end
 
-		if isPlaying then
-			-- Rotating jog
-			if uptime > jogIncrementUptime then
-				incrementJogIndex(1)
-
-				jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
-				shouldDraw = true
-			end
-		else
-			jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
+		-- Jog
+		if isPlaying and uptime > jogIncrementUptime then
+			incrementJogIndex(1)
+			invalidateJogIncrementUptime(uptime)
+			shouldDraw = true
 		end
 
-		-- Blink
+		-- Blink state
 		if uptime > blinkUptime then
 			blinkUptime = uptime + blinkInterval
 			blinkState = not blinkState
@@ -1208,9 +1264,6 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 		end
 	end
 end
-
-
--------------------------------- Cyka ------------------------------------------------
 
 updateTapes()
 
