@@ -10,7 +10,7 @@ local text = require("Text")
 local internet = require("Internet")
 local event = require("Event")
 
---------------------------------------------------------------------------------
+-------------------------------- Config ------------------------------------------------
 
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 
@@ -19,6 +19,9 @@ local config
 
 if filesystem.exists(configPath) then
 	config = filesystem.readTable(configPath)
+
+	-- Older versions support
+	config.timeMode = config.timeMode or 0
 else
 	config = {
 		tapes = {
@@ -32,30 +35,17 @@ local function saveConfig()
 	filesystem.writeTable(configPath, config)
 end
 
--- Older versions support
-config.timeMode = config.timeMode or 0
+-------------------------------- Core ------------------------------------------------
 
---------------------------------------------------------------------------------
-
-local function loadImage(name)
-	local result, reason = image.load(currentScriptDirectory .. "Images/" .. name .. ".pic")
-
-	if not result then
-		GUI.alert(reason)
-	end
-
-	return result
-end
-
-local speedSlider
+local sampleRate = 1500 * 4
+local IOBufferSize = 8192
 
 local blinkState = false
 local blinkUptime = 0
 local blinkInterval = 0.5
 
+local speedSlider
 local powerButton
-
-local IOBufferSize = 8192
 
 local tapes
 local tapeIndex
@@ -135,6 +125,16 @@ local function updateTapes()
  	end
 end
 
+local function loadImage(name)
+	local result, reason = image.load(currentScriptDirectory .. "Images/" .. name .. ".pic")
+
+	if not result then
+		GUI.alert(reason)
+	end
+
+	return result
+end
+
 -------------------------------- Round mini button ------------------------------------------------
 
 local function roundMiniButtonDraw(button)
@@ -210,8 +210,11 @@ local workspace, window, menu = system.addWindow(GUI.window(1, 1, 78, 49))
 
 window.drawShadow = false
 
+-------------------------------- Overlay ------------------------------------------------
 
--------------------------------- Jog ------------------------------------------------
+local overlay = window:addChild(GUI.object(1, 1, window.width, window.height))
+
+local displayWidth, displayHeight = 33, 10
 
 local jogImages = {}
 
@@ -219,12 +222,17 @@ for i = 1, 12 do
 	jogImages[i] = loadImage("Jog" .. i)
 end
 
--------------------------------- Overlay ------------------------------------------------
+local jogIndex = 1
 
-local overlay = window:addChild(GUI.object(1, 1, window.width, window.height))
+local function incrementJogIndex(value)
+	jogIndex = jogIndex + value
 
-local currentJogIndex = 1
-local displayWidth, displayHeight = 33, 10
+	if jogIndex > #jogImages then
+		jogIndex = 1
+	elseif jogIndex < 1 then
+		jogIndex = #jogImages
+	end
+end
 
 local function displayDrawProgressBar(x, y, width, progress)
 	local progressActiveWidth = math.floor(progress * width)
@@ -248,7 +256,7 @@ overlay.draw = function(overlay)
 	screen.drawText(overlay.x + 68, overlay.y + 39, 0xFFDB40, "⠆")
 
 	-- Jog
-	screen.drawImage(overlay.x + 33, overlay.y + 29, jogImages[currentJogIndex])
+	screen.drawImage(overlay.x + 33, overlay.y + 29, jogImages[jogIndex])
 
 	-- Display
 	local displayX, displayY = overlay.x + 22, overlay.y + 3
@@ -274,7 +282,7 @@ overlay.draw = function(overlay)
 		screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
 
 		-- Time
-		local timeSecondsTotal = (config.timeMode == 0 and position or (config.timeMode == 1 and tape.size - position or tape.size)) / (1500 * 4)
+		local timeSecondsTotal = (config.timeMode == 0 and position or (config.timeMode == 1 and tape.size - position or tape.size)) / sampleRate
 		local timeMinutes = math.floor(timeSecondsTotal / 60)
 		local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
 		local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
@@ -358,7 +366,7 @@ powerButton.eventHandler = function(workspace, powerButton, e1)
 
 		-- Stopping playback
 		if powerButton.pressed then
-			currentJogIndex = 1
+			jogIndex = 1
 		else
 			for i = 1, #tapes do
 				component.invoke(tapes[i].address, "stop")
@@ -722,10 +730,56 @@ needleSearch.eventHandler = function(workspace, needleSearch, e1, e2, e3, e4)
 	end
 end
 
+-------------------------------- Jog ------------------------------------------------
+
+-- Center 40, 32
+local jog = window:addChild(GUI.object(15, 20, 52, 26))
+local jogAngleOld
+
+-- local jogText = ""
+
+-- jog.draw = function()
+-- 	screen.drawText(jog.x, jog.y, 0x00FF00, jogText)
+-- end
+
+jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	if e1 == "touch" then
+		
+	
+	elseif e1 == "drag" then
+		local angleNew = math.atan2(
+			e3 - jog.x - jog.width / 2,
+			e4 - jog.y - jog.height / 2
+		)
+
+		if jogAngleOld then
+			local angleDelta = jogAngleOld - angleNew
+			local bytesPerRadian = 1 * sampleRate
+			local seek = bytesPerRadian * angleDelta
+
+			-- jogText = "delta: " .. math.deg(angleDelta) .. ", seek: " .. seek
+
+			incrementJogIndex(angleDelta >= 0 and 1 or -1)
+			invoke("seek", seek)
+
+			workspace:draw()
+		end
+
+		jogAngleOld = angleNew
+
+	elseif e1 == "drop" then
+		jogAngleOld = nil
+	end
+end
+
 -------------------------------- Pref/next tape button ------------------------------------------------
 
-local previousTapeButton = window:addChild(newRoundMiniButton(2, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
-local nextTapeButton = window:addChild(newRoundMiniButton(7, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
+local tapePrevButton = window:addChild(newRoundMiniButton(2, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
+local tapeNextButton = window:addChild(newRoundMiniButton(7, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
 
 local function incrementTape(next)
 	if not tape or not powerButton.pressed then
@@ -744,25 +798,33 @@ local function incrementTape(next)
 	saveConfig()
 end
 
-previousTapeButton.onTouch = function()
+tapePrevButton.onTouch = function()
 	incrementTape(false)
 end
 
-nextTapeButton.onTouch = function()
+tapeNextButton.onTouch = function()
 	incrementTape(true)
 end
 
 -------------------------------- Pref/next search button ------------------------------------------------
 
-local previousSearchButton = window:addChild(newRoundMiniButton(2, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
-local nextSearchButton = window:addChild(newRoundMiniButton(7, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
+local searchPrevButton = window:addChild(newRoundMiniButton(2, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
+local searchNextButton = window:addChild(newRoundMiniButton(7, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
 
-previousSearchButton.onTouch = function()
-	
+local function incrementFromSearchButton(seconds)
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	invoke("seek", seconds * sampleRate)
 end
 
-nextSearchButton.onTouch = function()
-	
+searchPrevButton.onTouch = function()
+	incrementFromSearchButton(-1)
+end
+
+searchNextButton.onTouch = function()
+	incrementFromSearchButton(1)
 end
 
 -------------------------------- Hot cue buttons ------------------------------------------------
@@ -1125,11 +1187,7 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 		if isPlaying then
 			-- Rotating jog
 			if uptime > jogIncrementUptime then
-				currentJogIndex = currentJogIndex + 1
-
-				if currentJogIndex > #jogImages then
-					currentJogIndex = 1
-				end
+				incrementJogIndex(1)
 
 				jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
 				shouldDraw = true
