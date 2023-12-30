@@ -55,13 +55,18 @@ local blinkInterval = 0.5
 
 local powerButton
 
+local IOBufferSize = 8192
+
 local tapes
 local tapeIndex
 local tape, tapeConfig
-local tapeWritingProgress
 
 local function invoke(...)
 	return component.invoke(tape.address, ...)
+end
+
+local function setPosition(value)
+	invoke("seek", value - invoke("getPosition"))
 end
 
 local function getCurrentTapeSpeed()
@@ -248,113 +253,92 @@ overlay.draw = function(overlay)
 	-- Display
 	local displayX, displayY = overlay.x + 22, overlay.y + 3
 
-	if tapeWritingProgress then
-		local progressWidth = displayWidth - 4
+	-- Label
+	local label = tape and invoke("getLabel") or "No tape"
 
-		displayDrawProgressBar(
-			math.floor(displayX + displayWidth / 2 - progressWidth / 2),
-			math.floor(displayY + displayHeight / 2),
-			progressWidth,
-			tapeWritingProgress
+	if not label or #label == 0 then
+		label = "Untitled tape"
+	end
+
+	screen.drawRectangle(displayX, displayY, displayWidth, 1, 0x004980, 0xE1E1E1, " ")
+	screen.drawText(displayX + 1, displayY, 0xE1E1E1, text.limit("♪ " .. label, displayWidth - 3))
+
+	if tape then
+		-- Stats
+		local position = invoke("getPosition")
+		local statsX = displayX + 2
+		local statsY = displayY + displayHeight - 5
+
+		-- Track index
+		screen.drawText(statsX, statsY, 0xE1E1E1, "Track")
+		screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
+
+		-- Time
+		local timeSecondsTotal = (config.timeMode == 0 and position or (config.timeMode == 1 and tape.size - position or tape.size)) / (1500 * 4)
+		local timeMinutes = math.floor(timeSecondsTotal / 60)
+		local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
+		local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
+		screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, config.timeMode == 1 and "-" .. timeString or timeString)
+
+		-- Tempo
+		screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
+		screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getCurrentTapeSpeed() * 100)) .. "%")
+
+		-- Tempo index
+
+		-- Track
+		local trackWidth = displayWidth - 4
+		local trackHeight = 3
+		statsY = statsY + 2
+
+		screen.drawRectangle(
+			statsX,
+			statsY + 1,
+			trackWidth,
+			trackHeight - 2,
+			0x2D2D2D,
+			0xE1E1E1,
+			" "
 		)
-
-		-- UpperText
-		local text = "Writing in progress"
 
 		screen.drawText(
-			math.floor(displayX + displayWidth / 2 - #text / 2),
-			displayY + 1,
+			math.floor(statsX + (tape.size == 0 and 0 or position / tape.size) * trackWidth),
+			statsY + 1,
 			0xE1E1E1,
-			text
+			"│"
 		)
-	else
-		-- Label
-		local label = tape and invoke("getLabel") or "No tape"
 
-		if not label or #label == 0 then
-			label = "Untitled tape"
-		end
+		-- Memory cues
+		local cueY = statsY
 
-		screen.drawRectangle(displayX, displayY, displayWidth, 1, 0x004980, 0xE1E1E1, " ")
-		screen.drawText(displayX + 1, displayY, 0xE1E1E1, text.limit("♪ " .. label, displayWidth - 3))
-
-		if tape then
-			-- Stats
-			local position = invoke("getPosition")
-			local statsX = displayX + 2
-			local statsY = displayY + displayHeight - 5
-
-			-- Track index
-			screen.drawText(statsX, statsY, 0xE1E1E1, "Track")
-			screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
-
-			-- Time
-			local timeSecondsTotal = (config.timeMode == 0 and position or (config.timeMode == 1 and tape.size - position or tape.size)) / (1500 * 4)
-			local timeMinutes = math.floor(timeSecondsTotal / 60)
-			local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
-			local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
-			screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, config.timeMode == 1 and "-" .. timeString or timeString)
-
-			-- Tempo
-			screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
-			screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getCurrentTapeSpeed() * 100)) .. "%")
-
-			-- Tempo index
-
-			-- Track
-			local trackWidth = displayWidth - 4
-			local trackHeight = 3
-			statsY = statsY + 2
-
-			screen.drawRectangle(
-				statsX,
-				statsY + 1,
-				trackWidth,
-				trackHeight - 2,
-				0x2D2D2D,
-				0xE1E1E1,
-				" "
-			)
-
+		for i = 1, #tapeConfig.cues do
 			screen.drawText(
-				math.floor(statsX + (tape.size == 0 and 0 or position / tape.size) * trackWidth),
-				statsY + 1,
-				0xE1E1E1,
-				"│"
-			)
-
-			-- Memory cues
-			local cueY = statsY
-
-			for i = 1, #tapeConfig.cues do
-				screen.drawText(
-					statsX + math.floor(tapeConfig.cues[i] / tape.size * trackWidth),
-					cueY,
-					i == tapeConfig.cueIndex and 0xE1E1E1 or 0xCC0000,
-					"•"
-				)
-			end
-
-			-- Hot cues
-			for name, position in pairs(tapeConfig.hotCues) do
-				screen.drawText(
-					statsX + math.floor(position / tape.size * trackWidth),
-					cueY,
-					0x66FF40,
-					"•" .. name
-				)
-			end
-
-			-- Current cue
-			cueY = statsY + trackHeight - 1
-
-			screen.drawText(
-				statsX + math.floor(tapeConfig.cue / tape.size * trackWidth),
+				statsX + math.floor(tapeConfig.cues[i] / tape.size * trackWidth),
 				cueY,
-				0xFFB640,
+				i == tapeConfig.cueIndex and 0xE1E1E1 or 0xCC0000,
 				"•"
 			)
 		end
+
+		-- Hot cues
+		for name, position in pairs(tapeConfig.hotCues) do
+			screen.drawText(
+				statsX + math.floor(position / tape.size * trackWidth),
+				cueY,
+				0x66FF40,
+				"•" .. name
+			)
+		end
+
+		-- Current cue
+		cueY = statsY + trackHeight - 1
+
+		screen.drawText(
+			statsX + math.floor(tapeConfig.cue / tape.size * trackWidth),
+			cueY,
+			0xFFB640,
+			"•"
+		)
 	end
 end
 
@@ -511,6 +495,15 @@ closeButton.onTouch = function()
 	window:remove()
 end
 
+local function checkForFreeSpace(requiredSize)
+	if requiredSize > tape.size - invoke("getPosition") then
+		GUI.alert("Not enough space on tape")
+		return false
+	end
+
+	return true
+end
+
 local wipeButton = window:addChild(newDisplayButton(14, 7, 7, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "Wipe"))
 
 local fileButton = window:addChild(newDisplayButton(23, 1, 10, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "File"))
@@ -527,45 +520,148 @@ fileButton.onTouch = function()
 	filesystemDialog:show()
 
 	filesystemDialog.onSubmit = function(path)
-		local tapeSpaceFree = tape.size - invoke("getPosition")
 		local fileSize = filesystem.size(path)
 
-		if fileSize > tapeSpaceFree then
-			GUI.alert("Not enough space on tape")
+		if not checkForFreeSpace(fileSize) then
 			return
 		end
-		
-		local file = filesystem.open(path, "rb")
 
+		local container = GUI.addBackgroundContainer(workspace, true, true, "Writing track via file")
+		local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 36, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
+
+		local oldPosition = invoke("getPosition")
 		invoke("stop")
 
-		local bytesWritten, chunk = 0
-		while true do
-			chunk = file:read(8192)
+		workspace:draw()
 
-			if not chunk then
-				break
+		local file, reason = filesystem.open(path, "rb")
+		
+		if file then
+			local bytesWritten, chunk = 0
+			
+			while true do
+				chunk = file:read(IOBufferSize)
+
+				if not chunk then
+					break
+				end
+
+				if not invoke("isReady") then
+					GUI.alert("Tape was removed during writing")
+					break
+				end
+
+				invoke("write", chunk)
+
+				bytesWritten = bytesWritten + #chunk
+				progressBar.value = math.floor(bytesWritten / fileSize * 100)
+
+				workspace:draw()
 			end
 
-			if not invoke("isReady") then
-				GUI.alert("Tape was removed during writing")
-				break
-			end
-
-			invoke("write", chunk)
-
-			bytesWritten = bytesWritten + #chunk
-			tapeWritingProgress = bytesWritten / fileSize
-			workspace:draw()
+			file:close()
+		else
+			GUI.alert(reason or "Unable to open file for writing")
 		end
 
-		file:close()
-		invoke("seek", -tape.size)
-		tapeWritingProgress = nil
+		setPosition(oldPosition)
+
+		container:remove()
+		workspace:draw()
 	end
 end
 
 local urlButton = window:addChild(newDisplayButton(34, 1, 10, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "Url"))
+urlButton.onTouch = function()
+	if not tape or not powerButton.pressed or not component.isAvailable("internet") then
+		return
+	end
+
+	local container = GUI.addBackgroundContainer(workspace, true, true, "Downloading track via URL")
+	
+	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "https://example.com/track.dfpwm", false))
+
+	container.panel.eventHandler = function(workspace, panel, e1)
+		if e1 == "touch" then
+			if #input.text > 0 then
+				input:remove()
+
+				container.label.text = "Downloading track"
+				local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 36, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
+
+				workspace:draw()
+
+				invoke("stop")
+
+				local handle, reason = component.get("internet").request(
+					input.text,
+					nil,
+					{
+						["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36",
+						["Content-Type"] = "application/x-www-form-urlencoded"
+					},
+					"GET"
+				)
+				
+				if handle then
+					local deadline, code, message, headers = computer.uptime() + 5
+					
+					repeat
+						code, message, headers = handle:response()
+					until headers or computer.uptime() >= deadline
+
+					if headers then
+						if headers["Content-Length"] then
+							local fileSize = tonumber(headers["Content-Length"][1])
+							local oldPosition = invoke("getPosition")
+
+							if checkForFreeSpace(fileSize) then
+								local bytesWritten, chunk, reason = 0
+
+								while true do
+									chunk, reason = handle.read(IOBufferSize)
+
+									if not chunk then
+										if reason then
+											GUI.alert(reason)
+										end
+
+										break
+									end
+
+									if not invoke("isReady") then
+										GUI.alert("Tape was removed during writing")
+										break
+									end
+
+									invoke("write", chunk)
+
+									bytesWritten = bytesWritten + #chunk
+									progressBar.value = math.floor(bytesWritten / fileSize * 100)
+
+									workspace:draw()
+								end
+
+								setPosition(oldPosition)
+							end
+						else
+							GUI.alert("Web-server didn't respont with Content-Length header")
+						end
+					else
+						GUI.alert("Too long without response")
+					end
+
+					handle:close()
+				else
+					GUI.alert(reason or "Invalid URL-address")
+				end
+			end
+
+			container:remove()
+			workspace:draw()
+		end
+	end
+end
 
 local labelButton = window:addChild(newDisplayButton(45, 1, 10, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "Label"))
 labelButton.onTouch = function()
@@ -620,9 +716,7 @@ end
 
 needleSearch.eventHandler = function(workspace, needleSearch, e1, e2, e3, e4)
 	if (e1 == "touch" or e1 == "drag") and powerButton.pressed and tape then
-		local newPosition = math.floor((e3 - needleSearch.x) / needleSearch.width * tape.size)
-
-		invoke("seek", newPosition - invoke("getPosition"))
+		setPosition(math.floor((e3 - needleSearch.x) / needleSearch.width * tape.size))
 
 		workspace:draw()
 	end
@@ -724,7 +818,8 @@ local function newHotCueButton(x, y, index, text)
 			saveConfig()
 
 		elseif hotCuePosition then
-			invoke("seek", hotCuePosition - invoke("getPosition"))
+			setPosition(hotCuePosition)
+
 			workspace:draw()
 		end
 	end
@@ -850,9 +945,9 @@ local function incrementCueIndex(value)
 
 	tapeConfig.cue = tapeConfig.cues[tapeConfig.cueIndex]
 
-	-- invoke("stop")
-	invoke("seek", tapeConfig.cue - invoke("getPosition"))
+	setPosition(tapeConfig.cue)
 
+	workspace:draw()
 	saveConfig()
 end
 
@@ -919,8 +1014,8 @@ cueButton.eventHandler = function(workspace, cueButton, e1)
 			workspace:draw()
 			saveConfig()
 		else
-			invoke("seek", tapeConfig.cue - invoke("getPosition"))
-			
+			setPosition(tapeConfig.cue)
+
 			workspace:draw()
 		end
 	end
@@ -1057,7 +1152,7 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 end
 
 
----------------------------------------------------------------------------------
+-------------------------------- Cyka ------------------------------------------------
 
 updateTapes()
 
