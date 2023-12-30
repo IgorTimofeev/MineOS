@@ -669,9 +669,9 @@ labelButton.onTouch = function()
 		return
 	end
 
-	local container = GUI.addBackgroundContainer(workspace, true, true, title)
+	local container = GUI.addBackgroundContainer(workspace, true, true, "Change tape label")
 	
-	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, invoke("getLabel") or "", "New label", false))
+	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, invoke("getLabel") or "", "The Algortithm - Superscalar", false))
 
 	input.onInputFinished = function()
 		invoke("setLabel", input.text)
