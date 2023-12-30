@@ -2535,6 +2535,7 @@ function system.updateDesktop()
 		while path:sub(-4) == ".lnk" do
 			path = system.readShortcut(path)
 		end
+
 		local icon = dockContainer:addChild(system.icon(1, 2, path, dockColors))
 		icon:analyseExtension(defaultIconLaunchers)
 		icon:moveBackward()
