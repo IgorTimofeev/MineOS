@@ -483,7 +483,7 @@ helpButton.onTouch = function()
 	local lines = {
 		"Pioneer CDJ-2000 nexus",
 		" ",
-		"Pro-grade digital DJ deck for Computronix",
+		"Pro-grade digital DJ deck for Computronics",
 		"tape drives and DFPWM audio codec.",
 		"To convert your favorite tracks, use",
 		"https://music.madefor.cc",
