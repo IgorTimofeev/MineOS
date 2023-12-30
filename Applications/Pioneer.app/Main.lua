@@ -24,13 +24,16 @@ else
 		tapes = {
 
 		},
-		lastTape = nil
+		timeMode = 0
 	}
 end
 
 local function saveConfig()
 	filesystem.writeTable(configPath, config)
 end
+
+-- Older versions support
+config.timeMode = config.timeMode or 0
 
 --------------------------------------------------------------------------------
 
@@ -286,10 +289,11 @@ overlay.draw = function(overlay)
 			screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
 
 			-- Time
-			local timeSecondsTotal = position / (1500 * 4)
+			local timeSecondsTotal = (config.timeMode == 0 and position or (config.timeMode == 1 and tape.size - position or tape.size)) / (1500 * 4)
 			local timeMinutes = math.floor(timeSecondsTotal / 60)
 			local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
-			screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000)))
+			local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
+			screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, config.timeMode == 1 and "-" .. timeString or timeString)
 
 			-- Tempo
 			screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
@@ -588,8 +592,23 @@ end
 
 -------------------------------- Quantize/time buttons ------------------------------------------------
 
-local _ = window:addChild(newRoundTinyButton(14, 12, 0x0F0F0F, 0xFF0000, 0x0F0F0F, 0xFF0000, "⢠⡄"))
-local _ = window:addChild(newRoundTinyButton(18, 12, 0x0F0F0F, 0x2D2D2D, 0x0F0F0F, 0x2D2D2D, "⢠⡄"))
+local _ = window:addChild(newRoundTinyButton(14, 12, 0x0F0F0F, 0xFF0000, 0x0, 0x440000, "⢠⡄"))
+
+local timeModeButton = window:addChild(newRoundTinyButton(18, 12, 0x0F0F0F, 0x1E1E1E, 0x0, 0x0F0F0F, "⢠⡄"))
+timeModeButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	config.timeMode = config.timeMode + 1
+
+	if config.timeMode > 2 then
+		config.timeMode = 0
+	end
+
+	workspace:draw()
+	saveConfig()
+end
 
 -------------------------------- Needle search ------------------------------------------------
 
