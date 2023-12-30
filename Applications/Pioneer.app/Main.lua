@@ -15,22 +15,29 @@ local event = require("Event")
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 
 local configPath = paths.user.applicationData .. "Pioneer/Config.cfg"
-local config
+
+local config = {
+	tapes = {
+
+	},
+	timeMode = 0,
+	jogSpeed = 0,
+	gain = 1,
+	speed = 0.5,
+ 	speedIndex = 0,
+}
 
 if filesystem.exists(configPath) then
-	config = filesystem.readTable(configPath)
+	local loadedConfig = filesystem.readTable(configPath)
 
 	-- Older versions support
-	config.timeMode = config.timeMode or 0
-	config.jogSpeed = config.jogSpeed or 0
-else
-	config = {
-		tapes = {
+	for key, value in pairs(config) do
+		if not loadedConfig[key] then
+			loadedConfig[key] = value
+		end
+	end
 
-		},
-		timeMode = 0,
-		jogSpeed = 0
-	}
+	config = loadedConfig
 end
 
 local function saveConfig()
@@ -46,7 +53,6 @@ local blinkState = false
 local blinkUptime = 0
 local blinkInterval = 0.5
 
-local speedSlider
 local powerButton
 
 local tapes
@@ -61,14 +67,16 @@ local function setPosition(value)
 	invoke("seek", value - invoke("getPosition"))
 end
 
-local function getCurrentTapeSpeed()
-	local speed = 2 * speedSlider.value - 1
+local function getTapeSpeed()
+	local speed = 2 * config.speed - 1
 
-	if tapeConfig.speedIndex == 0 then
+	if config.speedIndex == 0 then
 		speed = speed * 0.25
-	elseif tapeConfig.speedIndex == 1 then
+	
+	elseif config.speedIndex == 1 then
 		speed = speed * 0.5
-	elseif tapeConfig.speedIndex == 2 then
+	
+	elseif config.speedIndex == 2 then
 		speed = speed * 0.75
 	end
 
@@ -76,17 +84,16 @@ local function getCurrentTapeSpeed()
 end
 
 local function updateCurrentTapeSpeed()
-	local speed = getCurrentTapeSpeed()
-
-	invoke("setSpeed", 1 + speed * 0.75)
+	invoke("setSpeed", 1 + getTapeSpeed() * 0.75)
 end
 
 local function updateCurrentTape()
 	tape = tapes[tapeIndex]
 	tapeConfig = config.tapes[tape.address]
-	speedSlider.value = tapeConfig.speed
+
 	config.lastTape = tape.address
 
+	-- Because there's no "getSpeed" function...
 	updateCurrentTapeSpeed()
 end
 
@@ -106,8 +113,6 @@ local function updateTapes()
 
  		if not config.tapes[address] then
  			config.tapes[address] = {
- 				speed = 0.5,
- 				speedIndex = 0,
  				cue = 0,
  				cues = {},
  				cueIndex = 1,
@@ -247,7 +252,7 @@ local function incrementJogIndex(value)
 end
 
 local function invalidateJogIncrementUptime(uptime)
-	jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
+	jogIncrementUptime = uptime + (1 - config.speed) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
 end
 
 local function displayDrawProgressBar(x, y, width, progress)
@@ -306,7 +311,7 @@ overlay.draw = function(overlay)
 
 		-- Tempo
 		screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
-		screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getCurrentTapeSpeed() * 100)) .. "%")
+		screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getTapeSpeed() * 100)) .. "%")
 
 		-- Tempo index
 
@@ -415,10 +420,10 @@ end
 
 -------------------------------- Speed slider ------------------------------------------------
 
+local speedSlider = window:addChild(GUI.object(71, 33, 5, 15))
 local speedSliderImage = loadImage("SpeedSlider")
 
-speedSlider = window:addChild(GUI.object(71, 33, 5, 15))
-speedSlider.value = 0.5
+speedSlider.value = config.speed
 
 speedSlider.draw = function(speedSlider)
 	-- screen.drawRectangle(speedSlider.x, speedSlider.y, speedSlider.width, speedSlider.height, 0xFF0000, 0x0, " ")
@@ -440,7 +445,7 @@ speedSlider.eventHandler = function(workspace, speedSlider, e1, e2, e3, e4)
 		end
 
 		if tape and powerButton.pressed then
-			tapeConfig.speed = speedSlider.value
+			config.speed = speedSlider.value
 
 			updateCurrentTapeSpeed()
 		end
@@ -769,7 +774,7 @@ jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
 			invalidateJogIncrementUptime(computer.uptime())
 
 			-- Min seek speed is 100 msec & max is 10 sec
-			invoke("seek", math.floor((0.1 + (10 * (1 - config.jogSpeed))) * sampleRate * direction))
+			invoke("seek", math.floor((0.1 + (10 * config.jogSpeed)) * sampleRate * direction))
 
 			workspace:draw()
 		end
@@ -827,19 +832,29 @@ local function newKnob(x, y, value)
 	return knob
 end
 
+-- Jog adjust
+local jogAdjustKnob = window:addChild(newKnob(61, 21, 0))
+
+-- Gain
+gainKnob = window:addChild(newKnob(72, 12, config.gain))
+
+gainKnob.onValueChanged = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	config.gain = gainKnob.value
+	invoke("setVolume", config.gain)
+	saveConfig()
+end
+
 -- Jog speed
-local jogSpeedKnob = window:addChild(newKnob(61, 21, config.jogSpeed))
+local jogSpeedKnob = window:addChild(newKnob(72, 16, config.jogSpeed))
 
 jogSpeedKnob.onValueChanged = function()
 	config.jogSpeed = jogSpeedKnob.value
 	saveConfig()
 end
-
--- Speed adjust
-local speedAdjustKnob = window:addChild(newKnob(72, 12, 0))
-
--- Release start
-local releaseStartKnob = window:addChild(newKnob(72, 16, 0))
 
 -------------------------------- Pref/next tape button ------------------------------------------------
 
@@ -1202,10 +1217,10 @@ masterTempoButton.switchMode = true
 masterTempoButton:press()
 
 tempoButton.onTouch = function()
-	tapeConfig.speedIndex = tapeConfig.speedIndex + 1
+	config.speedIndex = config.speedIndex + 1
 
-	if tapeConfig.speedIndex > 3 then
-		tapeConfig.speedIndex = 1
+	if config.speedIndex > 3 then
+		config.speedIndex = 1
 	end
 
 	updateCurrentTapeSpeed()
