@@ -17,8 +17,6 @@ local iconImageWidth = 8
 local iconImageHeight = 4
 
 local bootUptime = computer.uptime()
-local dateUptime = bootUptime
-local screensaverUptime = bootUptime
 
 local user
 local userSettings
@@ -86,6 +84,7 @@ function system.getDefaultUserSettings()
 		networkFTPConnections = {},
 		
 		interfaceScreenAddress = nil,
+		interfaceScreenUpdateInterval = 1,
 		interfaceWallpaperEnabled = false,
 		interfaceWallpaperPath = paths.system.pictures .. "Space.pic",
 		interfaceWallpaperMode = 1,
@@ -133,7 +132,7 @@ function system.getDefaultUserSettings()
 			[".txt"] = filesystem.path(paths.system.applicationMineCodeIDE),
 			[".lang"] = filesystem.path(paths.system.applicationMineCodeIDE),
 			[".pic"] = filesystem.path(paths.system.applicationPictureView),
-			[".3dm"] = paths.system.applications .. "3D Print.app/"
+			[".3dm"] = filesystem.path(paths.system.applicationPrint3D)
 		},
 	}
 end
@@ -180,11 +179,13 @@ function system.getLocalization(pathToLocalizationFolder)
 
 	-- Final choose
 	if filesystem.exists(required) then
-		local reql = filesystem.readTable(required)
-		for k,v in pairs(firstAvailable) do
-			if not reql[k] then reql[k] = v end
+		local requestedLocalization = filesystem.readTable(required)
+
+		for k, v in pairs(firstAvailable) do
+			if not requestedLocalization[k] then requestedLocalization[k] = v end
 		end
-		readyLocalization = reql
+		
+		readyLocalization = requestedLocalization
 	else
 		readyLocalization = firstAvailable
 	end
@@ -238,6 +239,7 @@ function system.parseArguments(...)
 				end
 
 				table.remove(arguments, i)
+
 				i = i - 1
 			end
 		end
@@ -2323,13 +2325,16 @@ function system.updateWallpaper()
 
 	if userSettings.interfaceWallpaperEnabled and userSettings.interfaceWallpaperPath then
 		local extension = filesystem.extension(userSettings.interfaceWallpaperPath)
+		
 		if extension == ".pic" then
 			local result, reason = image.load(userSettings.interfaceWallpaperPath)
+			
 			if result then
 				-- Fit to screen size mode
 				if userSettings.interfaceWallpaperMode == 1 then
 					result = image.transform(result, desktopBackground.width, desktopBackground.height)
 					desktopBackgroundWallpaperX, desktopBackgroundWallpaperY = 1, 2
+				
 				-- Centerized mode
 				else
 					desktopBackgroundWallpaperX = math.floor(1 + desktopBackground.width / 2 - image.getWidth(result) / 2)
@@ -2338,6 +2343,7 @@ function system.updateWallpaper()
 
 				-- Brightness adjustment
 				local brightness, background, foreground, alpha, symbol, r, g, b = userSettings.interfaceWallpaperBrightness
+				
 				for y = 1, image.getHeight(result) do
 					for x = 1, image.getWidth(result) do
 						background, foreground, alpha, symbol = image.get(result, x, y)
@@ -2367,11 +2373,15 @@ function system.updateWallpaper()
 			else
 				GUI.alert(reason or "image file is corrupted")
 			end
+		
+			userSettings.interfaceScreenUpdateInterval = 1
+
 		elseif extension == ".lua" then
 			local result, reason = loadfile(userSettings.interfaceWallpaperPath)
 
 			if result then
 				result, functionOrReason = xpcall(result, debug.traceback)
+				
 				if result then
 					if type(functionOrReason) == "function" then
 						desktopBackground.draw = functionOrReason
@@ -2384,7 +2394,11 @@ function system.updateWallpaper()
 			else
 				GUI.alert(reason)
 			end
+
+			userSettings.interfaceScreenUpdateInterval = 0.01
 		end
+	else
+		userSettings.interfaceScreenUpdateInterval = 1
 	end
 end
 
@@ -2802,6 +2816,8 @@ function system.updateDesktop()
 	end
 
 	local lastWindowHandled
+	local dateDeadline = bootUptime + 1
+	local screensaverUptime = bootUptime
 	
 	workspace.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "key_down" then
@@ -2836,25 +2852,25 @@ function system.updateDesktop()
 			end
 		end
 
-		if computer.uptime() - dateUptime >= 1 then
+		if computer.uptime() >= dateDeadline then
 			system.updateMenuWidgets()
 			workspace:draw()
 
-			dateUptime = computer.uptime()
+			dateDeadline = computer.uptime() + userSettings.interfaceScreenUpdateInterval
 		end
 
 		if userSettings.interfaceScreensaverEnabled then
 			if e1 then
 				screensaverUptime = computer.uptime()
-			end
+			else
+				if computer.uptime() >= screensaverUptime + userSettings.interfaceScreensaverDelay then
+					if filesystem.exists(userSettings.interfaceScreensaverPath) then
+						system.execute(userSettings.interfaceScreensaverPath)
+						workspace:draw()
+					end
 
-			if dateUptime - screensaverUptime >= userSettings.interfaceScreensaverDelay then
-				if filesystem.exists(userSettings.interfaceScreensaverPath) then
-					system.execute(userSettings.interfaceScreensaverPath)
-					workspace:draw(true)
+					screensaverUptime = computer.uptime()
 				end
-
-				screensaverUptime = computer.uptime()
 			end
 		end
 	end
@@ -3034,6 +3050,7 @@ function system.authorize()
 		if filesystem.exists(paths.user.settings) then
 			userSettings = filesystem.readTable(paths.user.settings)
 
+			-- Copying missing default settings (for outdated config files)
 			for key, value in pairs(system.getDefaultUserSettings()) do
 				if userSettings[key] == nil then
 					userSettings[key] = value
