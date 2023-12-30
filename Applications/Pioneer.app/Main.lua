@@ -14,6 +14,26 @@ local event = require("Event")
 
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 
+local configPath = paths.user.applicationData .. "Pioneer/Config.cfg"
+local config
+
+if filesystem.exists(configPath) then
+	config = filesystem.readTable(configPath)
+else
+	config = {
+		tapes = {
+
+		},
+		lastTape = nil
+	}
+end
+
+local function saveConfig()
+	filesystem.writeTable(configPath, config)
+end
+
+--------------------------------------------------------------------------------
+
 local function loadImage(name)
 	local result, reason = image.load(currentScriptDirectory .. "Images/" .. name .. ".pic")
 
@@ -25,62 +45,92 @@ local function loadImage(name)
 end
 
 local speedSlider
-local speedMin = 0.25
-local speedMax = 1.75
 
-local bpmMin = 40
-local bpmMax = 200
+local blinkState = false
+local blinkUptime = 0
+local blinkInterval = 0.5
 
 local powerButton
 
 local tapes
 local tapeIndex
-local tape
+local tape, tapeConfig
 local tapeWritingProgress
 
+local function invoke(...)
+	return component.invoke(tape.address, ...)
+end
+
+local function getCurrentTapeSpeed()
+	local speed = 2 * speedSlider.value - 1
+
+	if tapeConfig.speedIndex == 0 then
+		speed = speed * 0.25
+	elseif tapeConfig.speedIndex == 1 then
+		speed = speed * 0.5
+	elseif tapeConfig.speedIndex == 2 then
+		speed = speed * 0.75
+	end
+
+	return speed
+end
+
 local function updateCurrentTapeSpeed()
-	component.invoke(tape.address, "setSpeed", speedMin + tape.speed * (speedMax - speedMin))
+	local speed = getCurrentTapeSpeed()
+
+	invoke("setSpeed", 1 + speed * 0.75)
 end
 
 local function updateCurrentTape()
 	tape = tapes[tapeIndex]
-	speedSlider.value = tape.speed
+	tapeConfig = config.tapes[tape.address]
+	speedSlider.value = tapeConfig.speed
+	config.lastTape = tape.address
 
 	updateCurrentTapeSpeed()
-end
-
-local function incrementTape(next)
-	tapeIndex = tapeIndex + (next and 1 or -1)
-
-	if tapeIndex > #tapes then
-		tapeIndex = 1
-	elseif tapeIndex < 1 then
-		tapeIndex = #tapes
-	end
-
-	updateCurrentTape()
 end
 
 local function updateTapes()
  	tapes = {}
  	tapeIndex = 1
+ 	tape = nil
+ 	tapeConfig = nil
+
+ 	local counter = 1
 
  	for address in component.list("tape_drive") do
  		table.insert(tapes, {
  			address = address,
- 			size = component.invoke(address, "getSize"),
- 			speed = 0.5,
- 			cues = {},
+ 			size = component.invoke(address, "getSize")
  		})
+
+ 		if not config.tapes[address] then
+ 			config.tapes[address] = {
+ 				speed = 0.5,
+ 				speedIndex = 0,
+ 				cue = 0,
+ 				cues = {},
+ 				cueIndex = 1,
+ 				hotCues = {}
+ 			}
+ 		end
+
+ 		if config.lastTape == address then
+ 			tapeIndex = counter
+ 		end
+
+ 		counter = counter + 1
  	end
 
- 	updateCurrentTape()
+ 	if #tapes > 0 then
+ 		updateCurrentTape()
+ 	end
 end
 
 -------------------------------- Round mini button ------------------------------------------------
 
 local function roundMiniButtonDraw(button)
-	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x0
+	local bg, fg = button.animationCurrentBackground, (powerButton.pressed or button.ignoresPower) and button.animationCurrentText or 0x0
 
 	-- Background
 	screen.drawRectangle(button.x + 1, button.y + 1, button.width - 2, button.height - 2, bg, fg, " ")
@@ -119,7 +169,7 @@ end
 
 
 local function roundTinyButtonDraw(button)
-	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x0
+	local bg, fg = button.animationCurrentBackground, (powerButton.pressed or button.ignoresPower) and button.animationCurrentText or 0x0
 
 	-- Left
 	screen.drawText(button.x, button.y, bg, "⢰")
@@ -133,18 +183,6 @@ local function roundTinyButtonDraw(button)
 
 	-- Lower
 	screen.drawText(button.x, button.y + 1, bg, "⠈⠛⠛⠁")
-
-	-- -- Left
-	-- screen.drawText(button.x, button.y, bg, "⣾")
-
-	-- -- Middle
-	-- screen.set(button.x + 1, button.y, bg, fg, "⠄")
-
-	-- -- Right
-	-- screen.drawText(button.x + 2, button.y, bg, "⡆")
-
-	-- -- Lower
-	-- screen.drawText(button.x, button.y + 1, bg, "⠈⠉")
 end
 
 local function newRoundTinyButton(x, y, ...)
@@ -156,91 +194,6 @@ local function newRoundTinyButton(x, y, ...)
 	return button
 end
 
--------------------------------- UpperButtons ------------------------------------------------
-
-local function upperButtonDraw(button)
-	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x0
-
-	-- Background
-	screen.drawRectangle(button.x + 1, button.y + 1, button.width - 2, button.height - 2, bg, fg, " ")
-
-	-- Upper
-	screen.drawText(button.x, button.y, fg, "⢀" .. string.rep("⣀", button.width - 2) .. "⡀")
-
-	-- Left
-	screen.drawText(button.x, button.y + 1, fg, "⢸")
-
-	-- Middle
-	screen.drawText(math.floor(button.x + button.width / 2 - unicode.len(button.text) / 2), button.y + 1, fg, button.text)
-
-	-- Right
-	screen.drawText(button.x + button.width - 1, button.y + 1, fg, "⡇")
-
-	-- Lower
-	screen.drawText(button.x, button.y + button.height - 1, fg, "⠈" .. string.rep("⠉", button.width - 2) .. "⠁")
-
-end
-
-local function upperButtonEventHandler(workspace, button, e1, e2, e3, e4, e5)
-	if e1 == "touch" and powerButton.pressed then
-		button:press()
-	end
-end
-
-local function newUpperButton(x, y, width, ...)
-	local button = GUI.button(x, y, width, 3, ...)
-
-	button.pressed = false
-	button.draw = upperButtonDraw
-	button.eventHandler = upperButtonEventHandler
-
-	return button
-end
-
--------------------------------- Round mini button ------------------------------------------------
-
-local function hotCueButtonDraw(button)
-	local bg, fg = button.animationCurrentBackground, powerButton.pressed and button.animationCurrentText or 0x2D2D2D
-
-	-- Upper
-	screen.drawText(button.x, button.y, bg, "⢀" .. string.rep("⣀", button.width - 2) .. "⡀")
-
-	-- Left
-	screen.drawText(button.x, button.y + 1, bg, "⢸")
-
-	-- Middle
-	screen.set(button.x + 1, button.y + 1, 0x2D2D2D, 0x5A5A5A, "⣤")
-	screen.set(button.x + 2, button.y + 1, bg, 0x787878, "⠤")
-
-	screen.set(button.x + 3, button.y + 1, bg, fg, button.text)
-
-	screen.set(button.x + 4, button.y + 1, bg, 0x787878, "⠒")
-	screen.set(button.x + 5, button.y + 1, 0x2D2D2D, 0x5A5A5A, "⠛")
-
-	-- Right
-	screen.drawText(button.x + button.width - 1, button.y + 1, bg, "⡇")
-
-	-- Lower
-	screen.drawText(button.x, button.y + button.height - 1, bg, "⠈" .. string.rep("⠉", button.width - 2) .. "⠁")
-
-end
-
-local function hotCueButtonEventHandler(workspace, button, e1, e2, e3, e4, e5)
-	if e1 == "touch" then
-		button:press()
-	end
-end
-
-local function newHotCueButton(x, y, defaultForeground, pressedForeground, text)
-	local button = GUI.button(x, y, 7, 3, 0x1E1E1E, defaultForeground, 0x0, pressedForeground, text)
-
-	button.draw = hotCueButtonDraw
-	button.eventHandler = hotCueButtonEventHandler
-
-	return button
-end
-
-
 -------------------------------- Window ------------------------------------------------
 
 local backgroundImage = loadImage("Background")
@@ -248,7 +201,6 @@ local backgroundImage = loadImage("Background")
 local workspace, window, menu = system.addWindow(GUI.window(1, 1, 78, 49))
 
 window.drawShadow = false
-
 
 
 -------------------------------- Jog ------------------------------------------------
@@ -259,17 +211,12 @@ for i = 1, 12 do
 	jogImages[i] = loadImage("Jog" .. i)
 end
 
+-------------------------------- Overlay ------------------------------------------------
 
-local function getIsPlaying()
-	return component.invoke(tape.address, "getState") == "PLAYING"
-end
-
--------------------------------- Background ------------------------------------------------
-
-local windowBackground = window:addChild(GUI.object(1, 1, window.width, window.height))
+local overlay = window:addChild(GUI.object(1, 1, window.width, window.height))
 
 local currentJogIndex = 1
-local displayWidth, displayHeight = 33, 9
+local displayWidth, displayHeight = 33, 10
 
 local function displayDrawProgressBar(x, y, width, progress)
 	local progressActiveWidth = math.floor(progress * width)
@@ -278,9 +225,8 @@ local function displayDrawProgressBar(x, y, width, progress)
 	screen.drawText(x + progressActiveWidth, y, 0x4B4B4B, string.rep("━", width - progressActiveWidth))
 end
 
-windowBackground.draw = function(windowBackground)
-	-- Background
-	screen.drawImage(windowBackground.x, windowBackground.y, backgroundImage)
+overlay.draw = function(overlay)
+	screen.drawImage(overlay.x, overlay.y, backgroundImage)
 	
 	-- Ignoring if power is off
 	if not powerButton.pressed then
@@ -288,21 +234,18 @@ windowBackground.draw = function(windowBackground)
 	end
 
 	-- Power indicator
-	screen.drawText(windowBackground.x + 73, windowBackground.y + 3, 0xFF0000, "●")
+	screen.drawText(overlay.x + 73, overlay.y + 3, 0xFF0000, "●")
 
 	-- Speed slider indicator
-	screen.drawText(windowBackground.x + 68, windowBackground.y + 39, 0xFFDB40, "⠆")
+	screen.drawText(overlay.x + 68, overlay.y + 39, 0xFFDB40, "⠆")
 
 	-- Jog
-	screen.drawImage(windowBackground.x + 33, windowBackground.y + 29, jogImages[currentJogIndex])
+	screen.drawImage(overlay.x + 33, overlay.y + 29, jogImages[currentJogIndex])
 
 	-- Display
-	local displayX, displayY = windowBackground.x + 22, windowBackground.y + 3
-	local displayUpperText
+	local displayX, displayY = overlay.x + 22, overlay.y + 3
 
 	if tapeWritingProgress then
-		displayUpperText = "Writing in progress"
-
 		local progressWidth = displayWidth - 4
 
 		displayDrawProgressBar(
@@ -311,38 +254,104 @@ windowBackground.draw = function(windowBackground)
 			progressWidth,
 			tapeWritingProgress
 		)
-	else
-		-- UpperText
-		displayUpperText = component.invoke(tape.address, "getLabel")
 
-		if not displayUpperText or #displayUpperText == 0 then
-			displayUpperText = "Untitled tape"
+		-- UpperText
+		local text = "Writing in progress"
+
+		screen.drawText(
+			math.floor(displayX + displayWidth / 2 - #text / 2),
+			displayY + 1,
+			0xE1E1E1,
+			text
+		)
+	else
+		-- Label
+		local label = tape and invoke("getLabel") or "No tape"
+
+		if not label or #label == 0 then
+			label = "Untitled tape"
 		end
 
-		-- BPM
-		local bpmText = tostring(math.floor(bpmMin + speedSlider.value * (bpmMax - bpmMin))) .. " bpm"
-		local bpmWidth = #bpmText + 4
-		
-		local bpmX = displayX + displayWidth - 2 - bpmWidth
-		local bpmY = displayY + displayHeight - 5
+		screen.drawRectangle(displayX, displayY, displayWidth, 1, 0x004980, 0xE1E1E1, " ")
+		screen.drawText(displayX + 1, displayY, 0xE1E1E1, text.limit("♪ " .. label, displayWidth - 3))
 
-		screen.drawFrame(bpmX, bpmY, bpmWidth, 3, 0xE1E1E1)
-		screen.drawText(bpmX + 2, bpmY + 1, 0xE1E1E1, bpmText)
+		if tape then
+			-- Stats
+			local position = invoke("getPosition")
+			local statsX = displayX + 2
+			local statsY = displayY + displayHeight - 5
 
-		-- Lower track
-		local progressWidth = displayWidth - 4
+			-- Track index
+			screen.drawText(statsX, statsY, 0xE1E1E1, "Track")
+			screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
 
-		displayDrawProgressBar(
-			math.floor(displayX + displayWidth / 2 - progressWidth / 2),
-			displayY + displayHeight - 2,
-			progressWidth,
-			tape.size == 0 and 0 or component.invoke(tape.address, "getPosition") / tape.size
-		)
+			-- Time
+			local timeSecondsTotal = position / (1500 * 4)
+			local timeMinutes = math.floor(timeSecondsTotal / 60)
+			local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
+			screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000)))
+
+			-- Tempo
+			screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
+			screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getCurrentTapeSpeed() * 100)) .. "%")
+
+			-- Tempo index
+
+			-- Track
+			local trackWidth = displayWidth - 4
+			local trackHeight = 3
+			statsY = statsY + 2
+
+			screen.drawRectangle(
+				statsX,
+				statsY + 1,
+				trackWidth,
+				trackHeight - 2,
+				0x2D2D2D,
+				0xE1E1E1,
+				" "
+			)
+
+			screen.drawText(
+				math.floor(statsX + (tape.size == 0 and 0 or position / tape.size) * trackWidth),
+				statsY + 1,
+				0xE1E1E1,
+				"│"
+			)
+
+			-- Memory cues
+			local cueY = statsY
+
+			for i = 1, #tapeConfig.cues do
+				screen.drawText(
+					statsX + math.floor(tapeConfig.cues[i] / tape.size * trackWidth),
+					cueY,
+					i == tapeConfig.cueIndex and 0xE1E1E1 or 0xCC0000,
+					"•"
+				)
+			end
+
+			-- Hot cues
+			for name, position in pairs(tapeConfig.hotCues) do
+				screen.drawText(
+					statsX + math.floor(position / tape.size * trackWidth),
+					cueY,
+					0x66FF40,
+					"•" .. name
+				)
+			end
+
+			-- Current cue
+			cueY = statsY + trackHeight - 1
+
+			screen.drawText(
+				statsX + math.floor(tapeConfig.cue / tape.size * trackWidth),
+				cueY,
+				0xFFB640,
+				"•"
+			)
+		end
 	end
-
-	-- UpperText
-	displayUpperText = text.limit(displayUpperText, displayWidth - 2)
-	screen.drawText(math.floor(displayX + displayWidth / 2 - #displayUpperText / 2), displayY + 1, 0xE1E1E1, displayUpperText)
 end
 
 -------------------------------- Power button ------------------------------------------------
@@ -376,12 +385,8 @@ end
 
 -------------------------------- ImageButton ------------------------------------------------
 
-local imageButtonBlink = false
-local imageButtonBlinkUptime = 0
-local imageButtonBlinkInterval = 0.5
-
 local function imageButtonDraw(button)
-	screen.drawImage(button.x, button.y, (powerButton.pressed and (not button.blinking or imageButtonBlink)) and button.imageOn or button.imageOff)
+	screen.drawImage(button.x, button.y, (powerButton.pressed and (not button.blinking or blinkState)) and button.imageOn or button.imageOff)
 end
 
 local function newImageButton(x, y, width, height, name)
@@ -400,42 +405,116 @@ end
 
 local speedSliderImage = loadImage("SpeedSlider")
 
-speedSlider = window:addChild(GUI.object(71, 33, 5, 14))
+speedSlider = window:addChild(GUI.object(71, 33, 5, 15))
+speedSlider.value = 0.5
 
 speedSlider.draw = function(speedSlider)
 	-- screen.drawRectangle(speedSlider.x, speedSlider.y, speedSlider.width, speedSlider.height, 0xFF0000, 0x0, " ")
 
 	local x = speedSlider.x
-	local y = speedSlider.y + math.floor((1 - speedSlider.value) * (speedSlider.height - image.getHeight(speedSliderImage) / 2))
+	local y = speedSlider.y + math.floor((1 - speedSlider.value) * speedSlider.height) - math.floor((1 - speedSlider.value) * 3)
 
 	screen.drawImage(x, y, speedSliderImage)
 end
 
 speedSlider.eventHandler = function(workspace, speedSlider, e1, e2, e3, e4)
-	if e1 == "touch" or e1 == "drag" then
-		speedSlider.value = 1 - ((e4 - speedSlider.y) / speedSlider.height)
-		tape.speed = speedSlider.value
+	if (e1 == "touch" or e1 == "drag") then
+		if e4 == speedSlider.y + speedSlider.height - 1 then
+			speedSlider.value = 0
+		elseif e4 == math.floor(speedSlider.y + speedSlider.height / 2) then
+			speedSlider.value = 0.5
+		else
+			speedSlider.value = 1 - ((e4 - speedSlider.y) / speedSlider.height)
+		end
 
-		updateCurrentTapeSpeed()
+		if tape and powerButton.pressed then
+			tapeConfig.speed = speedSlider.value
+
+			updateCurrentTapeSpeed()
+		end
 
 		workspace:draw()
 	end
 end
 
--------------------------------- File/url/label upper buttons ------------------------------------------------
+-------------------------------- Display buttons ------------------------------------------------
 
-local _ = window:addChild(newUpperButton(14, 1, 7, 0x1E1E1E, 0xF0F0F0, 0x0F0F0F, 0xA5A5A5, "Help"))
-local urlUpperButton = window:addChild(newUpperButton(14, 4, 7, 0x1E1E1E, 0x3349FF, 0x0F0F0F, 0x002480, "Url"))
-local fileUpperButton = window:addChild(newUpperButton(14, 7, 7, 0x1E1E1E, 0xFFDB40, 0x0F0F0F, 0x996D00, "File"))
+local function displayButtonDraw(button)
+	local bg, fg = button.animationCurrentBackground, (powerButton.pressed or button.ignoresPower) and button.animationCurrentText or 0x4B4B4B
 
-local _ = window:addChild(newRoundTinyButton(14, 12, 0x0F0F0F, 0xFF0000, 0x0F0F0F, 0xFF0000, "⢠⡄"))
-local _ = window:addChild(newRoundTinyButton(18, 12, 0x0F0F0F, 0x2D2D2D, 0x0F0F0F, 0x2D2D2D, "⢠⡄"))
+	-- Background
+	screen.drawRectangle(button.x + 1, button.y + 1, button.width - 2, button.height - 2, bg, fg, " ")
 
-local labelUpperButton = window:addChild(newUpperButton(23, 1, 9, 0x1E1E1E, 0xFFDB40, 0x0F0F0F, 0x996D00, "Label"))
-local _ = window:addChild(newUpperButton(33, 1, 9, 0x1E1E1E, 0xFFDB40, 0x0F0F0F, 0x996D00, " "))
-local _ = window:addChild(newUpperButton(43, 1, 9, 0x1E1E1E, 0xFFDB40, 0x0F0F0F, 0x996D00, " "))
+	-- Upper
+	screen.drawText(button.x, button.y, fg, "⢀" .. string.rep("⣀", button.width - 2) .. "⡀")
 
-fileUpperButton.onTouch = function()
+	-- Left
+	screen.drawText(button.x, button.y + 1, fg, "⢸")
+
+	-- Middle
+	screen.drawText(math.floor(button.x + button.width / 2 - unicode.len(button.text) / 2), button.y + 1, fg, button.text)
+
+	-- Right
+	screen.drawText(button.x + button.width - 1, button.y + 1, fg, "⡇")
+
+	-- Lower
+	screen.drawText(button.x, button.y + button.height - 1, fg, "⠈" .. string.rep("⠉", button.width - 2) .. "⠁")
+
+end
+
+local function newDisplayButton(x, y, width, ...)
+	local button = GUI.button(x, y, width, 3, ...)
+
+	button.pressed = false
+	button.draw = displayButtonDraw
+
+	return button
+end
+
+local helpButton = window:addChild(newDisplayButton(14, 1, 7, 0x0F0F0F, 0xF0F0F0, 0x0, 0xA5A5A5, "Help"))
+helpButton.onTouch = function()
+	if not powerButton.pressed then
+		return
+	end
+
+	local container = GUI.addBackgroundContainer(workspace, true, true, "Help")
+	container.layout:removeChildren()
+	
+	local lines = {
+		"Pioneer CDJ-2000 nexus",
+		" ",
+		"Pro-grade digital DJ deck for Computronix",
+		"tape drives and DFPWM audio codec.",
+		"To convert your favorite tracks, use",
+		"https://music.madefor.cc",
+		" ",
+		"Designed by Pioneer Corporation in Japan",
+		" ",
+		"Developed and adapted for MineOS by",
+		"Igor Timofeev, vk.com/id7799889",
+		"Maxim Afonin, @140bpmdubstep"
+	}
+
+	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
+	textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	textBox.eventHandler = container.panel.eventHandler
+
+	workspace:draw()
+end
+
+local closeButton = window:addChild(newDisplayButton(14, 4, 7, 0x0F0F0F, 0x4B4B4B, 0x0, 0x3349FF, "Close"))
+closeButton.onTouch = function()
+	window:remove()
+end
+
+local wipeButton = window:addChild(newDisplayButton(14, 7, 7, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "Wipe"))
+
+local fileButton = window:addChild(newDisplayButton(23, 1, 10, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "File"))
+fileButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Confirm", "Cancel", "File name", "/")
 	
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
@@ -444,7 +523,7 @@ fileUpperButton.onTouch = function()
 	filesystemDialog:show()
 
 	filesystemDialog.onSubmit = function(path)
-		local tapeSpaceFree = tape.size - component.invoke(tape.address, "getPosition")
+		local tapeSpaceFree = tape.size - invoke("getPosition")
 		local fileSize = filesystem.size(path)
 
 		if fileSize > tapeSpaceFree then
@@ -454,7 +533,7 @@ fileUpperButton.onTouch = function()
 		
 		local file = filesystem.open(path, "rb")
 
-		component.invoke(tape.address, "stop")
+		invoke("stop")
 
 		local bytesWritten, chunk = 0
 		while true do
@@ -464,12 +543,12 @@ fileUpperButton.onTouch = function()
 				break
 			end
 
-			if not component.invoke(tape.address, "isReady") then
+			if not invoke("isReady") then
 				GUI.alert("Tape was removed during writing")
 				break
 			end
 
-			component.invoke(tape.address, "write", chunk)
+			invoke("write", chunk)
 
 			bytesWritten = bytesWritten + #chunk
 			tapeWritingProgress = bytesWritten / fileSize
@@ -477,19 +556,25 @@ fileUpperButton.onTouch = function()
 		end
 
 		file:close()
-		component.invoke(tape.address, "seek", -tape.size)
+		invoke("seek", -tape.size)
 		tapeWritingProgress = nil
 	end
 end
 
-urlUpperButton.onTouch = function()
+local urlButton = window:addChild(newDisplayButton(34, 1, 10, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "Url"))
+
+local labelButton = window:addChild(newDisplayButton(45, 1, 10, 0x0F0F0F, 0x4B4B4B, 0x0, 0xFFDB40, "Label"))
+labelButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
 	local container = GUI.addBackgroundContainer(workspace, true, true, title)
 	
-	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "Url", false))
+	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, invoke("getLabel") or "", "New label", false))
 
 	input.onInputFinished = function()
-		
-
+		invoke("setLabel", input.text)
 		workspace:draw()
 	end
 
@@ -499,46 +584,28 @@ urlUpperButton.onTouch = function()
 	end
 
 	workspace:draw()
-
-	return container
 end
 
-labelUpperButton.onTouch = function()
-	local container = GUI.addBackgroundContainer(workspace, true, true, title)
-	
-	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, component.invoke(tape.address, "getLabel") or "", "New label", false))
+-------------------------------- Quantize/time buttons ------------------------------------------------
 
-	input.onInputFinished = function()
-		component.invoke(tape.address, "setLabel", input.text)
-		workspace:draw()
-	end
-
-	container.panel.onTouch = function()
-		container:remove()
-		workspace:draw()
-	end
-
-	workspace:draw()
-
-	return container
-end
+local _ = window:addChild(newRoundTinyButton(14, 12, 0x0F0F0F, 0xFF0000, 0x0F0F0F, 0xFF0000, "⢠⡄"))
+local _ = window:addChild(newRoundTinyButton(18, 12, 0x0F0F0F, 0x2D2D2D, 0x0F0F0F, 0x2D2D2D, "⢠⡄"))
 
 -------------------------------- Needle search ------------------------------------------------
 
 local needleSearch = window:addChild(GUI.object(25, 15, 29, 2))
 
 needleSearch.draw = function()
-	-- screen.drawRectangle(needleSearch.x, needleSearch.y, needleSearch.width, needleSearch.height, 0xFF0000, 0x0, " ")
-
 	screen.drawText(needleSearch.x, needleSearch.y, powerButton.pressed and 0xE1E1E1 or 0x0, "▲ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ╷ ▲")
 end
 
 needleSearch.eventHandler = function(workspace, needleSearch, e1, e2, e3, e4)
-	if e1 == "touch" and powerButton.pressed and tape then
-		local position = component.invoke(tape.address, "getPosition")
+	if (e1 == "touch" or e1 == "drag") and powerButton.pressed and tape then
 		local newPosition = math.floor((e3 - needleSearch.x) / needleSearch.width * tape.size)
 
-		component.invoke(tape.address, "seek", newPosition - position)
+		invoke("seek", newPosition - invoke("getPosition"))
+
+		workspace:draw()
 	end
 end
 
@@ -546,6 +613,23 @@ end
 
 local previousTapeButton = window:addChild(newRoundMiniButton(2, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
 local nextTapeButton = window:addChild(newRoundMiniButton(7, 30, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
+
+local function incrementTape(next)
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	tapeIndex = tapeIndex + (next and 1 or -1)
+
+	if tapeIndex > #tapes then
+		tapeIndex = 1
+	elseif tapeIndex < 1 then
+		tapeIndex = #tapes
+	end
+
+	updateCurrentTape()
+	saveConfig()
+end
 
 previousTapeButton.onTouch = function()
 	incrementTape(false)
@@ -570,13 +654,11 @@ end
 
 -------------------------------- Hot cue buttons ------------------------------------------------
 
-local hotCueButtonA = window:addChild(newHotCueButton(3, 13, 0x66FF40, 0x336D00, "A"))
-local hotCueButtonB = window:addChild(newHotCueButton(3, 16, 0xFFB600, 0x664900, "B"))
-local hotCueButtonB = window:addChild(newHotCueButton(3, 19, 0xFF2440, 0x660000, "C"))
-local hotCueSaveLoad = window:addChild(newHotCueButton(3, 23, 0x0F0F0F, 0x000000, "⠰⠆"))
+local hotCueRecCallButton
 
-hotCueSaveLoad.draw = function(button)
-	local bg, fg = button.animationCurrentBackground, button.animationCurrentText
+local function hotCueButtonDraw(button)
+	local bg = button.animationCurrentBackground
+	local fg = (powerButton.pressed and tape and (hotCueRecCallButton.rec or tapeConfig.hotCues[button.text])) and button.animationCurrentText or 0x2D2D2D
 
 	-- Upper
 	screen.drawText(button.x, button.y, bg, "⢀" .. string.rep("⣀", button.width - 2) .. "⡀")
@@ -585,22 +667,80 @@ hotCueSaveLoad.draw = function(button)
 	screen.drawText(button.x, button.y + 1, bg, "⢸")
 
 	-- Middle
-	screen.set(button.x + 1, button.y + 1, 0x2D2D2D, fg, " ")
-	screen.set(button.x + 2, button.y + 1, 0x2D2D2D, fg, " ")
-	screen.set(button.x + 3, button.y + 1, 0x2D2D2D, fg, "⠶")
-	screen.set(button.x + 4, button.y + 1, 0x2D2D2D, fg, " ")
-	screen.set(button.x + 5, button.y + 1, 0x2D2D2D, fg, " ")
+	screen.set(button.x + 1, button.y + 1, 0x2D2D2D, 0x5A5A5A, "⣤")
+	screen.set(button.x + 2, button.y + 1, bg, 0x787878, "⠤")
+
+	screen.set(button.x + 3, button.y + 1, bg, fg, button.text)
+
+	screen.set(button.x + 4, button.y + 1, bg, 0x787878, "⠒")
+	screen.set(button.x + 5, button.y + 1, 0x2D2D2D, 0x5A5A5A, "⠛")
 
 	-- Right
 	screen.drawText(button.x + button.width - 1, button.y + 1, bg, "⡇")
 
 	-- Lower
 	screen.drawText(button.x, button.y + button.height - 1, bg, "⠈" .. string.rep("⠉", button.width - 2) .. "⠁")
+
 end
 
+local hotCueButtons = {}
 
-hotCueButtonA.onTouch = function()
-	
+local function newHotCueButton(x, y, index, text)
+	local button = GUI.button(x, y, 7, 3, 0x1E1E1E, 0x66FF40, 0x0, 0x336D00, text)
+
+	button.draw = hotCueButtonDraw
+
+	button.onTouch = function()
+		if not tape or not powerButton.pressed then
+			return
+		end
+
+		local hotCuePosition = tapeConfig.hotCues[button.text]
+
+		if hotCueRecCallButton.rec then
+			local position = invoke("getPosition")
+			tapeConfig.hotCues[button.text] = (not hotCuePosition or hotCuePosition ~= position) and position or nil
+
+			workspace:draw()
+			saveConfig()
+
+		elseif hotCuePosition then
+			invoke("seek", hotCuePosition - invoke("getPosition"))
+			workspace:draw()
+		end
+	end
+
+	table.insert(hotCueButtons, button)
+
+	return button
+end
+
+-- local hotCueButtonA = window:addChild(newHotCueButton(3, 13, 0x66FF40, 0x336D00, "A"))
+-- local hotCueButtonB = window:addChild(newHotCueButton(3, 16, 0xFFB600, 0x664900, "B"))
+-- local hotCueButtonB = window:addChild(newHotCueButton(3, 19, 0xFF2440, 0x660000, "C"))
+
+local hotCueButtonA = window:addChild(newHotCueButton(3, 13, 1, "A"))
+local hotCueButtonB = window:addChild(newHotCueButton(3, 16, 2, "B"))
+local hotCueButtonB = window:addChild(newHotCueButton(3, 19, 3, "C"))
+
+hotCueRecCallButton = window:addChild(GUI.button(3, 23, 7, 3, 0x1E1E1E, 0x1E1E1E, 0x0, 0x0, "⠶"))
+hotCueRecCallButton.rec = false
+hotCueRecCallButton.draw = hotCueButtonDraw
+hotCueRecCallButton.onTouch = function()
+	hotCueRecCallButton.rec = not hotCueRecCallButton.rec
+
+	-- Updating buttons color scheme
+	local button
+
+	for i = 1, #hotCueButtons do
+		button = hotCueButtons[i]
+
+		button.colors.default.text = hotCueRecCallButton.rec and 0xFF2440 or 0x66FF40
+		button.colors.pressed.text = hotCueRecCallButton.rec and 0x660000 or 0x336D00
+		button.animationCurrentText = button.colors.default.text
+	end
+
+	workspace:draw()
 end
 
 -------------------------------- Loop buttons ------------------------------------------------
@@ -669,36 +809,148 @@ loopButtonIn.onTouch = function()
 	
 end
 
--------------------------------- Cue button ------------------------------------------------
+-------------------------------- Cue memory buttons ------------------------------------------------
+
+local function incrementCueIndex(value)
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	if #tapeConfig.cues == 0 then
+		tapeConfig.cueIndex = 1
+		return
+	end
+
+	tapeConfig.cueIndex = tapeConfig.cueIndex + value
+
+	if tapeConfig.cueIndex < 1 then
+		tapeConfig.cueIndex = #tapeConfig.cues
+	elseif tapeConfig.cueIndex > #tapeConfig.cues then
+		tapeConfig.cueIndex = 1
+	end
+
+	tapeConfig.cue = tapeConfig.cues[tapeConfig.cueIndex]
+
+	-- invoke("stop")
+	invoke("seek", tapeConfig.cue - invoke("getPosition"))
+
+	saveConfig()
+end
+
+local cuePrevButton = window:addChild(newRoundTinyButton(50, 18, 0x0F0F0F, 0xFFB640, 0x0, 0x996D00, "⢔ "))
+cuePrevButton.onTouch = function()
+	incrementCueIndex(-1)
+end
+
+local cueNextButton = window:addChild(newRoundTinyButton(54, 18, 0x0F0F0F, 0xFFB640, 0x0, 0x996D00, " ⡢"))
+cueNextButton.onTouch = function()
+	incrementCueIndex(1)
+end
+
+local cueDelButton = window:addChild(newRoundTinyButton(59, 18, 0x0F0F0F, 0x4B4B4B, 0x0, 0x2D2D2D, " "))
+cueDelButton.onTouch = function()
+	if not tape or not powerButton.pressed or #tapeConfig.cues == 0 then
+		return
+	end
+
+	table.remove(tapeConfig.cues, tapeConfig.cueIndex)
+
+	if tapeConfig.cueIndex > #tapeConfig.cues then
+		tapeConfig.cueIndex = math.max(tapeConfig.cueIndex - 1, 1)
+	end	
+
+	saveConfig()
+end
+
+local cueMemButton = window:addChild(newRoundTinyButton(63, 18, 0x0F0F0F, 0x4B4B4B, 0x0, 0x2D2D2D, " "))
+cueMemButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	local cue
+
+	for i = 1, #tapeConfig.cues do
+		cue = tapeConfig.cues[i]
+
+		if cue == tapeConfig.cue then
+			return
+		end
+	end
+
+	table.insert(tapeConfig.cues, tapeConfig.cue)
+	table.sort(tapeConfig.cues)
+
+	saveConfig()
+end
+
+-------------------------------- Cue / play buttons ------------------------------------------------
 
 local cueButton = window:addChild(newImageButton(2, window.height - 11, 9, 5, "Cue"))
 
-cueButton.eventHandler = function(workspace, cueButton, e1)
-	if e1 == "touch" then
-		workspace:draw()
-	end
-end
-
--------------------------------- Play button ------------------------------------------------
-
 local playButton = window:addChild(newImageButton(2, window.height - 5, 9, 5, "Play"))
-
 playButton.blinking = true
 
+cueButton.eventHandler = function(workspace, cueButton, e1)
+	if e1 == "touch" and tape and powerButton.pressed then
+		if playButton.blinking then
+			tapeConfig.cue = invoke("getPosition")
+			cueButton.blinking = false
+
+			workspace:draw()
+			saveConfig()
+		else
+			invoke("seek", tapeConfig.cue - invoke("getPosition"))
+			
+			workspace:draw()
+		end
+	end
+end
+
 playButton.eventHandler = function(workspace, playButton, e1)
-	if e1 == "touch" and powerButton.pressed then
+	if e1 == "touch" and tape and powerButton.pressed then
 		playButton.blinking = not playButton.blinking
 
-		component.invoke(tape.address, playButton.blinking and "stop" or "play")
+		if not playButton.blinking then
+			cueButton.blinking = false
+		end
+		
+		invoke(playButton.blinking and "stop" or "play")
 
 		workspace:draw()
 	end
 end
 
+-------------------------------- Jog mode ------------------------------------------------
+
+local jogModeDisplay = window:addChild(GUI.object(71, 20, 3, 2))
+jogModeDisplay.draw = function(jogModeDisplay)
+	local vinyl = (powerButton.pressed and not config.jogModeCdj) and 0x00B6FF or 0x002440
+	local cdj = (powerButton.pressed and config.jogModeCdj) and 0xFFFF40 or 0x332400
+
+	screen.drawText(jogModeDisplay.x, jogModeDisplay.y, vinyl, "⢀⣀⡀")
+	screen.drawRectangle(jogModeDisplay.x, jogModeDisplay.y + 1, 3, 1, vinyl, cdj, "⣤")
+	screen.drawText(jogModeDisplay.x, jogModeDisplay.y + 2, cdj, "⠈⠉⠁")
+end
+
+local jogModeButton = window:addChild(newRoundMiniButton(74, 20, 0x2D2D2D, 0x696969, 0x1E1E1E, 0x3C3C3C, "JM"))
+jogModeButton.ignoresPower = true
+jogModeButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	config.jogModeCdj = not config.jogModeCdj
+	workspace:draw()
+	saveConfig()
+end
 -------------------------------- Right beat buttons ------------------------------------------------
 
 local beatSyncButton = window:addChild(newRoundMiniButton(70, 24, 0xB4B4B4, 0x0F0F0F, 0x787878, 0x0F0F0F, "Sy"))
+beatSyncButton.ignoresPower = true
+
 local beatSyncMasterButton = window:addChild(newRoundMiniButton(74, 24, 0xB4B4B4, 0x0F0F0F, 0x787878, 0x0F0F0F, "Ms"))
+beatSyncMasterButton.ignoresPower = true
 
 -------------------------------- Right tempo buttons ------------------------------------------------
 
@@ -709,9 +961,15 @@ masterTempoButton.switchMode = true
 masterTempoButton:press()
 
 tempoButton.onTouch = function()
-	
-end
+	tapeConfig.speedIndex = tapeConfig.speedIndex + 1
 
+	if tapeConfig.speedIndex > 3 then
+		tapeConfig.speedIndex = 1
+	end
+
+	updateCurrentTapeSpeed()
+	saveConfig()
+end
 
 -------------------------------- Events ------------------------------------------------
 
@@ -721,45 +979,61 @@ local jogIncrementUptime = 0
 
 local overrideWindowEventHandler = window.eventHandler
 
-window.eventHandler = function(workspace, window, e1, ...)
-	overrideWindowEventHandler(workspace, window, e1, ...)
+window.eventHandler = function(workspace, window, e1, e2, e3, ...)
+	if (e1 == "component_added" or e1 == "component_removed") and e3 == "tape_drive" then
+		updateTapes()
+	else
+		overrideWindowEventHandler(workspace, window, e1, e2, e3, ...)
 
-	local shouldDraw = false
-	local isPlaying = getIsPlaying()
+		if not tape or not powerButton.pressed then
+			return
+		end
 
-	local uptime = computer.uptime()
+		local shouldDraw = false
+		local isPlaying = invoke("getState") == "PLAYING"
+		local position = invoke("getPosition")
+		local uptime = computer.uptime()
 
-	-- Cheching if play button state was changed
-	if isPlaying == playButton.blinking then
-		playButton.blinking = not playButton.blinking
-		shouldDraw = true
-	end
-
-	if isPlaying then
-		if uptime > jogIncrementUptime then
-			-- Rotating jog
-			currentJogIndex = currentJogIndex + 1
-
-			if currentJogIndex > #jogImages then
-				currentJogIndex = 1
-			end
-
-			jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
+		-- Cheching if play button state was changed
+		if isPlaying == playButton.blinking then
+			playButton.blinking = not playButton.blinking
 			shouldDraw = true
 		end
-	else
-		jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
-	end
 
-	-- Blink
-	if uptime > imageButtonBlinkUptime then
-		imageButtonBlinkUptime = uptime + imageButtonBlinkInterval
-		imageButtonBlink = not imageButtonBlink
-		shouldDraw = true
-	end
+		-- Cue button
+		local cueButtonBlinking = playButton.blinking and tapeConfig.cue ~= invoke("getPosition")
 
-	if shouldDraw then
-		workspace:draw()
+		if cueButtonBlinking ~= cueButton.blinking then
+			cueButton.blinking = cueButtonBlinking
+			shouldDraw = true
+		end
+
+		if isPlaying then
+			-- Rotating jog
+			if uptime > jogIncrementUptime then
+				currentJogIndex = currentJogIndex + 1
+
+				if currentJogIndex > #jogImages then
+					currentJogIndex = 1
+				end
+
+				jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
+				shouldDraw = true
+			end
+		else
+			jogIncrementUptime = uptime + (1 - speedSlider.value) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
+		end
+
+		-- Blink
+		if uptime > blinkUptime then
+			blinkUptime = uptime + blinkInterval
+			blinkState = not blinkState
+			shouldDraw = true
+		end
+
+		if shouldDraw then
+			workspace:draw()
+		end
 	end
 end
 
