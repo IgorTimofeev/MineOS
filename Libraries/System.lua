@@ -86,12 +86,12 @@ function system.getDefaultUserSettings()
 		interfaceScreenAddress = nil,
 		interfaceScreenUpdateInterval = 1,
 		interfaceWallpaperEnabled = false,
-		interfaceWallpaperPath = paths.system.pictures .. "Space.pic",
+		interfaceWallpaperPath = paths.system.pictures .. "Flight.lua",
 		interfaceWallpaperMode = 1,
 		interfaceWallpaperBrightness = 0.9,
 
 		interfaceScreensaverEnabled = false,
-		interfaceScreensaverPath = paths.system.screensavers .. "Space.lua",
+		interfaceScreensaverPath = paths.system.screensavers .. "Matrix.lua",
 		interfaceScreensaverDelay = 20,
 		
 		interfaceTransparencyEnabled = true,
