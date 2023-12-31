@@ -280,7 +280,7 @@ overlay.draw = function(overlay)
 		local timeSecondsTotal = (config.timeMode == 0 and tapePosition or (config.timeMode == 1 and tape.size - tapePosition or tape.size)) / sampleRate
 		local timeMinutes = math.floor(timeSecondsTotal / 60)
 		local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
-		local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
+		local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%02d", math.floor(timeMilliseconds * 100))
 		screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, config.timeMode == 1 and "-" .. timeString or timeString)
 
 		-- Tempo
