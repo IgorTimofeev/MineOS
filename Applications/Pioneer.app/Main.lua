@@ -1280,9 +1280,10 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 		end
 
 		local uptime = computer.uptime()
-		tapePosition = invoke("getPosition")
 
 		if tape and powerButton.pressed then
+			tapePosition = invoke("getPosition")
+			
 			local shouldDraw = false
 			local isPlaying = invoke("getState") == "PLAYING"
 
