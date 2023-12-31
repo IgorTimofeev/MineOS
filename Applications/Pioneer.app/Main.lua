@@ -778,9 +778,17 @@ end
 local jog = window:addChild(GUI.object(15, 20, 52, 26))
 local jogAngleOld
 
-jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
+jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, e5, ...)
 	if not tape or not powerButton.pressed then
 		return
+	end
+
+	local function jogNavigate(direction)
+		incrementJogIndex(direction)
+		invalidateJogIncrementUptime(computer.uptime())
+		workspace:draw()
+
+		navigate(direction)
 	end
 
 	if e1 == "drag" then
@@ -790,19 +798,16 @@ jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
 		)
 
 		if jogAngleOld then
-			local direction = jogAngleOld - angleNew >= 0 and 1 or -1
-
-			incrementJogIndex(direction)
-			invalidateJogIncrementUptime(computer.uptime())
-			navigate(direction)
-
-			workspace:draw()
+			jogNavigate(jogAngleOld - angleNew >= 0 and 1 or -1)
 		end
 
 		jogAngleOld = angleNew
 
 	elseif e1 == "drop" then
 		jogAngleOld = nil
+
+	elseif e1 == "scroll" then
+		jogNavigate(e5 >= 0 and 1 or -1)
 	end
 end
 
@@ -1179,7 +1184,7 @@ cueButton.eventHandler = function(workspace, cueButton, e1)
 
 	if e1 == "touch" then
 		cueButton.touchUptime = computer.uptime() + 10
-		
+
 		if playButton.blinking then
 			tapeConfig.cue = invoke("getPosition")
 			cueButton.blinking = false
