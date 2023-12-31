@@ -12,21 +12,21 @@ local event = require("Event")
 
 -------------------------------- Config ------------------------------------------------
 
-local currentScriptDirectory = filesystem.path(system.getCurrentScript())
-
 local configPath = paths.user.applicationData .. "Pioneer/Config.cfg"
+local saveConfigUptime
 
 local config = {
 	tapes = {
 
 	},
 	timeMode = 0,
-	jogSpeed = 0,
+	navigationSensivity = 0,
 	gain = 1,
-	speed = 0.5,
- 	speedIndex = 0,
+	tempo = 0.5,
+ 	tempoIndex = 0,
 }
 
+-- Loading config if it exists
 if filesystem.exists(configPath) then
 	local loadedConfig = filesystem.readTable(configPath)
 
@@ -40,8 +40,8 @@ if filesystem.exists(configPath) then
 	config = loadedConfig
 end
 
-local function saveConfig()
-	filesystem.writeTable(configPath, config)
+local function delaySaveConfig()
+	saveConfigUptime = computer.uptime() + 1
 end
 
 -------------------------------- Core ------------------------------------------------
@@ -53,11 +53,13 @@ local blinkState = false
 local blinkUptime = 0
 local blinkInterval = 0.5
 
-local powerButton
-
 local tapes
 local tapeIndex
-local tape, tapeConfig
+local tape
+local tapeConfig
+local tapePosition = 0
+
+local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 
 local function invoke(...)
 	return component.invoke(tape.address, ...)
@@ -67,34 +69,51 @@ local function setPosition(value)
 	invoke("seek", value - invoke("getPosition"))
 end
 
-local function getTapeSpeed()
-	local speed = 2 * config.speed - 1
+local function navigate(direction)
+	-- Min seek is 100 ms & max is 10 s
+	invoke("seek", math.floor((0.1 + (10 * config.navigationSensivity)) * sampleRate * direction))
+end
 
-	if config.speedIndex == 0 then
-		speed = speed * 0.25
+local function getTapeTempo()
+	local tempo = 2 * config.tempo - 1
+
+	if config.tempoIndex == 0 then
+		tempo = tempo * 0.25
 	
-	elseif config.speedIndex == 1 then
-		speed = speed * 0.5
+	elseif config.tempoIndex == 1 then
+		tempo = tempo * 0.5
 	
-	elseif config.speedIndex == 2 then
-		speed = speed * 0.75
+	elseif config.tempoIndex == 2 then
+		tempo = tempo * 0.75
 	end
 
-	return speed
+	return tempo
 end
 
-local function updateCurrentTapeSpeed()
-	invoke("setSpeed", 1 + getTapeSpeed() * 0.75)
+local function updateTempo(address)
+	component.invoke(address, "setSpeed", 1 + getTapeTempo() * 0.75)
 end
 
-local function updateCurrentTape()
+local function updateGain(address)
+	component.invoke(address, "setVolume", config.gain)
+end
+
+local function updateTempoForAll()
+	for i = 1, #tapes do
+		updateTempo(tapes[i].address)
+	end
+end
+
+local function updateGainForAll()
+	for i = 1, #tapes do
+		updateGain(tapes[i].address)
+	end
+end
+
+local function updateTape()
 	tape = tapes[tapeIndex]
 	tapeConfig = config.tapes[tape.address]
-
 	config.lastTape = tape.address
-
-	-- Because there's no "getSpeed" function...
-	updateCurrentTapeSpeed()
 end
 
 local function updateTapes()
@@ -124,11 +143,14 @@ local function updateTapes()
  			tapeIndex = counter
  		end
 
+ 		updateTempo(address)
+ 		updateGain(address)
+
  		counter = counter + 1
  	end
 
  	if #tapes > 0 then
- 		updateCurrentTape()
+ 		updateTape()
  	end
 end
 
@@ -140,6 +162,201 @@ local function loadImage(name)
 	end
 
 	return result
+end
+
+-------------------------------- Window ------------------------------------------------
+
+local workspace, window, menu = system.addWindow(GUI.window(1, 1, 78, 49))
+
+window.drawShadow = false
+
+local backgroundImage = loadImage("Background")
+local powerButton
+
+-------------------------------- Overlay ------------------------------------------------
+
+local overlay = window:addChild(GUI.object(1, 1, window.width, window.height))
+
+local displayWidth, displayHeight = 33, 10
+
+local jogImages = {}
+
+for i = 1, 12 do
+	jogImages[i] = loadImage("Jog" .. i)
+end
+
+local knobImages = {}
+
+for i = 1, 8 do
+	knobImages[i] = loadImage("Knob" .. i)
+end
+
+local jogIndex = 1
+local jogIncrementTempoMin = 0.05
+local jogIncrementTempoMax = 2
+local jogIncrementUptime = 0
+
+local function incrementJogIndex(value)
+	jogIndex = jogIndex + value
+
+	if jogIndex > #jogImages then
+		jogIndex = 1
+
+	elseif jogIndex < 1 then
+		jogIndex = #jogImages
+	end
+end
+
+local function invalidateJogIncrementUptime(uptime)
+	jogIncrementUptime = uptime + (1 - config.tempo) * (jogIncrementTempoMax - jogIncrementTempoMin)
+end
+
+local function displayDrawProgressBar(x, y, width, progress)
+	local progressActiveWidth = math.floor(progress * width)
+
+	screen.drawText(x, y, 0xE1E1E1, string.rep("━", progressActiveWidth))
+	screen.drawText(x + progressActiveWidth, y, 0x4B4B4B, string.rep("━", width - progressActiveWidth))
+end
+
+overlay.draw = function(overlay)
+	screen.drawImage(overlay.x, overlay.y, backgroundImage)
+	
+	-- Power indicator
+	screen.drawText(overlay.x + 73, overlay.y + 3, powerButton.pressed and 0xFF0000 or 0x330000, "⠒")
+
+	-- SD-card indicator
+	screen.drawText(overlay.x + 5, overlay.y + 10, powerButton.pressed and 0xFFB640 or 0x332400, "⠒")
+
+	-- Ignoring if power is off
+	if not powerButton.pressed then
+		return
+	end
+
+	-- Tempo slider indicator
+	screen.drawText(overlay.x + 68, overlay.y + 39, 0xFFDB40, "⠆")
+
+	-- Jog
+	screen.drawImage(overlay.x + 33, overlay.y + 29, jogImages[jogIndex])
+
+	-- Display
+	local displayX, displayY = overlay.x + 22, overlay.y + 3
+
+	-- Label
+	local label = tape and invoke("getLabel") or "No tape"
+
+	if not label or #label == 0 then
+		label = "Untitled tape"
+	end
+
+	screen.drawRectangle(displayX, displayY, displayWidth, 1, 0x004980, 0xE1E1E1, " ")
+	screen.drawText(displayX + 1, displayY, 0xE1E1E1, text.limit("♪ " .. label, displayWidth - 3))
+
+	if tape then
+		-- Stats
+		local statsX = displayX + 2
+		local statsY = displayY + displayHeight - 5
+
+		-- Track index
+		screen.drawText(statsX, statsY, 0xE1E1E1, "Track")
+		screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
+
+		-- Time
+		local timeSecondsTotal = (config.timeMode == 0 and tapePosition or (config.timeMode == 1 and tape.size - tapePosition or tape.size)) / sampleRate
+		local timeMinutes = math.floor(timeSecondsTotal / 60)
+		local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
+		local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
+		screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, config.timeMode == 1 and "-" .. timeString or timeString)
+
+		-- Tempo
+		screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
+		screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getTapeTempo() * 100)) .. "%")
+
+		-- Tempo index
+
+		-- Track
+		local trackWidth = displayWidth - 4
+		local trackHeight = 3
+		statsY = statsY + 2
+
+		screen.drawRectangle(
+			statsX,
+			statsY + 1,
+			trackWidth,
+			trackHeight - 2,
+			0x2D2D2D,
+			0xE1E1E1,
+			" "
+		)
+
+		screen.drawText(
+			math.floor(statsX + (tape.size == 0 and 0 or tapePosition / tape.size) * trackWidth),
+			statsY + 1,
+			0xE1E1E1,
+			"│"
+		)
+
+		-- Memory cues
+		local cueY = statsY
+
+		for i = 1, #tapeConfig.cues do
+			screen.drawText(
+				statsX + math.floor(tapeConfig.cues[i] / tape.size * trackWidth),
+				cueY,
+				i == tapeConfig.cueIndex and 0xE1E1E1 or 0xCC0000,
+				"•"
+			)
+		end
+
+		-- Hot cues
+		for name, position in pairs(tapeConfig.hotCues) do
+			screen.drawText(
+				statsX + math.floor(position / tape.size * trackWidth),
+				cueY,
+				0x66FF40,
+				"•" .. name
+			)
+		end
+
+		-- Current cue
+		cueY = statsY + trackHeight - 1
+
+		screen.drawText(
+			statsX + math.floor(tapeConfig.cue / tape.size * trackWidth),
+			cueY,
+			0xFFB640,
+			"•"
+		)
+	end
+end
+
+-------------------------------- Power button ------------------------------------------------
+
+powerButton = window:addChild(GUI.object(75, 2, 4, 2))
+powerButton.pressed = false
+
+powerButton.draw = function()
+	screen.drawText(powerButton.x, powerButton.y, 0x1E1E1E, powerButton.pressed and "⣠⣤⣄" or "⣸⣿⣇")
+end
+
+powerButton.eventHandler = function(workspace, powerButton, e1)
+	if e1 == "touch" then
+		powerButton.pressed = not powerButton.pressed
+
+		if powerButton.pressed then
+			jogIndex = 1
+		end
+
+		workspace:draw()
+
+		computer.beep(20, 0.01)
+
+		-- Stopping playback
+		if not powerButton.pressed then
+			for i = 1, #tapes do
+				component.invoke(tapes[i].address, "stop")
+			end
+		end
+	end
 end
 
 -------------------------------- Round mini button ------------------------------------------------
@@ -209,198 +426,6 @@ local function newRoundTinyButton(x, y, ...)
 	return button
 end
 
--------------------------------- Window ------------------------------------------------
-
-local backgroundImage = loadImage("Background")
-
-local workspace, window, menu = system.addWindow(GUI.window(1, 1, 78, 49))
-
-window.drawShadow = false
-
--------------------------------- Overlay ------------------------------------------------
-
-local overlay = window:addChild(GUI.object(1, 1, window.width, window.height))
-
-local displayWidth, displayHeight = 33, 10
-
-local jogImages = {}
-
-for i = 1, 12 do
-	jogImages[i] = loadImage("Jog" .. i)
-end
-
-local knobImages = {}
-
-for i = 1, 8 do
-	knobImages[i] = loadImage("Knob" .. i)
-end
-
-local jogIndex = 1
-local jogIncrementSpeedMin = 0.05
-local jogIncrementSpeedMax = 2
-local jogIncrementUptime = 0
-
-local function incrementJogIndex(value)
-	jogIndex = jogIndex + value
-
-	if jogIndex > #jogImages then
-		jogIndex = 1
-
-	elseif jogIndex < 1 then
-		jogIndex = #jogImages
-	end
-end
-
-local function invalidateJogIncrementUptime(uptime)
-	jogIncrementUptime = uptime + (1 - config.speed) * (jogIncrementSpeedMax - jogIncrementSpeedMin)
-end
-
-local function displayDrawProgressBar(x, y, width, progress)
-	local progressActiveWidth = math.floor(progress * width)
-
-	screen.drawText(x, y, 0xE1E1E1, string.rep("━", progressActiveWidth))
-	screen.drawText(x + progressActiveWidth, y, 0x4B4B4B, string.rep("━", width - progressActiveWidth))
-end
-
-overlay.draw = function(overlay)
-	screen.drawImage(overlay.x, overlay.y, backgroundImage)
-	
-	-- Ignoring if power is off
-	if not powerButton.pressed then
-		return
-	end
-
-	-- Power indicator
-	screen.drawText(overlay.x + 73, overlay.y + 3, 0xFF0000, "●")
-
-	-- Speed slider indicator
-	screen.drawText(overlay.x + 68, overlay.y + 39, 0xFFDB40, "⠆")
-
-	-- Jog
-	screen.drawImage(overlay.x + 33, overlay.y + 29, jogImages[jogIndex])
-
-	-- Display
-	local displayX, displayY = overlay.x + 22, overlay.y + 3
-
-	-- Label
-	local label = tape and invoke("getLabel") or "No tape"
-
-	if not label or #label == 0 then
-		label = "Untitled tape"
-	end
-
-	screen.drawRectangle(displayX, displayY, displayWidth, 1, 0x004980, 0xE1E1E1, " ")
-	screen.drawText(displayX + 1, displayY, 0xE1E1E1, text.limit("♪ " .. label, displayWidth - 3))
-
-	if tape then
-		-- Stats
-		local position = invoke("getPosition")
-		local statsX = displayX + 2
-		local statsY = displayY + displayHeight - 5
-
-		-- Track index
-		screen.drawText(statsX, statsY, 0xE1E1E1, "Track")
-		screen.drawText(statsX, statsY + 1, 0xE1E1E1, string.format("%02d", tapeIndex))
-
-		-- Time
-		local timeSecondsTotal = (config.timeMode == 0 and position or (config.timeMode == 1 and tape.size - position or tape.size)) / sampleRate
-		local timeMinutes = math.floor(timeSecondsTotal / 60)
-		local timeSeconds, timeMilliseconds = math.modf(timeSecondsTotal - timeMinutes * 60)
-		local timeString = string.format("%02d", timeMinutes) .. "m:" .. string.format("%02d", timeSeconds) .. "s".. string.format("%03d", math.floor(timeMilliseconds * 1000))
-		screen.drawText(statsX + 10, statsY + 1, 0xE1E1E1, config.timeMode == 1 and "-" .. timeString or timeString)
-
-		-- Tempo
-		screen.drawText(statsX + 24, statsY, 0xE1E1E1, "Tempo")
-		screen.drawText(statsX + 26, statsY + 1, 0xE1E1E1, string.format("%02d", math.floor(getTapeSpeed() * 100)) .. "%")
-
-		-- Tempo index
-
-		-- Track
-		local trackWidth = displayWidth - 4
-		local trackHeight = 3
-		statsY = statsY + 2
-
-		screen.drawRectangle(
-			statsX,
-			statsY + 1,
-			trackWidth,
-			trackHeight - 2,
-			0x2D2D2D,
-			0xE1E1E1,
-			" "
-		)
-
-		screen.drawText(
-			math.floor(statsX + (tape.size == 0 and 0 or position / tape.size) * trackWidth),
-			statsY + 1,
-			0xE1E1E1,
-			"│"
-		)
-
-		-- Memory cues
-		local cueY = statsY
-
-		for i = 1, #tapeConfig.cues do
-			screen.drawText(
-				statsX + math.floor(tapeConfig.cues[i] / tape.size * trackWidth),
-				cueY,
-				i == tapeConfig.cueIndex and 0xE1E1E1 or 0xCC0000,
-				"•"
-			)
-		end
-
-		-- Hot cues
-		for name, position in pairs(tapeConfig.hotCues) do
-			screen.drawText(
-				statsX + math.floor(position / tape.size * trackWidth),
-				cueY,
-				0x66FF40,
-				"•" .. name
-			)
-		end
-
-		-- Current cue
-		cueY = statsY + trackHeight - 1
-
-		screen.drawText(
-			statsX + math.floor(tapeConfig.cue / tape.size * trackWidth),
-			cueY,
-			0xFFB640,
-			"•"
-		)
-	end
-end
-
--------------------------------- Power button ------------------------------------------------
-
-powerButton = window:addChild(GUI.object(75, 2, 4, 2))
-
-powerButton.pressed = false
-
-powerButton.draw = function()
-	screen.drawText(powerButton.x, powerButton.y, 0x1E1E1E, powerButton.pressed and "⣠⣤⣄" or "⣸⣿⣇")
-end
-
-powerButton.eventHandler = function(workspace, powerButton, e1)
-	if e1 == "touch" then
-		powerButton.pressed = not powerButton.pressed
-
-		-- Stopping playback
-		if powerButton.pressed then
-			jogIndex = 1
-		
-		else
-			for i = 1, #tapes do
-				component.invoke(tapes[i].address, "stop")
-			end
-		end
-
-		workspace:draw()
-
-		computer.beep(20, 0.01)
-	end
-end
-
 -------------------------------- ImageButton ------------------------------------------------
 
 local function imageButtonDraw(button)
@@ -418,39 +443,36 @@ local function newImageButton(x, y, width, height, name)
 	return button
 end
 
--------------------------------- Speed slider ------------------------------------------------
+-------------------------------- Tempo slider ------------------------------------------------
 
-local speedSlider = window:addChild(GUI.object(71, 33, 5, 15))
-local speedSliderImage = loadImage("SpeedSlider")
+local tempoSlider = window:addChild(GUI.object(71, 33, 5, 15))
+local tempoSliderImage = loadImage("TempoSlider")
 
-speedSlider.value = config.speed
+tempoSlider.value = config.tempo
 
-speedSlider.draw = function(speedSlider)
-	-- screen.drawRectangle(speedSlider.x, speedSlider.y, speedSlider.width, speedSlider.height, 0xFF0000, 0x0, " ")
-
-	local x = speedSlider.x
-	local y = speedSlider.y + math.floor((1 - speedSlider.value) * speedSlider.height) - math.floor((1 - speedSlider.value) * 3)
-
-	screen.drawImage(x, y, speedSliderImage)
+tempoSlider.draw = function(tempoSlider)
+	screen.drawImage(
+		tempoSlider.x,
+		tempoSlider.y + math.floor((1 - tempoSlider.value) * tempoSlider.height) - math.floor((1 - tempoSlider.value) * 3),
+		tempoSliderImage
+	)
 end
 
-speedSlider.eventHandler = function(workspace, speedSlider, e1, e2, e3, e4)
+tempoSlider.eventHandler = function(workspace, tempoSlider, e1, e2, e3, e4)
 	if (e1 == "touch" or e1 == "drag") then
-		if e4 == speedSlider.y + speedSlider.height - 1 then
-			speedSlider.value = 0
-		elseif e4 == math.floor(speedSlider.y + speedSlider.height / 2) then
-			speedSlider.value = 0.5
+		if e4 == tempoSlider.y + tempoSlider.height - 1 then
+			tempoSlider.value = 0
+		elseif e4 == math.floor(tempoSlider.y + tempoSlider.height / 2) then
+			tempoSlider.value = 0.5
 		else
-			speedSlider.value = 1 - ((e4 - speedSlider.y) / speedSlider.height)
+			tempoSlider.value = 1 - ((e4 - tempoSlider.y) / tempoSlider.height)
 		end
 
-		if tape and powerButton.pressed then
-			config.speed = speedSlider.value
-
-			updateCurrentTapeSpeed()
-		end
-
+		config.tempo = tempoSlider.value
 		workspace:draw()
+
+		updateTempoForAll()
+		delaySaveConfig()
 	end
 end
 
@@ -732,7 +754,7 @@ timeModeButton.onTouch = function()
 	end
 
 	workspace:draw()
-	saveConfig()
+	delaySaveConfig()
 end
 
 -------------------------------- Needle search ------------------------------------------------
@@ -772,9 +794,7 @@ jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, ...)
 
 			incrementJogIndex(direction)
 			invalidateJogIncrementUptime(computer.uptime())
-
-			-- Min seek speed is 100 msec & max is 10 sec
-			invoke("seek", math.floor((0.1 + (10 * config.jogSpeed)) * sampleRate * direction))
+			navigate(direction)
 
 			workspace:draw()
 		end
@@ -792,17 +812,21 @@ local function knobDraw(knob)
 	screen.drawImage(knob.x, knob.y, knobImages[1 + math.floor(knob.value * (#knobImages - 1))])
 end
 
+
 local function knobEventHandler(workspace, knob, e1, e2, e3, e4, e5, ...)
 	local function increment(upper)
-		local speed = 0.1
+		local tempo = 0.1
+		local newValue = math.max(0, math.min(1, knob.value + (upper and tempo or -tempo)))
 
-		knob.value = math.max(0, math.min(1, knob.value + (upper and speed or -speed)))
+		if newValue == knob.value then
+			return
+		end
+
+		knob.value = newValue
 
 		if knob.onValueChanged then
 			knob.onValueChanged(knob)
 		end
-
-		workspace:draw()
 	end
 
 	if e1 == "touch" then
@@ -839,21 +863,19 @@ local jogAdjustKnob = window:addChild(newKnob(61, 21, 0))
 gainKnob = window:addChild(newKnob(72, 12, config.gain))
 
 gainKnob.onValueChanged = function()
-	if not tape or not powerButton.pressed then
-		return
-	end
-
 	config.gain = gainKnob.value
-	invoke("setVolume", config.gain)
-	saveConfig()
+
+	workspace:draw()
+	updateGainForAll()
+	delaySaveConfig()
 end
 
--- Jog speed
-local jogSpeedKnob = window:addChild(newKnob(72, 16, config.jogSpeed))
+-- Navigation sensivity
+local navigationSensivityKnob = window:addChild(newKnob(72, 16, config.navigationSensivity))
 
-jogSpeedKnob.onValueChanged = function()
-	config.jogSpeed = jogSpeedKnob.value
-	saveConfig()
+navigationSensivityKnob.onValueChanged = function()
+	config.navigationSensivity = navigationSensivityKnob.value
+	delaySaveConfig()
 end
 
 -------------------------------- Pref/next tape button ------------------------------------------------
@@ -874,8 +896,10 @@ local function incrementTape(next)
 		tapeIndex = #tapes
 	end
 
-	updateCurrentTape()
-	saveConfig()
+	updateTape()
+	workspace:draw()
+
+	delaySaveConfig()
 end
 
 tapePrevButton.onTouch = function()
@@ -891,12 +915,13 @@ end
 local searchPrevButton = window:addChild(newRoundMiniButton(2, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, "<<"))
 local searchNextButton = window:addChild(newRoundMiniButton(7, 34, 0x2D2D2D, 0xFFB600, 0x0F0F0F, 0xCC9200, ">>"))
 
-local function incrementFromSearchButton(seconds)
+local function incrementFromSearchButton(direction)
 	if not tape or not powerButton.pressed then
 		return
 	end
 
-	invoke("seek", seconds * sampleRate)
+	navigate(direction)
+	workspace:draw()
 end
 
 searchPrevButton.onTouch = function()
@@ -957,7 +982,7 @@ local function newHotCueButton(x, y, index, text)
 			tapeConfig.hotCues[button.text] = (not hotCuePosition or hotCuePosition ~= position) and position or nil
 
 			workspace:draw()
-			saveConfig()
+			delaySaveConfig()
 
 		elseif hotCuePosition then
 			setPosition(hotCuePosition)
@@ -1090,7 +1115,7 @@ local function incrementCueIndex(value)
 	setPosition(tapeConfig.cue)
 
 	workspace:draw()
-	saveConfig()
+	delaySaveConfig()
 end
 
 local cuePrevButton = window:addChild(newRoundTinyButton(50, 18, 0x0F0F0F, 0xFFB640, 0x0, 0x996D00, "⢔ "))
@@ -1115,7 +1140,7 @@ cueDelButton.onTouch = function()
 		tapeConfig.cueIndex = math.max(tapeConfig.cueIndex - 1, 1)
 	end	
 
-	saveConfig()
+	delaySaveConfig()
 end
 
 local cueMemButton = window:addChild(newRoundTinyButton(63, 18, 0x0F0F0F, 0x4B4B4B, 0x0, 0x2D2D2D, " "))
@@ -1137,7 +1162,7 @@ cueMemButton.onTouch = function()
 	table.insert(tapeConfig.cues, tapeConfig.cue)
 	table.sort(tapeConfig.cues)
 
-	saveConfig()
+	delaySaveConfig()
 end
 
 -------------------------------- Cue / play buttons ------------------------------------------------
@@ -1148,13 +1173,19 @@ local playButton = window:addChild(newImageButton(2, window.height - 5, 9, 5, "P
 playButton.blinking = true
 
 cueButton.eventHandler = function(workspace, cueButton, e1)
-	if e1 == "touch" and tape and powerButton.pressed then
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	if e1 == "touch" then
+		cueButton.touchUptime = computer.uptime() + 10
+		
 		if playButton.blinking then
 			tapeConfig.cue = invoke("getPosition")
 			cueButton.blinking = false
 
 			workspace:draw()
-			saveConfig()
+			delaySaveConfig()
 		else
 			setPosition(tapeConfig.cue)
 
@@ -1198,8 +1229,9 @@ jogModeButton.onTouch = function()
 
 	config.jogModeCdj = not config.jogModeCdj
 	workspace:draw()
-	saveConfig()
+	delaySaveConfig()
 end
+
 -------------------------------- Right beat buttons ------------------------------------------------
 
 local beatSyncButton = window:addChild(newRoundMiniButton(70, 24, 0xB4B4B4, 0x0F0F0F, 0x787878, 0x0F0F0F, "Sy"))
@@ -1217,14 +1249,15 @@ masterTempoButton.switchMode = true
 masterTempoButton:press()
 
 tempoButton.onTouch = function()
-	config.speedIndex = config.speedIndex + 1
+	config.tempoIndex = config.tempoIndex + 1
 
-	if config.speedIndex > 3 then
-		config.speedIndex = 1
+	if config.tempoIndex > 3 then
+		config.tempoIndex = 1
 	end
 
-	updateCurrentTapeSpeed()
-	saveConfig()
+	workspace:draw()
+	updateTempoForAll()
+	delaySaveConfig()
 end
 
 -------------------------------- Cyka ------------------------------------------------
@@ -1237,45 +1270,55 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 	else
 		overrideWindowEventHandler(workspace, window, e1, e2, e3, ...)
 
-		if not tape or not powerButton.pressed then
+		if e1 then
 			return
 		end
 
-		local shouldDraw = false
-		local isPlaying = invoke("getState") == "PLAYING"
 		local uptime = computer.uptime()
+		tapePosition = invoke("getPosition")
 
-		-- Cheching if play button state was changed
-		if isPlaying == playButton.blinking then
-			playButton.blinking = not playButton.blinking
-			invalidateJogIncrementUptime(uptime)
-			shouldDraw = true
+		if tape and powerButton.pressed then
+			local shouldDraw = false
+			local isPlaying = invoke("getState") == "PLAYING"
+
+			-- Cheching if play button state was changed
+			if isPlaying == playButton.blinking then
+				playButton.blinking = not playButton.blinking
+				invalidateJogIncrementUptime(uptime)
+				shouldDraw = true
+			end
+
+			-- Cue button
+			local cueButtonBlinking = playButton.blinking and tapeConfig.cue ~= tapePosition
+
+			if cueButtonBlinking ~= cueButton.blinking then
+				cueButton.blinking = cueButtonBlinking
+				shouldDraw = true
+			end
+
+			-- Jog
+			if isPlaying and uptime > jogIncrementUptime then
+				incrementJogIndex(1)
+				invalidateJogIncrementUptime(uptime)
+				shouldDraw = true
+			end
+
+			-- Blink state
+			if uptime > blinkUptime then
+				blinkUptime = uptime + blinkInterval
+				blinkState = not blinkState
+				shouldDraw = true
+			end
+
+			if shouldDraw then
+				workspace:draw()
+			end
 		end
 
-		-- Cue button
-		local cueButtonBlinking = playButton.blinking and tapeConfig.cue ~= invoke("getPosition")
-
-		if cueButtonBlinking ~= cueButton.blinking then
-			cueButton.blinking = cueButtonBlinking
-			shouldDraw = true
-		end
-
-		-- Jog
-		if isPlaying and uptime > jogIncrementUptime then
-			incrementJogIndex(1)
-			invalidateJogIncrementUptime(uptime)
-			shouldDraw = true
-		end
-
-		-- Blink state
-		if uptime > blinkUptime then
-			blinkUptime = uptime + blinkInterval
-			blinkState = not blinkState
-			shouldDraw = true
-		end
-
-		if shouldDraw then
-			workspace:draw()
+		-- If THE TIME HAS COME - saving config file
+		if saveConfigUptime and uptime >= saveConfigUptime then
+			saveConfigUptime = nil
+			filesystem.writeTable(configPath, config)
 		end
 	end
 end
