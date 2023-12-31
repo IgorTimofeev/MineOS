@@ -21,6 +21,7 @@ local config = {
 	},
 	timeMode = 0,
 	navigationSensivity = 0,
+	jogResistance = 0,
 	gain = 1,
 	tempo = 0.5,
  	tempoIndex = 0,
@@ -53,6 +54,9 @@ local blinkState = false
 local blinkUptime = 0
 local blinkInterval = 0.5
 
+local loopInButton
+local loopOutButton
+
 local tapes
 local tapeIndex
 local tape
@@ -69,9 +73,14 @@ local function setPosition(value)
 	invoke("seek", value - invoke("getPosition"))
 end
 
+local function updateTapePosition()
+	tapePosition = invoke("getPosition")
+end
+
 local function navigate(direction)
 	-- Min seek is 100 ms & max is 10 s
 	invoke("seek", math.floor((0.1 + (10 * config.navigationSensivity)) * sampleRate * direction))
+	updateTapePosition()
 end
 
 local function getTapeTempo()
@@ -110,10 +119,17 @@ local function updateGainForAll()
 	end
 end
 
+local function updateLoop()
+	loopInButton.blinking = tapeConfig.loopIn and tapeConfig.loopOn
+	loopOutButton.blinking = tapeConfig.loopOut and tapeConfig.loopOn
+end
+
 local function updateTape()
 	tape = tapes[tapeIndex]
 	tapeConfig = config.tapes[tape.address]
 	config.lastTape = tape.address
+
+	updateLoop()
 end
 
 local function updateTapes()
@@ -288,6 +304,22 @@ overlay.draw = function(overlay)
 			" "
 		)
 
+		-- Loop
+		if tapeConfig.loopIn or tapeConfig.loopOut then
+			local loopX = tapeConfig.loopIn and math.floor(tapeConfig.loopIn / tape.size * trackWidth) or 0
+
+			screen.drawRectangle(
+				statsX + loopX,
+				statsY + 1,
+				1 + (tapeConfig.loopOut and math.floor(tapeConfig.loopOut / tape.size * trackWidth) or trackWidth) - loopX,
+				1,
+				tapeConfig.loopOn and 0x5A5A5A or 0x3C3C3C,
+				0xE1E1E1,
+				" "
+			)
+		end
+
+		-- Position
 		screen.drawText(
 			math.floor(statsX + (tape.size == 0 and 0 or tapePosition / tape.size) * trackWidth),
 			statsY + 1,
@@ -453,7 +485,7 @@ tempoSlider.value = config.tempo
 tempoSlider.draw = function(tempoSlider)
 	screen.drawImage(
 		tempoSlider.x,
-		tempoSlider.y + math.floor((1 - tempoSlider.value) * tempoSlider.height) - math.floor((1 - tempoSlider.value) * 3),
+		tempoSlider.y + math.floor(tempoSlider.value * tempoSlider.height) - math.floor(tempoSlider.value * 3),
 		tempoSliderImage
 	)
 end
@@ -461,11 +493,11 @@ end
 tempoSlider.eventHandler = function(workspace, tempoSlider, e1, e2, e3, e4)
 	if (e1 == "touch" or e1 == "drag") then
 		if e4 == tempoSlider.y + tempoSlider.height - 1 then
-			tempoSlider.value = 0
+			tempoSlider.value = 1
 		elseif e4 == math.floor(tempoSlider.y + tempoSlider.height / 2) then
 			tempoSlider.value = 0.5
 		else
-			tempoSlider.value = 1 - ((e4 - tempoSlider.y) / tempoSlider.height)
+			tempoSlider.value = (e4 - tempoSlider.y) / tempoSlider.height
 		end
 
 		config.tempo = tempoSlider.value
@@ -767,7 +799,7 @@ end
 
 needleSearch.eventHandler = function(workspace, needleSearch, e1, e2, e3, e4)
 	if (e1 == "touch" or e1 == "drag") and powerButton.pressed and tape then
-		setPosition(math.floor((e3 - needleSearch.x) / needleSearch.width * tape.size))
+		setPosition(math.floor((e3 - needleSearch.x) / (needleSearch.width - 1) * tape.size))
 
 		workspace:draw()
 	end
@@ -786,9 +818,9 @@ jog.eventHandler = function(workspace, jog, e1, e2, e3, e4, e5, ...)
 	local function jogNavigate(direction)
 		incrementJogIndex(direction)
 		invalidateJogIncrementUptime(computer.uptime())
-		workspace:draw()
-
 		navigate(direction)
+
+		workspace:draw()
 	end
 
 	if e1 == "drag" then
@@ -817,7 +849,6 @@ local function knobDraw(knob)
 	screen.drawImage(knob.x, knob.y, knobImages[1 + math.floor(knob.value * (#knobImages - 1))])
 end
 
-
 local function knobEventHandler(workspace, knob, e1, e2, e3, e4, e5, ...)
 	local function increment(upper)
 		local tempo = 0.1
@@ -828,6 +859,8 @@ local function knobEventHandler(workspace, knob, e1, e2, e3, e4, e5, ...)
 		end
 
 		knob.value = newValue
+
+		workspace:draw()
 
 		if knob.onValueChanged then
 			knob.onValueChanged(knob)
@@ -861,8 +894,13 @@ local function newKnob(x, y, value)
 	return knob
 end
 
--- Jog adjust
-local jogAdjustKnob = window:addChild(newKnob(61, 21, 0))
+-- Jog resistance
+local jogResistanceKnob = window:addChild(newKnob(61, 21, config.jogResistance))
+
+jogResistanceKnob.onValueChanged = function()
+	config.jogResistance = jogResistanceKnob.value
+	delaySaveConfig()
+end
 
 -- Gain
 gainKnob = window:addChild(newKnob(72, 12, config.gain))
@@ -870,7 +908,6 @@ gainKnob = window:addChild(newKnob(72, 12, config.gain))
 gainKnob.onValueChanged = function()
 	config.gain = gainKnob.value
 
-	workspace:draw()
 	updateGainForAll()
 	delaySaveConfig()
 end
@@ -926,6 +963,7 @@ local function incrementFromSearchButton(direction)
 	end
 
 	navigate(direction)
+
 	workspace:draw()
 end
 
@@ -1034,7 +1072,7 @@ end
 local function loopButtonDraw(button)
 	local border, color1, color2, color3, color4
 
-	if powerButton.pressed then
+	if powerButton.pressed and (not button.blinking or blinkState) then
 		if button.pressed then
 			border, color1, color2, color3, color4 = 0x332400, 0x996D00, 0x996D00, 0x996D00, 0x996D00
 		else
@@ -1085,14 +1123,70 @@ local function newLoopButton(x, y)
 	return button
 end
 
-
-local loopButtonIn = window:addChild(newLoopButton(13, 18))
-local loopButtonOut = window:addChild(newLoopButton(19, 18))
-
+loopInButton = window:addChild(newLoopButton(13, 18))
+loopOutButton = window:addChild(newLoopButton(19, 18))
 local reloopButton = window:addChild(newRoundTinyButton(26, 18, 0x2D2D2D, 0xFFB640, 0x1E1E1E, 0x996D00, "⢠⡄"))
 
-loopButtonIn.onTouch = function()
-	
+loopInButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	local position = invoke("getPosition")
+
+	tapeConfig.loopIn = position ~= tapeConfig.loopIn and position or nil
+
+	if tapeConfig.loopIn then
+		tapeConfig.loopOn = true
+
+		if tapeConfig.loopOut and tapeConfig.loopIn >= tapeConfig.loopOut then
+			tapeConfig.loopOut = nil
+		end
+	else
+		tapeConfig.loopOn = tapeConfig.loopOut ~= nil
+	end
+
+	updateLoop()
+
+	workspace:draw()
+	delaySaveConfig()
+end
+
+loopOutButton.onTouch = function()
+	if not tape or not powerButton.pressed then
+		return
+	end
+
+	local position = invoke("getPosition")
+
+	tapeConfig.loopOut = position ~= tapeConfig.loopOut and position or nil
+
+	if tapeConfig.loopOut then
+		tapeConfig.loopOn = true
+
+		if tapeConfig.loopIn and tapeConfig.loopIn >= tapeConfig.loopOut then
+			tapeConfig.loopIn = nil
+		end
+	else
+		tapeConfig.loopOn = tapeConfig.loopIn ~= nil
+	end
+
+	updateLoop()
+
+	workspace:draw()
+	delaySaveConfig()
+end
+
+reloopButton.onTouch = function()
+	if not tape or not powerButton.pressed or (not tapeConfig.loopIn and not tapeConfig.loopOut) then
+		return
+	end
+
+	tapeConfig.loopOn = not tapeConfig.loopOn
+	updateLoop()
+
+	workspace:draw()
+	delaySaveConfig()
 end
 
 -------------------------------- Cue memory buttons ------------------------------------------------
@@ -1282,7 +1376,7 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 		local uptime = computer.uptime()
 
 		if tape and powerButton.pressed then
-			tapePosition = invoke("getPosition")
+			updateTapePosition()
 			
 			local shouldDraw = false
 			local isPlaying = invoke("getState") == "PLAYING"
@@ -1314,6 +1408,14 @@ window.eventHandler = function(workspace, window, e1, e2, e3, ...)
 				blinkUptime = uptime + blinkInterval
 				blinkState = not blinkState
 				shouldDraw = true
+			end
+
+			-- Loop
+			if isPlaying and tapeConfig.loopOn then
+				if tapePosition >= (tapeConfig.loopOut or tape.size) then
+					setPosition(tapeConfig.loopIn or 0)
+					shouldDraw = true
+				end
 			end
 
 			if shouldDraw then
