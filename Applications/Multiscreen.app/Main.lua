@@ -55,7 +55,7 @@ local function mainMenu(force)
 	local lines = {
 		{color = 0xE1E1E1, text = "Welcome to MultiScreen software"},
 		" ",
-		"You can combine multiple screens into a single cluster and draw huge images saved in OCIF5 format. Image converter converter can be downloaded from it's repository:",
+		"You can combine multiple screens into a single cluster and draw huge images saved in OCIF5 format. Image converter can be downloaded from it's repository:",
 		"github.com/IgorTimofeev/OCIFImageConverter",
 		" ",
 		"There's some useful tips for best experience:",
