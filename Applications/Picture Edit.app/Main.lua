@@ -280,6 +280,7 @@ end
 
 local function swapColors()
 	window.primaryColorSelector.color, window.secondaryColorSelector.color = window.secondaryColorSelector.color, window.primaryColorSelector.color
+	workspace:draw()
 end
 
 local function colorSelectorDraw(object)
@@ -423,6 +424,7 @@ window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 		-- X
 		elseif e4 == 45 then
 			swapColors()
+			
 		elseif keyboard.isControlDown() or keyboard.isCommandDown() then
 			-- S
 			if e4 == 31 then
@@ -449,6 +451,7 @@ window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 	end
 
 	local result, reason = pcall(tool.eventHandler, workspace, object, e1, e2, e3, e4, ...)
+	
 	if not result then
 		GUI.alert("Tool eventHandler() failed: " .. reason)
 	end
