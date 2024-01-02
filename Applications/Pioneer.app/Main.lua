@@ -70,6 +70,7 @@ local function invoke(...)
 end
 
 local function setPosition(value)
+	tapePosition = value
 	invoke("seek", value - invoke("getPosition"))
 end
 
@@ -1186,6 +1187,11 @@ reloopButton.onTouch = function()
 	updateLoop()
 
 	workspace:draw()
+
+	if tapeConfig.loopOn then
+		setPosition(tapeConfig.loopIn or 0)
+	end
+
 	delaySaveConfig()
 end
 
