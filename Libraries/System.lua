@@ -2062,15 +2062,18 @@ end
 --------------------------------------------------------------------------------
 
 function system.addPropertiesWindow(x, y, width, icon)
-	local workspace, window = system.addWindow(GUI.titledWindow(x, y, width, 1, localization.properties), true, true)
+	local workspace, window = system.addWindow(GUI.filledWindow(x, y, width, 1, 0x1E1E1E), true, true)
 
-	window.backgroundPanel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.2
+	window:addChild(GUI.label(1, 1, width, 1, 0xE1E1E1, localization.properties)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	window.actionButtons.localY = 1
+	window.actionButtons:moveToFront()
+
 	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3
 
 	local function addKeyAndValue(key, value)
-		local object = window:addChild(GUI.keyAndValue(x, y, 0x3C3C3C, 0x5A5A5A, key, ": " .. value))
+		local object = window:addChild(GUI.keyAndValue(x, y, 0x969696, 0x5A5A5A, key, ": " .. value))
 		y = y + 1
 
 		return object
