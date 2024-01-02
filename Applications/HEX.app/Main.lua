@@ -122,9 +122,10 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 			menu:addSeparator()
 			
 			menu:addItem("Edit").onTouch = function()
-				local container = system.addBackgroundContainer(workspace, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
+				local container = GUI.addBackgroundContainer(workspace, true, true, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, string.format("%02X" , bytes[selection.from]), "Type byte value"))
+				
 				input.onInputFinished = function(text)
 					local number = tonumber("0x" .. input.text)
 					if number and number >= 0 and number <= 255 then
@@ -141,7 +142,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 			end
 			
 			menu:addItem("Insert").onTouch = function()
-				local container = system.addBackgroundContainer(workspace, "Insert bytes at position " .. selection.from .. "")
+				local container = GUI.addBackgroundContainer(workspace, true, true, "Insert bytes at position " .. selection.from .. "")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", "Type byte values separated by space", true))
 				local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xBBBBBB, "Select inserted bytes:", true)).switch
@@ -312,7 +313,7 @@ titleTextBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICA
 titleTextBox.eventHandler = nil
 
 local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Save"))
-local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Open"))
+local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 10, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Open"))
 
 ------------------------------------------------------------------------------------------------------------------
 
