@@ -34,7 +34,6 @@ local desktopMenuLayout
 local desktopMenuMineOSItem
 local desktopIconField
 local desktopBackground
-local desktopBackgroundColor = 0x1E1E1E
 local desktopBackgroundWallpaperX
 local desktopBackgroundWallpaperY
 
@@ -2293,7 +2292,7 @@ function system.execute(path, ...)
 end
 
 local function desktopBackgroundAmbientDraw()
-	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
+	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, userSettings.interfaceColorDesktopBackground or 0x1E1E1E, 0, " ")
 end
 
 function system.updateWallpaper()
