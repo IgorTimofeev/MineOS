@@ -37,11 +37,6 @@ module.onTouch = function()
 	end
 
 	addColorSelector("interfaceColorDesktopBackground", localization.appearanceDesktopBackground)
-	addColorSelector("interfaceColorMenu", localization.appearanceMenu)
-	addColorSelector("interfaceColorDock", localization.appearanceDock)
-	addColorSelector("interfaceColorDropDownMenuDefaultBackground", localization.appearanceDropDownDefaultBackground)
-	addColorSelector("interfaceColorDropDownMenuDefaultText", localization.appearanceDropDownDefaultText)
-	addColorSelector("interfaceColorDropDownMenuSeparator", localization.appearanceDropDownSeparator)
 
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceSize))
 

@@ -91,7 +91,6 @@ if filesystem.exists(configPath) then
 end
 
 local workspace, window, menu = system.addWindow(GUI.window(1, 1, 120, 30))
-menu:removeChildren()
 
 local codeView = window:addChild(GUI.codeView(1, 1, 1, 1, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, config.syntaxColorScheme, config.syntaxHighlight, lines))
 
@@ -1638,36 +1637,6 @@ leftTreeView.onItemSelected = function(path)
 	workspace:draw()
 end
 
-local MineCodeContextMenu = menu:addContextMenuItem("MineCode", 0x0)
-MineCodeContextMenu:addItem(localization.about).onTouch = function()
-	local container = addBackgroundContainer(localization.about)
-	
-	local about = {
-		"MineCode IDE",
-		"Copyright © 2014-2018 ECS Inc.",
-		" ",
-		"Developers:",
-		" ",
-		"Timofeev Igor, vk.com/id7799889",
-		"Trifonov Gleb, vk.com/id88323331",
-		" ",
-		"Testers:",
-		" ",
-		"Semyonov Semyon, vk.com/id92656626",
-		"Prosin Mihail, vk.com/id75667079",
-		"Shestakov Timofey, vk.com/id113499693",
-		"Bogushevich Victoria, vk.com/id171497518",
-		"Vitvitskaya Yana, vk.com/id183425349",
-		"Golovanova Polina, vk.com/id226251826",
-	}
-
-	local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
-	textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	textBox.eventHandler = nil
-
-	workspace:draw()
-end
-
 local fileContextMenu = menu:addContextMenuItem(localization.file)
 fileContextMenu:addItem(localization.new, false, "^N").onTouch = function()
 	newFile()
@@ -1681,7 +1650,6 @@ end
 fileContextMenu:addItem(localization.getFromWeb, not component.isAvailable("internet"), "^U").onTouch = function()
 	downloadFileFromWeb()
 end
-
 
 fileContextMenu:addSeparator()
 

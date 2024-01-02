@@ -103,11 +103,6 @@ function system.getDefaultUserSettings()
 		interfaceBlurTransparency = 0.6,
 
 		interfaceColorDesktopBackground = 0x1E1E1E,
-		interfaceColorDock = 0xE1E1E1,
-		interfaceColorMenu = 0xF0F0F0,
-		interfaceColorDropDownMenuSeparator = 0xA5A5A5,
-		interfaceColorDropDownMenuDefaultBackground = 0xFFFFFF,
-		interfaceColorDropDownMenuDefaultText = 0x2D2D2D,
 
 		filesShowExtension = false,
 		filesShowHidden = false,
@@ -520,34 +515,42 @@ end
 
 local function iconDraw(icon)
 	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.selectionTransparency
-	local xCenter, yText = icon.x + iconHalfWidth, icon.y + iconImageHeight + 1
+	local xCenter = icon.x + iconHalfWidth
 
-	local function iconDrawNameLine(y, line)
-		local lineLength = unicode.len(line)
-		local x = math.floor(xCenter - lineLength / 2)
+	-- Name
+	if not icon.hideName then
+		local yText = icon.y + iconImageHeight + 1
 
-		local foreground
-		if icon.selected then
-			foreground = icon.colors.selectionText
-			screen.drawRectangle(x, y, lineLength, 1, icon.colors.selectionBackground, foreground or 0xFF00FF, " ", selectionTransparency)
-		else
-			foreground = icon.colors.defaultText
+		local function iconDrawNameLine(y, line)
+			local lineLength = unicode.len(line)
+			local x = math.floor(xCenter - lineLength / 2)
+
+			local foreground
+			if icon.selected then
+				foreground = icon.colors.selectionText
+				screen.drawRectangle(x, y, lineLength, 1, icon.colors.selectionBackground, foreground or 0xFF00FF, " ", selectionTransparency)
+			else
+				foreground = icon.colors.defaultText
+			end
+
+			screen.drawText(x, y, foreground or 0xFF00FF, line)
 		end
 
-		screen.drawText(x, y, foreground or 0xFF00FF, line)
-	end
-
-	local charIndex = 1
-	for lineIndex = 1, iconTextHeight do
-		if lineIndex < iconTextHeight then
-			iconDrawNameLine(yText, unicode.sub(icon.name, charIndex, charIndex + icon.width - 1))
-			charIndex, yText = charIndex + icon.width, yText + 1
-		else
-			iconDrawNameLine(yText, text.limit(unicode.sub(icon.name, charIndex, -1), icon.width, "center"))
+		local charIndex = 1
+		
+		for lineIndex = 1, iconTextHeight do
+			if lineIndex < iconTextHeight then
+				iconDrawNameLine(yText, unicode.sub(icon.name, charIndex, charIndex + icon.width - 1))
+				charIndex, yText = charIndex + icon.width, yText + 1
+			else
+				iconDrawNameLine(yText, text.limit(unicode.sub(icon.name, charIndex, -1), icon.width, "center"))
+			end
 		end
 	end
 
+	-- Image
 	local xImage = icon.x + iconImageHorizontalOffset
+	
 	if icon.selected then
 		drawSelection(xImage - 1, icon.y - 1, iconImageWidth + 2, iconImageHeight + 2, icon.colors.selectionBackground, selectionTransparency)
 	end
@@ -556,8 +559,10 @@ local function iconDraw(icon)
 		if icon.cut then
 			if not icon.semiTransparentImage then
 				icon.semiTransparentImage = image.copy(icon.image)
+				
 				for i = 3, #icon.semiTransparentImage, 4 do
 					icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
+					
 					if icon.semiTransparentImage[i + 2] > 1 then
 						icon.semiTransparentImage[i + 2] = 1
 					end
@@ -568,8 +573,6 @@ local function iconDraw(icon)
 		else
 			screen.drawImage(xImage, icon.y, icon.image)
 		end
-	elseif icon.liveImage then
-		icon.liveImage(xImage, icon.y)
 	end
 
 	local xShortcut = xImage + iconImageWidth
@@ -1142,7 +1145,7 @@ local function anyIconAddInfo(icon, path)
 	icon.analyseExtension = anyIconAnalyseExtension
 end
 
-function system.icon(x, y, path, colors)
+local function newIcon(x, y, path, colors)
 	local icon = GUI.object(x, y, userSettings.iconWidth, userSettings.iconHeight)
 	
 	anyIconAddInfo(icon, path)
@@ -1242,7 +1245,7 @@ end
 local function iconFieldUpdateFileList(iconField)
 	anyIconFieldUpdateFileList(iconField, function(list)
 		local function addGridIcon(x, y, path)
-			local icon = system.icon(
+			local icon = newIcon(
 				x,
 				y,
 				iconField.path .. path,
@@ -2001,7 +2004,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					window.menu.colors = desktopMenu.colors
 
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
-					local contextMenu = window.menu:addContextMenuItem(name, 0x0)
+					local contextMenu = window.menu:addContextMenuItem(name, 0xD2D2D2)
 
 					contextMenu:addItem(localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
 						window:remove()
@@ -2184,35 +2187,8 @@ function system.copy(fileList, toPath)
 	workspace:draw()
 end
 
-local function menuWidgetEventHandler(workspace, object, e1, ...)
-	if e1 == "touch" and object.onTouch then
-		object.selected = true
-		workspace:draw()
-
-		object.onTouch(workspace, object, e1, ...)
-
-		object.selected = false
-		workspace:draw()
-	end
-end
-
-local function menuWidgetDraw(object)
-	if object.selected then
-		object.textColor = 0xFFFFFF
-		screen.drawRectangle(object.x - 1, object.y, object.width + 2, 1, 0x3366CC, object.textColor, " ")
-	else
-		object.textColor = 0x0
-	end
-
-	object.drawContent(object)
-end
-
 function system.menuWidget(width)
 	local object = GUI.object(1, 1, width, 1)
-	
-	object.selected = false
-	object.eventHandler = menuWidgetEventHandler
-	object.draw = menuWidgetDraw
 
 	return object
 end
@@ -2492,7 +2468,7 @@ function system.updateDesktop()
 		system.execute(paths.system.applicationFinder, "-o", icon.path)
 	end
 
-	dockContainer = workspace:addChild(GUI.container(1, 1, workspace.width, 7))
+	dockContainer = workspace:addChild(GUI.container(1, 1, workspace.width, 6))
 
 	dockContainer.saveUserSettings = function()
 		userSettings.dockShortcuts = {}
@@ -2525,18 +2501,18 @@ function system.updateDesktop()
 	local dockColors = {
 		selectionBackground = 0xD2D2D2,
 		selectionText = 0x2D2D2D,
-		defaultText = 0x2D2D2D,
+		defaultText = 0xE1E1E1,
 		selectionTransparency = 0.5
 	}
 
 	dockContainer.addIcon = function(path)
-		-- RU чекаем новое прикрепление к dock, если ярлык, то ищем оригинальный файл и прикрепляем его
-		-- EN check the new attachment to the dock, if it's a shortcut, then look for the original file and attach it
+		-- Check the new attachment to the dock, if it's a shortcut, then look for the original file and attach it
 		while path:sub(-4) == ".lnk" do
 			path = system.readShortcut(path)
 		end
 
-		local icon = dockContainer:addChild(system.icon(1, 2, path, dockColors))
+		local icon = dockContainer:addChild(newIcon(1, 2, path, dockColors))
+		icon.hideName = true
 		icon:analyseExtension(defaultIconLaunchers)
 		icon:moveBackward()
 
@@ -2668,15 +2644,17 @@ function system.updateDesktop()
 
 	-- Draw dock drawDock dockDraw cyka заебался искать, блядь
 	local overrideDockContainerDraw = dockContainer.draw
+	
 	dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos = userSettings.interfaceColorDock, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
+		local color, currentDockTransparency, currentDockWidth, xPos = 0x696969, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
 
-		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 4, -1 do
+		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 3, -1 do
 			screen.drawText(xPos, y, color, "◢", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
 			screen.drawRectangle(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
 			screen.drawText(xPos + currentDockWidth + 1, y, color, "◣", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
 
-			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1
+			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.1, currentDockWidth - 2, xPos + 1
+			
 			if currentDockTransparency > 1 then
 				currentDockTransparency = 1
 			end
@@ -2687,9 +2665,9 @@ function system.updateDesktop()
 
 	desktopWindowsContainer = workspace:addChild(GUI.container(1, 2, 1, 1))
 
-	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x0, 0x696969, 0x3366CC, 0xFFFFFF))
+	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x1E1E1E, 0x787878, 0x3366CC, 0xFFFFFF))
 	
-	desktopMenuMineOSItem = desktopMenu:addContextMenuItem("MineOS", 0x000000)
+	desktopMenuMineOSItem = desktopMenu:addContextMenuItem("MineOS", 0xD2D2D2)
 	
 	desktopMenuMineOSItem:addItem(localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
@@ -2764,37 +2742,41 @@ function system.updateDesktop()
 	desktopMenuLayout:setSpacing(1, 1, 2)
 
 	local dateWidget, dateWidgetText = system.addMenuWidget(system.menuWidget(1))
-	dateWidget.drawContent = function()
-		screen.drawText(dateWidget.x, 1, dateWidget.textColor, dateWidgetText)
+	
+	dateWidget.draw = function(dateWidget)
+		screen.drawText(dateWidget.x, 1, 0x787878, dateWidgetText)
 	end
 
 	local batteryWidget, batteryWidgetPercent, batteryWidgetText = system.addMenuWidget(system.menuWidget(1))
-	batteryWidget.drawContent = function()
-		screen.drawText(batteryWidget.x, 1, batteryWidget.textColor, batteryWidgetText)
+	batteryWidget.draw = function(batteryWidget)
+		screen.drawText(batteryWidget.x, 1, 0x787878, batteryWidgetText)
 
 		local pixelPercent = math.floor(batteryWidgetPercent * 4 + 0.5)
+		
 		if pixelPercent == 0 then
 			pixelPercent = 1
 		end
 		
 		local index = screen.getIndex(batteryWidget.x + #batteryWidgetText, 1)
+		
 		for i = 1, 4 do
-			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0xD2D2D2, i < 4 and "⠶" or "╸")
+			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0x3C3C3C, i < 4 and "⠶" or "╸")
 			index = index + 1
 		end
 	end
 
 	local RAMWidget, RAMPercent = system.addMenuWidget(system.menuWidget(16))
-	RAMWidget.drawContent = function()
+	RAMWidget.draw = function(RAMWidget)
 		local text = "RAM: " .. math.ceil(RAMPercent * 100) .. "% "
 		local barWidth = RAMWidget.width - #text
 		local activeWidth = math.ceil(RAMPercent * barWidth)
 
-		screen.drawText(RAMWidget.x, 1, RAMWidget.textColor, text)
+		screen.drawText(RAMWidget.x, 1, 0x787878, text)
 		
 		local index = screen.getIndex(RAMWidget.x + #text, 1)
+		
 		for i = 1, barWidth do
-			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0xD2D2D2, "━")
+			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0x3C3C3C, "━")
 			index = index + 1
 		end
 	end
@@ -2887,25 +2869,8 @@ function system.updateDesktop()
 end
 
 function system.updateColorScheme()
-	-- Drop down menus
-	GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.18
-	GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.4
-	GUI.CONTEXT_MENU_SEPARATOR_COLOR = userSettings.interfaceColorDropDownMenuSeparator
-	GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = userSettings.interfaceColorDropDownMenuDefaultBackground
-	GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR = userSettings.interfaceColorDropDownMenuDefaultText
-
-	-- Windows
-	GUI.WINDOW_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.6
-	
-	-- Background containers
 	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or userSettings.interfaceColorDesktopBackground
 	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
-	
-	-- Top menu
-	desktopMenu.colors.default.background = userSettings.interfaceColorMenu
-	
-	-- Desktop background
-	desktopBackgroundColor = userSettings.interfaceColorDesktopBackground
 end
 
 --------------------------------------------------------------------------------
@@ -3175,7 +3140,7 @@ function system.getDockContainer()
 end
 
 function system.addBlurredOrDefaultPanel(container, x, y, width, height)
-	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x2D2D2D))
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x1E1E1E))
 end
 
 function system.addConsoleWindow()

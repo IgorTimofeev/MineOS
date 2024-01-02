@@ -35,13 +35,13 @@ local GUI = {
 	SWITCH_ANIMATION_DURATION = 0.3,
 	FILESYSTEM_DIALOG_ANIMATION_DURATION = 0.5,
 	
-	CONTEXT_MENU_SEPARATOR_COLOR = 0xA5A5A5,
-	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0x2D2D2D,
-	CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = 0xFFFFFF,
+	CONTEXT_MENU_SEPARATOR_COLOR = 0x0F0F0F,
+	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0xE1E1E1,
+	CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = 0x1E1E1E,
 	CONTEXT_MENU_PRESSED_BACKGROUND_COLOR = 0x3366CC,
 	CONTEXT_MENU_PRESSED_TEXT_COLOR = 0xFFFFFF,
-	CONTEXT_MENU_DISABLED_COLOR = 0x878787,
-	CONTEXT_MENU_BACKGROUND_TRANSPARENCY = 0.18,
+	CONTEXT_MENU_DISABLED_COLOR = 0x5A5A5A,
+	CONTEXT_MENU_BACKGROUND_TRANSPARENCY = nil,
 	CONTEXT_MENU_SHADOW_TRANSPARENCY = 0.4,
 
 	BACKGROUND_CONTAINER_PANEL_COLOR = 0x0,
@@ -1211,7 +1211,7 @@ local function colorSelectorDraw(colorSelector)
 		screen.drawText(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 0.8)
 	end
 	
-	screen.drawText(colorSelector.x + 1, colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, text.limit(colorSelector.text, colorSelector.width - 2))
+	screen.drawText(math.ceil(colorSelector.x + colorSelector.height / 2), colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, text.limit(colorSelector.text, colorSelector.width - 2))
 	
 	return colorSelector
 end
@@ -2142,7 +2142,7 @@ local function filesystemChooserDraw(object)
 	screen.drawRectangle(object.x, object.y, object.width - tipWidth, object.height, object.colors.background, object.colors.text, " ")
 	screen.drawRectangle(object.x + object.width - tipWidth, object.y, tipWidth, object.height, object.pressed and object.colors.tipText or object.colors.tipBackground, object.pressed and object.colors.tipBackground or object.colors.tipText, " ")
 	screen.drawText(object.x + object.width - math.floor(tipWidth / 2) - 1, y, object.pressed and object.colors.tipBackground or object.colors.tipText, "…")
-	screen.drawText(object.x + 1, y, object.colors.text, text.limit(object.path or object.placeholderText, object.width - tipWidth - 2, "left"))
+	screen.drawText(math.ceil(object.x + object.height / 2), y, object.colors.text, text.limit(object.path or object.placeholderText, object.width - tipWidth - 2, "left"))
 
 	return object
 end
@@ -2689,9 +2689,11 @@ local function textBoxDraw(object)
 
 	local x, y = nil, object.y + object.offset.vertical
 	local lineType, line, textColor
+	
 	for i = object.currentLine, object.currentLine + object.textHeight - 1 do
 		if object.linesCopy[i] then
 			lineType = type(object.linesCopy[i])
+			
 			if lineType == "string" then
 				line, textColor = text.limit(object.linesCopy[i], object.textWidth), object.colors.text
 			elseif lineType == "table" then
@@ -3923,23 +3925,24 @@ end
 local function dropDownMenuItemDraw(item)
 	local yText = item.y + math.floor(item.height / 2)
 
-	if item.type == 1 then
+	if item.isTextItem then
 		local textColor = item.color or item.parent.parent.colors.default.text
 
 		if item.pressed then
 			textColor = item.parent.parent.colors.selected.text
-			screen.drawRectangle(item.x, item.y, item.width, item.height, item.parent.parent.colors.selected.background, textColor, " ")
+			screen.drawRectangle(item.x, yText, item.width, 1, item.parent.parent.colors.selected.background, textColor, " ")
+		
 		elseif item.disabled then
 			textColor = item.parent.parent.colors.disabled.text
 		end
 
-		screen.drawText(item.x + 1, yText, textColor, item.text)
+		screen.drawText(item.x + item.height, yText, textColor, item.text)
 
 		if item.shortcut then
 			screen.drawText(item.x + item.width - unicode.wlen(item.shortcut) - 1, yText, textColor, item.shortcut)
 		end
 	else
-		screen.drawText(item.x, yText, item.parent.parent.colors.separator, string.rep("─", item.width))
+		screen.drawText(item.x, yText, item.parent.parent.colors.separator, string.rep(item.parent.parent.itemHeight % 2 == 0 and "▁" or "─", item.width))
 	end
 
 	return item
@@ -3955,9 +3958,9 @@ end
 
 local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 	if e1 == "touch" then
-		if object.type == 1 and not object.pressed then
-
+		if object.isTextItem and not object.pressed then
 			dropDownMenuReleaseItems(object.parent.parent)
+			
 			if #object.parent.parent.subMenus then
 				for i, subMenu in ipairs(object.parent.parent.subMenus) do
 			 		subMenu:remove()
@@ -3972,11 +3975,14 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 				object.parent.parent.parent:addChild(object.subMenu:releaseItems())
 				object.subMenu.localX = object.parent.parent.localX + object.parent.parent.width
 				object.subMenu.localY = object.parent.parent.localY + object.localY - 1
+				
 				if screen.getWidth() - object.parent.parent.localX - object.parent.parent.width + 1 < object.subMenu.width then
 					object.subMenu.localX = object.parent.parent.localX - object.subMenu.width
 					object.parent.parent:moveToFront()
 				end
+				
 				table.insert(object.parent.parent.subMenus, object.subMenu)
+				
 				workspace:draw()
 			else
 				event.sleep(0.2)
@@ -3984,6 +3990,7 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 				object.parent.parent.parent:remove()
 				
 				local objectIndex = object:indexOf()
+				
 				for i = 2, #object.parent.parent.parent.children do
 					if object.parent.parent.parent.children[i].onMenuClosed then
 						object.parent.parent.parent.children[i].onMenuClosed(objectIndex)
@@ -4001,9 +4008,10 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 end
 
 local function dropDownMenuGetHeight(menu)
-	local height = 0
+	local height = menu.itemHeight % 2 == 0 and 1 or 0
+
 	for i = 1, #menu.itemsContainer.children do
-		height = height + (menu.itemsContainer.children[i].type == 2 and 1 or menu.itemHeight)
+		height = height + menu.itemsContainer.children[i].height
 	end
 
 	return height
@@ -4015,9 +4023,11 @@ local function dropDownMenuReposition(menu)
 	menu.nextButton.localY = menu.height
 
 	local y = menu.itemsContainer.children[1].localY
+	
 	for i = 1, #menu.itemsContainer.children do
 		menu.itemsContainer.children[i].localY = y
 		menu.itemsContainer.children[i].width = menu.itemsContainer.width
+		
 		y = y + menu.itemsContainer.children[i].height
 	end
 
@@ -4028,6 +4038,7 @@ end
 local function dropDownMenuUpdate(menu)
 	if #menu.itemsContainer.children > 0 then
 		menu.height = math.min(dropDownMenuGetHeight(menu), menu.maximumHeight, screen.getHeight() - menu.y)
+
 		dropDownMenuReposition(menu)
 	end
 end
@@ -4042,13 +4053,14 @@ end
 
 local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, menu.itemHeight))
-	item.type = 1
+
 	item.text = text
 	item.disabled = disabled
 	item.shortcut = shortcut
 	item.color = color
 	item.draw = dropDownMenuItemDraw
 	item.eventHandler = dropDownMenuItemEventHandler
+	item.isTextItem = true
 
 	menu:update()
 
@@ -4057,7 +4069,7 @@ end
 
 local function dropDownMenuAddSeparator(menu)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, 1))
-	item.type = 2
+	
 	item.draw = dropDownMenuItemDraw
 	item.eventHandler = dropDownMenuItemEventHandler
 
@@ -4070,6 +4082,7 @@ local function dropDownMenuScrollDown(workspace, menu)
 	local limit, first = 1, menu.itemsContainer.children[1]
 
 	first.localY = first.localY + menu.scrollSpeed
+	
 	if first.localY > limit then
 		first.localY = limit
 	end
@@ -4079,9 +4092,10 @@ local function dropDownMenuScrollDown(workspace, menu)
 end
 
 local function dropDownMenuScrollUp(workspace, menu)
-	local limit, first = -(#menu.itemsContainer.children * menu.itemHeight - menu.height - 1), menu.itemsContainer.children[1]
+	local limit, first = -(dropDownMenuGetHeight(menu) - menu.height - 1), menu.itemsContainer.children[1]
 
 	first.localY = first.localY - menu.scrollSpeed
+
 	if first.localY < limit then
 		first.localY = limit
 	end
@@ -4188,7 +4202,7 @@ local function contextMenuUpdate(menu)
 	if #menu.itemsContainer.children > 0 then
 		local widestItem, widestShortcut = 0, 0
 		for i = 1, #menu.itemsContainer.children do
-			if menu.itemsContainer.children[i].type == 1 then
+			if menu.itemsContainer.children[i].isTextItem then
 				widestItem = math.max(widestItem, unicode.wlen(menu.itemsContainer.children[i].text))
 				
 				if menu.itemsContainer.children[i].shortcut then
@@ -4197,7 +4211,7 @@ local function contextMenuUpdate(menu)
 			end
 		end
 
-		menu.width, menu.height = 2 + widestItem + (widestShortcut > 0 and 3 + widestShortcut or 0), math.min(dropDownMenuGetHeight(menu), menu.maximumHeight)
+		menu.width, menu.height = menu.itemHeight * 2 + widestItem + (widestShortcut > 0 and 3 + widestShortcut or 0), math.min(dropDownMenuGetHeight(menu), menu.maximumHeight)
 		dropDownMenuReposition(menu)
 
 		local bufferWidth, bufferHeight = screen.getResolution()
@@ -4225,8 +4239,8 @@ contextMenuCreate = function(x, y, backgroundColor, textColor, backgroundPressed
 		x,
 		y,
 		1,
-		math.ceil(screen.getHeight() * 0.5),
-		1,
+		math.ceil(screen.getHeight() * 0.7),
+		2,
 		backgroundColor or GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
 		textColor or GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
 		backgroundPressedColor or GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
@@ -4263,7 +4277,7 @@ local function comboBoxDraw(object)
 	-- Item
 	if object.dropDownMenu.itemsContainer.children[object.selectedItem] then
 		screen.drawText(
-			object.x + 1,
+			math.ceil(object.x + object.height / 2),
 			math.floor(object.y + object.height / 2),
 			object.colors.default.text,
 			text.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 2, "right")
@@ -4328,8 +4342,8 @@ local function comboBoxAddSeparator(object)
 	return object.dropDownMenu:addSeparator()
 end
 
-function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
-	local comboBox = GUI.object(x, y, width, itemSize)
+function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
+	local comboBox = GUI.object(x, y, width, height)
 	
 	comboBox.colors = {
 		default = {
@@ -4351,7 +4365,7 @@ function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBa
 		1,
 		1,
 		math.ceil(screen.getHeight() * 0.5),
-		itemSize,
+		height == 1 and 1 or 2,
 		comboBox.colors.default.background, 
 		comboBox.colors.default.text, 
 		comboBox.colors.selected.background,

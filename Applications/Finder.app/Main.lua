@@ -53,19 +53,19 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 	0xF0F0F0
 ))
 
-local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x3C3C3C))
+local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x2D2D2D))
 
-local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "<"))
+local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, 0x3C3C3C, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "<"))
 prevButton.colors.disabled.background = 0x4B4B4B
 prevButton.colors.disabled.text = 0xA5A5A5
 
-local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, 0x4B4B4B, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
+local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, 0x3C3C3C, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
-local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0xE1E1E1, 0x4B4B4B, true))
+local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, 0x3C3C3C, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0xE1E1E1, 0x4B4B4B, true))
 modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
-local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, 0x4B4B4B, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
+local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, 0x3C3C3C, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not network.internetProxy
 
@@ -78,14 +78,14 @@ itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERT
 itemsLayout:setSpacing(1, 1, 0)
 itemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x3C3C3C, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
 
 local iconField
 
 local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
-local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
+local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x3C3C3C))
 
-local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
+local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x4B4B4B, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
 
 local resizer = window:addChild(GUI.resizer(1, 1, 3, 4, 0xC3C3C3, 0x0))
 
@@ -453,6 +453,7 @@ end
 
 local function updateIconField()
 	local path
+
 	if iconField then
 		path = iconField.path
 		iconField:remove()
@@ -562,6 +563,7 @@ local function updateIconField()
 		overrideUpdateFileList(...)
 	end
 
+	resizer:moveToFront()
 	calculateSizes()
 end
 
