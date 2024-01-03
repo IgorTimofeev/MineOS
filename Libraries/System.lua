@@ -335,7 +335,7 @@ end
 
 
 local function addMainDesktopMenuItem(menu)
-	local item = menu:addContextMenuItem("❤", 0xF0F0F0)
+	local item = menu:addContextMenuItem("💻", 0xF0F0F0)
 	
 	item:addItem("🛈", localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
