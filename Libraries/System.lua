@@ -1022,9 +1022,9 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 
 	if icon.path == paths.user.trash then
-		contextMenu:addItem("🗑", localization.emptyTrash).onTouch = emptyTrash
+		contextMenu:addItem("❌", localization.emptyTrash).onTouch = emptyTrash
 	else
-		contextMenu:addItem("🗑", localization.delete).onTouch = function()
+		contextMenu:addItem("❌", localization.delete).onTouch = function()
 			moveSelectedIconsToTrash(selectedIcons)
 		end
 	end
@@ -1040,7 +1040,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 	contextMenu:addSeparator()
 
-	contextMenu:addItem("👀", localization.properties).onTouch = function()
+	contextMenu:addItem("👁", localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
 			system.addPropertiesWindow(math.ceil(e3), math.ceil(e4), 46, selectedIcons[i])
 		end
@@ -2715,7 +2715,7 @@ function system.updateDesktop()
 			workspace:draw()
 		end
 		
-		contextMenu:addItem("🗑️", localization.emptyTrash).onTouch = emptyTrash
+		contextMenu:addItem("❌", localization.emptyTrash).onTouch = emptyTrash
 
 		workspace:draw()
 	end
