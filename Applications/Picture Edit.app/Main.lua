@@ -490,7 +490,7 @@ fileItem:addSeparator()
 
 fileItem:addItem("📂", locale.open, false, "^O").onTouch = open
 
-local fileItemSubMenu = fileItem:addSubMenuItem(locale.openRecent, #config.recentFiles == 0)
+local fileItemSubMenu = fileItem:addSubMenuItem("🗘", locale.openRecent, #config.recentFiles == 0)
 
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
