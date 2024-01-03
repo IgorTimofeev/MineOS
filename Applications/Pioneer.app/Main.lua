@@ -564,7 +564,7 @@ helpButton.onTouch = function()
 		" ",
 		"Developed and adapted for MineOS by",
 		"Igor Timofeev, vk.com/id7799889",
-		"Maxim Afonin, @140bpmdubstep"
+		"Maxim Afonin, vk.com/id258714476"
 	}
 
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
