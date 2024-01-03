@@ -389,7 +389,9 @@ local function addMainDesktopMenuItem(menu)
 
 	item:addSeparator()
 
-	item:addItem("↩", localization.logout).onTouch = function()
+	local logoutItems = {"🥰", "😭", "😎", "🥺", "🤔", "🤓"}
+
+	item:addItem(logoutItems[math.random(1, #logoutItems)], localization.logout).onTouch = function()
 		system.authorize()
 	end
 
@@ -2867,14 +2869,14 @@ function system.updateDesktop()
 		end
 
 		if userSettings.interfaceScreensaverEnabled then
-			if not e1 and uptime >= screensaverUptime + userSettings.interfaceScreensaverDelay then
+			if e1 then
+				screensaverUptime = computer.uptime()
+			elseif uptime >= screensaverUptime + userSettings.interfaceScreensaverDelay then
 				if filesystem.exists(userSettings.interfaceScreensaverPath) then
 					system.execute(userSettings.interfaceScreensaverPath)
 					workspace:draw()
 				end
 			end
-
-			screensaverUptime = computer.uptime()
 		end
 	end
 
