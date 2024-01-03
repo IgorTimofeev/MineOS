@@ -484,13 +484,14 @@ window.image.reposition = function()
 end
 
 local fileItem = menu:addContextMenuItem(locale.file)
-fileItem:addItem(locale.new, false, "^N").onTouch = new
+fileItem:addItem("➕", locale.new, false, "^N").onTouch = new
 
 fileItem:addSeparator()
 
-fileItem:addItem(locale.open, false, "^O").onTouch = open
+fileItem:addItem("📂", locale.open, false, "^O").onTouch = open
 
 local fileItemSubMenu = fileItem:addSubMenuItem(locale.openRecent, #config.recentFiles == 0)
+
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 		loadImage(config.recentFiles[i])
@@ -499,7 +500,7 @@ for i = 1, #config.recentFiles do
 	end
 end
 
-fileItem:addItem(locale.openFromURL).onTouch = function()
+fileItem:addItem("🌍", locale.openFromURL).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.openFromURL)
 	container.panel.eventHandler = nil
 
@@ -543,12 +544,12 @@ end
 
 fileItem:addSeparator()
 
-saveItem = fileItem:addItem(locale.save, false, "^S")
+saveItem = fileItem:addItem("💾", locale.save, false, "^S")
 saveItem.onTouch = function()
 	save(savePath)
 end
 
-fileItem:addItem(locale.saveAs, false, "^⇧S").onTouch = saveAs
+fileItem:addItem("🖪", locale.saveAs, false, "^⇧S").onTouch = saveAs
 
 menu:addItem(locale.view).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.view)
@@ -571,31 +572,31 @@ end
 
 local imageItem = menu:addContextMenuItem(locale.image)
 
-imageItem:addItem(locale.flipVertical).onTouch = function()
+imageItem:addItem("↕", locale.flipVertical).onTouch = function()
 	window.image.data = image.flipVertically(window.image.data)
 end
 
-imageItem:addItem(locale.flipHorizontal).onTouch = function()
+imageItem:addItem("⬌", locale.flipHorizontal).onTouch = function()
 	window.image.data = image.flipHorizontally(window.image.data)
 end
 
 imageItem:addSeparator()
 
-imageItem:addItem(locale.rotate90).onTouch = function()
+imageItem:addItem("⤹", locale.rotate90).onTouch = function()
 	window.image.data = image.rotate(window.image.data, 90)
 	window.image.width = window.image.data[1]
 	window.image.height = window.image.data[2]
 	window.image.reposition()
 end
 
-imageItem:addItem(locale.rotate180).onTouch = function()
+imageItem:addItem("⤿", locale.rotate180).onTouch = function()
 	window.image.data = image.rotate(window.image.data, 180)
 	window.image.width = window.image.data[1]
 	window.image.height = window.image.data[2]
 	window.image.reposition()
 end
 
-imageItem:addItem(locale.rotate270).onTouch = function()
+imageItem:addItem("↺", locale.rotate270).onTouch = function()
 	window.image.data = image.rotate(window.image.data, 270)
 	window.image.width = window.image.data[1]
 	window.image.height = window.image.data[2]
@@ -604,7 +605,7 @@ end
 
 local editItem = menu:addContextMenuItem(locale.edit)
 
-editItem:addItem(locale.hueSaturation).onTouch = function()
+editItem:addItem("🎨", locale.hueSaturation).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.hueSaturation)
 	container.layout:setSpacing(1, 1, 2)
 	container.panel.eventHandler = nil
@@ -628,7 +629,7 @@ editItem:addItem(locale.hueSaturation).onTouch = function()
 	end
 end
 
-editItem:addItem(locale.colorBalance).onTouch = function()
+editItem:addItem("🌈", locale.colorBalance).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.colorBalance)
 	container.layout:setSpacing(1, 1, 2)
 	container.panel.eventHandler = nil
@@ -652,7 +653,7 @@ editItem:addItem(locale.colorBalance).onTouch = function()
 	end
 end
 
-editItem:addItem(locale.photoFilter).onTouch = function()
+editItem:addItem("📷", locale.photoFilter).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.photoFilter)
 	container.layout:setSpacing(1, 1, 2)
 	container.panel.eventHandler = nil
@@ -674,17 +675,17 @@ end
 
 editItem:addSeparator()
 
-editItem:addItem(locale.invertColors).onTouch = function()
+editItem:addItem("☻", locale.invertColors).onTouch = function()
 	window.image.data = image.invert(window.image.data)
 end
 
-editItem:addItem(locale.blackWhite).onTouch = function()
+editItem:addItem("🌗", locale.blackWhite).onTouch = function()
 	window.image.data = image.blackAndWhite(window.image.data)
 end
 
 editItem:addSeparator()
 
-editItem:addItem(locale.gaussianBlur).onTouch = function()
+editItem:addItem("⧉", locale.gaussianBlur).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.gaussianBlur)
 	container.panel.eventHandler = nil
 

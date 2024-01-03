@@ -337,7 +337,7 @@ end
 local function addMainDesktopMenuItem(menu)
 	local item = menu:addContextMenuItem("❤", 0xF0F0F0)
 	
-	item:addItem(localization.aboutSystem).onTouch = function()
+	item:addItem("🛈", localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
 		container.layout:removeChildren()
 		
@@ -383,22 +383,22 @@ local function addMainDesktopMenuItem(menu)
 		workspace:draw()
 	end
 
-	item:addItem(localization.updates).onTouch = function()
+	item:addItem("🛒", localization.updates).onTouch = function()
 		system.execute(paths.system.applicationAppMarket, "updates")
 	end
 
 	item:addSeparator()
 
-	item:addItem(localization.logout).onTouch = function()
+	item:addItem("↩", localization.logout).onTouch = function()
 		system.authorize()
 	end
 
-	item:addItem(localization.reboot).onTouch = function()
+	item:addItem("🗘", localization.reboot).onTouch = function()
 		require("Network").broadcastComputerState(false)
 		computer.shutdown(true)
 	end
 
-	item:addItem(localization.shutdown).onTouch = function()
+	item:addItem("⏻", localization.shutdown).onTouch = function()
 		require("Network").broadcastComputerState(false)
 		computer.shutdown()
 	end
@@ -473,7 +473,7 @@ local function uploadToPastebin(path)
 end
 
 function system.addUploadToPastebinMenuItem(menu, path)
-	menu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+	menu:addItem("⤴", localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 		uploadToPastebin(path)
 	end
 end
@@ -758,7 +758,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
 	if #selectedIcons > 1 then
-		contextMenu:addItem(localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
+		contextMenu:addItem("📂", localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
 			local container = addBackgroundContainerWithInput("", localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")", localization.folderName)
 
 			container.input.onInputFinished = function()
@@ -784,15 +784,15 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	else
 		if icon.isDirectory then
 			if icon.extension == ".app" then
-				contextMenu:addItem(localization.edit .. " Main.lua").onTouch = function()
+				contextMenu:addItem("🖊", localization.edit .. " Main.lua").onTouch = function()
 					system.execute(paths.system.applicationMineCodeIDE, icon.path .. "Main.lua")
 				end
 
-				contextMenu:addItem(localization.showPackageContent).onTouch = function()
+				contextMenu:addItem("📂", localization.showPackageContent).onTouch = function()
 					icon.parent.launchers.showPackageContent(icon)
 				end		
 
-				contextMenu:addItem(localization.launchWithArguments).onTouch = function()
+				contextMenu:addItem("˃", localization.launchWithArguments).onTouch = function()
 					system.launchWithArguments(icon.path .. "Main.lua")
 				end
 
@@ -800,7 +800,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			end
 
 			if icon.extension ~= ".app" then
-				contextMenu:addItem(localization.addToFavourites).onTouch = function()
+				contextMenu:addItem("⭐", localization.addToFavourites).onTouch = function()
 					local container = GUI.addBackgroundContainer(workspace, true, true, localization.addToFavourites)
 
 					local input = addBackgroundContainerInput(container.layout, icon.name, localization.name)
@@ -819,7 +819,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			end
 		else
 			if icon.isShortcut then
-				contextMenu:addItem(localization.editShortcut).onTouch = function()
+				contextMenu:addItem("🖊", localization.editShortcut).onTouch = function()
 					local text = system.readShortcut(icon.path)
 					local container = addBackgroundContainerWithInput(text, localization.editShortcut, localization.rename)
 
@@ -839,21 +839,23 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 					workspace:draw()
 				end
 
-				contextMenu:addItem(localization.showContainingFolder).onTouch = function()
+				contextMenu:addItem("📂", localization.showContainingFolder).onTouch = function()
 					icon.parent.launchers.showContainingFolder(icon)
 				end
 
 				contextMenu:addSeparator()
 			else
 				local function addDefault()
-					contextMenu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+					contextMenu:addItem("⤴", localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 						uploadToPastebin(icon.path)
 					end
+
 					contextMenu:addSeparator()
 				end
 
 				if userSettings.extensions[icon.extension] then
 					local result, reason = loadfile(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Context menu.lua")
+					
 					if result then
 						result, reason = pcall(result, workspace, icon, contextMenu)
 
@@ -870,7 +872,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 				end
 
 				-- Open with
-				local subMenu = contextMenu:addSubMenuItem(localization.openWith)
+				local subMenu = contextMenu:addSubMenuItem("🔎", localization.openWith)
 				
 				local function setAssociation(path)
 					userSettings.extensions[icon.extension] = path
@@ -883,7 +885,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 					system.saveUserSettings()
 				end
 
-				subMenu:addItem(localization.select).onTouch = function()
+				subMenu:addItem("🗸", localization.select).onTouch = function()
 					local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), localization.open, localization.cancel, localization.fileName, "/")
 					
 					filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_DIRECTORY)
@@ -900,6 +902,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 				subMenu:addSeparator()
 
 				local list = filesystem.list(paths.system.applications)
+				
 				for i = 1, #list do
 					local path = paths.system.applications .. list[i]
 
@@ -914,10 +917,10 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	end
 
 	if not icon.isShortcut or #selectedIcons > 1 then
-		local subMenu = contextMenu:addSubMenuItem(localization.createShortcut)
+		local subMenu = contextMenu:addSubMenuItem("🔖", localization.createShortcut)
 		
-		local function addShortcutItem(name, pathGetter)
-			subMenu:addItem(name).onTouch = function()
+		local function addShortcutItem(icon, name, pathGetter)
+			subMenu:addItem(icon, name).onTouch = function()
 				local selectedIcon
 
 				for i = 1, #selectedIcons do
@@ -935,19 +938,20 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			end
 		end
 
-		addShortcutItem(localization.inCurrentDirectory, function(selectedIcon)
+		addShortcutItem("📂", localization.inCurrentDirectory, function(selectedIcon)
 			return filesystem.path(selectedIcon.path)
 		end)
 
-		addShortcutItem(localization.onDesktop, function(selectedIcon)
+		addShortcutItem("💻", localization.onDesktop, function(selectedIcon)
 			return paths.user.desktop
 		end)
 	end
 
-	local subMenu = contextMenu:addSubMenuItem(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
+	local subMenu = contextMenu:addSubMenuItem("📦", localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
 	
 	local function archive(where)
 		local itemsToArchive = {}
+		
 		for i = 1, #selectedIcons do
 			table.insert(itemsToArchive, selectedIcons[i].path)
 		end
@@ -961,16 +965,16 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		computer.pushSignal("system", "updateFileList")
 	end
 
-	subMenu:addItem(localization.inCurrentDirectory).onTouch = function()
+	subMenu:addItem("📂", localization.inCurrentDirectory).onTouch = function()
 		archive(filesystem.path(icon.path))
 	end
 
-	subMenu:addItem(localization.onDesktop).onTouch = function()
+	subMenu:addItem("💻", localization.onDesktop).onTouch = function()
 		archive(paths.user.desktop)
 	end
 
 	if #selectedIcons == 1 then
-		contextMenu:addItem(localization.addToDock).onTouch = function()
+		contextMenu:addItem("📌", localization.addToDock).onTouch = function()
 			dockContainer.addIcon(icon.path).keepInDock = true
 			dockContainer.saveUserSettings()
 		end
@@ -984,22 +988,23 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		end
 
 		system.clipboard = {cut = cut}
+		
 		for i = 1, #selectedIcons do
 			selectedIcons[i].cut = cut
 			table.insert(system.clipboard, selectedIcons[i].path)
 		end
 	end
 
-	contextMenu:addItem(localization.cut).onTouch = function()
+	contextMenu:addItem("✂", localization.cut).onTouch = function()
 		cutOrCopy(true)
 	end
 
-	contextMenu:addItem(localization.copy).onTouch = function()
+	contextMenu:addItem("⧉", localization.copy).onTouch = function()
 		cutOrCopy()
 	end
 
 	if #selectedIcons == 1 then
-		contextMenu:addItem(localization.rename).onTouch = function()
+		contextMenu:addItem("Aa", localization.rename).onTouch = function()
 			local container = addBackgroundContainerWithInput(filesystem.name(icon.path), localization.rename, localization.newName)
 
 			container.input.onInputFinished = function()
@@ -1015,16 +1020,15 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 
 	if icon.path == paths.user.trash then
-		contextMenu:addItem(localization.emptyTrash).onTouch = emptyTrash
+		contextMenu:addItem("🗑", localization.emptyTrash).onTouch = emptyTrash
 	else
-		contextMenu:addItem(localization.delete).onTouch = function()
+		contextMenu:addItem("🗑", localization.delete).onTouch = function()
 			moveSelectedIconsToTrash(selectedIcons)
 		end
 	end
 	
-
 	if icon.isShortcut then
-		contextMenu:addItem(localization.deleteWithSource).onTouch = function()
+		contextMenu:addItem("𝕩", localization.deleteWithSource).onTouch = function()
 			moveToTrash({
 				icon.shortcutPath,
 				icon.path
@@ -1034,7 +1038,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 	contextMenu:addSeparator()
 
-	contextMenu:addItem(localization.properties).onTouch = function()
+	contextMenu:addItem("👀", localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
 			system.addPropertiesWindow(math.ceil(e3), math.ceil(e4), 46, selectedIcons[i])
 		end
@@ -1469,9 +1473,9 @@ end
 local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
-	local subMenu = contextMenu:addSubMenuItem(localization.create)
+	local subMenu = contextMenu:addSubMenuItem("➕", localization.create)
 
-	subMenu:addItem(localization.newFile).onTouch = function()
+	subMenu:addItem("🗎", localization.newFile).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newFile, localization.fileName)
 
 		container.input.onInputFinished = function()
@@ -1489,7 +1493,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		workspace:draw()
 	end
 	
-	subMenu:addItem(localization.newFolder).onTouch = function()
+	subMenu:addItem("📂", localization.newFolder).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newFolder, localization.folderName)
 
 		container.input.onInputFinished = function()
@@ -1505,7 +1509,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		workspace:draw()
 	end
 
-	subMenu:addItem(localization.newImage).onTouch = function()
+	subMenu:addItem("📷", localization.newImage).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newImage, localization.fileName)
 
 		local layout = container.layout:addChild(GUI.layout(1, 1, 36, 3, 1, 1))
@@ -1550,7 +1554,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		workspace:draw()
 	end
 
-	subMenu:addItem(localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
+	subMenu:addItem("🌍", localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newFileFromURL, localization.fileName)
 
 		local inputURL = addBackgroundContainerInput(container.layout, "", "URL", false)
@@ -1592,7 +1596,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 
 	subMenu:addSeparator()
 
-	subMenu:addItem(localization.newApplication).onTouch = function()
+	subMenu:addItem("💻", localization.newApplication).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newApplication, localization.applicationName)
 		
 		container.panel.eventHandler = function(workspace, panel, e1)
@@ -1620,7 +1624,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 
 	contextMenu:addSeparator()
 				
-	local subMenu = contextMenu:addSubMenuItem(localization.sortBy)
+	local subMenu = contextMenu:addSubMenuItem("⇊", localization.sortBy)
 	
 	local function sortAutomatically()
 		if iconField.iconConfigEnabled then
@@ -1637,27 +1641,27 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		sortAutomatically()
 	end
 
-	subMenu:addItem(localization.sortByName).onTouch = function()
+	subMenu:addItem("Aa", localization.sortByName).onTouch = function()
 		setSortingMethod(filesystem.SORTING_NAME)
 	end
 
-	subMenu:addItem(localization.sortByDate).onTouch = function()
+	subMenu:addItem("🗓", localization.sortByDate).onTouch = function()
 		setSortingMethod(filesystem.SORTING_DATE)
 	end
 
-	subMenu:addItem(localization.sortByType).onTouch = function()
+	subMenu:addItem("🖹", localization.sortByType).onTouch = function()
 		setSortingMethod(filesystem.SORTING_TYPE)
 	end
 
-	contextMenu:addItem(localization.sortAutomatically).onTouch = sortAutomatically
+	contextMenu:addItem("🗓", localization.sortAutomatically).onTouch = sortAutomatically
 
-	contextMenu:addItem(localization.update).onTouch = function()
+	contextMenu:addItem("🗘", localization.update).onTouch = function()
 		iconField:updateFileList()
 	end
 
 	contextMenu:addSeparator()
 
-	contextMenu:addItem(localization.paste, not system.clipboard).onTouch = function()
+	contextMenu:addItem("⇲", localization.paste, not system.clipboard).onTouch = function()
 		local i = 1
 		while i <= #system.clipboard do
 			if filesystem.exists(system.clipboard[i]) then
@@ -2082,7 +2086,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
 					local contextMenu = window.menu:addContextMenuItem(name, 0xD2D2D2)
 
-					contextMenu:addItem(localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
+					contextMenu:addItem("⛌", localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
 						window:remove()
 					end
 
@@ -2626,11 +2630,11 @@ function system.updateDesktop()
 			if icon.windows then
 				local eventData = {...}
 				
-				contextMenu:addItem(localization.newWindow).onTouch = function()
+				contextMenu:addItem("➕", localization.newWindow).onTouch = function()
 					iconOnDoubleClick(icon, e1, e2, e3, e4, table.unpack(eventData))
 				end
 				
-				contextMenu:addItem(localization.closeAllWindows).onTouch = function()
+				contextMenu:addItem("⛌",localization.closeAllWindows).onTouch = function()
 					for window in pairs(icon.windows) do
 						window:remove()
 					end
@@ -2639,17 +2643,17 @@ function system.updateDesktop()
 				end
 			end
 			
-			contextMenu:addItem(localization.showContainingFolder).onTouch = function()
+			contextMenu:addItem("📂", localization.showContainingFolder).onTouch = function()
 				system.execute(paths.system.applicationFinder, "-o", filesystem.path(icon.shortcutPath or icon.path))
 			end
 			
 			contextMenu:addSeparator()
 			
-			contextMenu:addItem(localization.moveRight, indexOf >= #dockContainer.children - 1).onTouch = function()
+			contextMenu:addItem("˱", localization.moveRight, indexOf >= #dockContainer.children - 1).onTouch = function()
 				moveDockIcon(indexOf, 1)
 			end
 			
-			contextMenu:addItem(localization.moveLeft, indexOf <= 1).onTouch = function()
+			contextMenu:addItem("˲", localization.moveLeft, indexOf <= 1).onTouch = function()
 				moveDockIcon(indexOf, -1)
 			end
 			
@@ -2657,7 +2661,7 @@ function system.updateDesktop()
 			
 			if icon.keepInDock then
 				if #dockContainer.children > 1 then
-					contextMenu:addItem(localization.removeFromDock).onTouch = function()
+					contextMenu:addItem("📌", localization.removeFromDock).onTouch = function()
 						if icon.windows then
 							icon.keepInDock = nil
 						else
@@ -2671,7 +2675,7 @@ function system.updateDesktop()
 				end
 			else
 				if icon.windows then
-					contextMenu:addItem(localization.keepInDock).onTouch = function()
+					contextMenu:addItem("📌", localization.keepInDock).onTouch = function()
 						icon.keepInDock = true
 						dockContainer.saveUserSettings()
 					end
@@ -2709,7 +2713,7 @@ function system.updateDesktop()
 			workspace:draw()
 		end
 		
-		contextMenu:addItem(localization.emptyTrash).onTouch = emptyTrash
+		contextMenu:addItem("🗑️", localization.emptyTrash).onTouch = emptyTrash
 
 		workspace:draw()
 	end
@@ -2868,9 +2872,9 @@ function system.updateDesktop()
 					system.execute(userSettings.interfaceScreensaverPath)
 					workspace:draw()
 				end
-
-				screensaverUptime = computer.uptime()
 			end
+
+			screensaverUptime = computer.uptime()
 		end
 	end
 

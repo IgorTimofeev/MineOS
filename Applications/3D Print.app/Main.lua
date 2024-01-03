@@ -173,11 +173,11 @@ window.actionButtons.localY = 1
 
 local fileItem = menu:addContextMenuItem(localization.file)
 
-local newItem = fileItem:addItem(localization.new, false, "^N")
-local openItem = fileItem:addItem(localization.open, false, "^O")
+local newItem = fileItem:addItem("➕", localization.new, false, "^N")
+local openItem = fileItem:addItem("📂", localization.open, false, "^O")
 fileItem:addSeparator()
-local saveItem = fileItem:addItem(localization.save, true, "^S")
-local saveAsItem = fileItem:addItem(localization.saveAs, false, "^⇧S")
+local saveItem = fileItem:addItem("💾", localization.save, true, "^S")
+local saveAsItem = fileItem:addItem("🖪", localization.saveAs, false, "^⇧S")
 
 menu:addItem(localization.help).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.help)

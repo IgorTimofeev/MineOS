@@ -35,14 +35,17 @@ local GUI = {
 	SWITCH_ANIMATION_DURATION = 0.3,
 	FILESYSTEM_DIALOG_ANIMATION_DURATION = 0.5,
 	
-	CONTEXT_MENU_SEPARATOR_COLOR = 0x0F0F0F,
-	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0xD2D2D2,
 	CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = 0x1E1E1E,
+	CONTEXT_MENU_DEFAULT_ICON_COLOR = 0x969696,
+	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0xD2D2D2,
 	CONTEXT_MENU_PRESSED_BACKGROUND_COLOR = 0x3366CC,
+	CONTEXT_MENU_PRESSED_ICON_COLOR = 0xB4B4B4,
 	CONTEXT_MENU_PRESSED_TEXT_COLOR = 0xFFFFFF,
-	CONTEXT_MENU_DISABLED_COLOR = 0x5A5A5A,
+	CONTEXT_MENU_DISABLED_ICON_COLOR = 0x5A5A5A,
+	CONTEXT_MENU_DISABLED_TEXT_COLOR = 0x5A5A5A,
 	CONTEXT_MENU_BACKGROUND_TRANSPARENCY = nil,
 	CONTEXT_MENU_SHADOW_TRANSPARENCY = 0.4,
+	CONTEXT_MENU_SEPARATOR_COLOR = 0x0F0F0F,
 
 	BACKGROUND_CONTAINER_PANEL_COLOR = 0x0,
 	BACKGROUND_CONTAINER_TITLE_COLOR = 0xE1E1E1,
@@ -3926,20 +3929,29 @@ local function dropDownMenuItemDraw(item)
 	local yText = item.y + math.floor(item.height / 2)
 
 	if item.isTextItem then
+		local iconColor = item.color or item.parent.parent.colors.default.icon
 		local textColor = item.color or item.parent.parent.colors.default.text
 
 		if item.pressed then
+			iconColor = item.parent.parent.colors.selected.icon
 			textColor = item.parent.parent.colors.selected.text
 			screen.drawRectangle(item.x, yText, item.width, 1, item.parent.parent.colors.selected.background, textColor, " ")
-		
 		elseif item.disabled then
+			iconColor = item.parent.parent.colors.disabled.icon
 			textColor = item.parent.parent.colors.disabled.text
 		end
 
-		screen.drawText(item.x + item.height, yText, textColor, item.text)
+		-- Icon & text
+		if item.icon then
+			screen.drawText(item.x + item.height, yText, iconColor, item.icon)
+			screen.drawText(item.x + item.height * 2 + 2, yText, textColor, item.text)
+		else
+			screen.drawText(item.x + item.height, yText, textColor, item.text)
+		end
 
+		-- shortcut
 		if item.shortcut then
-			screen.drawText(item.x + item.width - unicode.wlen(item.shortcut) - 1, yText, textColor, item.shortcut)
+			screen.drawText(item.x + item.width - unicode.wlen(item.shortcut) - item.height, yText, textColor, item.shortcut)
 		end
 	else
 		screen.drawText(item.x, yText, item.parent.parent.colors.separator, string.rep(item.parent.parent.itemHeight % 2 == 0 and "▁" or "─", item.width))
@@ -4051,13 +4063,22 @@ local function dropDownMenuRemoveItem(menu, index)
 	return menu
 end
 
-local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
+local function dropDownMenuAddItem(menu, a1, a2, a3, a4, a5)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, menu.itemHeight))
 
-	item.text = text
-	item.disabled = disabled
-	item.shortcut = shortcut
-	item.color = color
+	if type(a1) == "string" and type(a2) == "string" then
+		item.icon = a1
+		item.text = a2
+		item.disabled = a3
+		item.shortcut = a4
+		item.color = a5
+	else
+		item.text = a1
+		item.disabled = a2
+		item.shortcut = a3
+		item.color = a4
+	end
+
 	item.draw = dropDownMenuItemDraw
 	item.eventHandler = dropDownMenuItemEventHandler
 	item.isTextItem = true
@@ -4148,20 +4169,40 @@ local function dropDownMenuAdd(parentContainer, menu)
 	return container:addChild(menu:releaseItems())
 end
 
-function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColor, textColor, backgroundPressedColor, textPressedColor, disabledColor, separatorColor, backgroundTransparency, shadowTransparency)
+function GUI.dropDownMenu(
+	x,
+	y,
+	width,
+	maximumHeight,
+	itemHeight,
+	backgroundColor,
+	iconColor,
+	textColor,
+	backgroundPressedColor,
+	iconPressedColor,
+	textPressedColor,
+	disabledIconColor,
+	disabledTextColor,
+	separatorColor,
+	backgroundTransparency,
+	shadowTransparency
+)
 	local menu = GUI.container(x, y, width, 1)
 	
 	menu.colors = {
 		default = {
 			background = backgroundColor,
-			text = textColor
+			text = textColor,
+			icon = iconColor
 		},
 		selected = {
 			background = backgroundPressedColor,
-			text = textPressedColor
+			text = textPressedColor,
+			icon = iconPressedColor
 		},
 		disabled = {
-			text = disabledColor
+			text = disabledTextColor,
+			icon = disabledIconColor
 		},
 		separator = separatorColor,
 		transparency = {
@@ -4200,24 +4241,40 @@ end
 
 local function contextMenuUpdate(menu)
 	if #menu.itemsContainer.children > 0 then
-		local widestItem, widestShortcut = 0, 0
+		local widestItem, widestShortcut, haveIcon, item = 0, 0, false
+		
 		for i = 1, #menu.itemsContainer.children do
-			if menu.itemsContainer.children[i].isTextItem then
-				widestItem = math.max(widestItem, unicode.wlen(menu.itemsContainer.children[i].text))
+			item = menu.itemsContainer.children[i]
+
+			if item.isTextItem then
+				if item.icon then
+					haveIcon = true
+				end
+
+				widestItem = math.max(widestItem, unicode.wlen(item.text))
 				
-				if menu.itemsContainer.children[i].shortcut then
-					widestShortcut = math.max(widestShortcut, unicode.wlen(menu.itemsContainer.children[i].shortcut))
+				if item.shortcut then
+					widestShortcut = math.max(widestShortcut, unicode.wlen(item.shortcut))
 				end
 			end
 		end
 
-		menu.width, menu.height = menu.itemHeight * 2 + widestItem + (widestShortcut > 0 and 3 + widestShortcut or 0), math.min(dropDownMenuGetHeight(menu), menu.maximumHeight)
+		menu.width =
+			menu.itemHeight * 2 +
+			(haveIcon and menu.itemHeight + 2 or 0) +
+			widestItem +
+			(widestShortcut > 0 and widestShortcut + menu.itemHeight + 1 or 0)
+		
+		menu.height = math.min(dropDownMenuGetHeight(menu), menu.maximumHeight)
+		
 		dropDownMenuReposition(menu)
 
 		local bufferWidth, bufferHeight = screen.getResolution()
+		
 		if menu.x + menu.width + 1 >= bufferWidth then
 			menu.localX = bufferWidth - menu.width - 1
 		end
+		
 		if menu.y + menu.height >= bufferHeight then
 			menu.localY = bufferHeight - menu.height
 		end
@@ -4226,8 +4283,15 @@ end
 
 local contextMenuCreate, contextMenuaddSubMenuItem
 
-contextMenuaddSubMenuItem = function(menu, text, disabled)
-	local item = menu:addItem(text, disabled, "►")
+contextMenuaddSubMenuItem = function(menu, a1, a2, a3)
+	local item
+
+	if type(a1) == "string" and type(a2) == "string" then
+		item = menu:addItem(a1, a2, a3, "►")
+	else
+		item = menu:addItem(a1, a2, "►")
+	end
+
 	item.subMenu = contextMenuCreate(1, 1)
 	item.subMenu.colors = menu.colors
 	
@@ -4241,14 +4305,20 @@ contextMenuCreate = function(x, y, backgroundColor, textColor, backgroundPressed
 		1,
 		math.ceil(screen.getHeight() * 0.7),
 		2,
-		backgroundColor or GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
-		textColor or GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
-		backgroundPressedColor or GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
-		textPressedColor or GUI.CONTEXT_MENU_PRESSED_TEXT_COLOR,
-		disabledColor or GUI.CONTEXT_MENU_DISABLED_COLOR,
-		separatorColor or GUI.CONTEXT_MENU_SEPARATOR_COLOR,
-		backgroundTransparency or GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY,
-		shadowTransparency or GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+		GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
+		GUI.CONTEXT_MENU_DEFAULT_ICON_COLOR,
+		GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
+
+		GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
+		GUI.CONTEXT_MENU_PRESSED_ICON_COLOR,
+		GUI.CONTEXT_MENU_PRESSED_TEXT_COLOR,
+
+		GUI.CONTEXT_MENU_DISABLED_ICON_COLOR,
+		GUI.CONTEXT_MENU_DISABLED_TEXT_COLOR,
+		
+		GUI.CONTEXT_MENU_SEPARATOR_COLOR,
+		GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY,
+		GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
 	)
 
 	menu.update = contextMenuUpdate
@@ -4368,9 +4438,12 @@ function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBack
 		height == 1 and 1 or 2,
 		comboBox.colors.default.background, 
 		comboBox.colors.default.text, 
+		comboBox.colors.default.text, 
 		comboBox.colors.selected.background,
 		comboBox.colors.selected.text,
-		GUI.CONTEXT_MENU_DISABLED_COLOR,
+		comboBox.colors.selected.text,
+		GUI.CONTEXT_MENU_DISABLED_ICON_COLOR,
+		GUI.CONTEXT_MENU_DISABLED_TEXT_COLOR,
 		GUI.CONTEXT_MENU_SEPARATOR_COLOR,
 		GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY, 
 		GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
@@ -4441,35 +4514,37 @@ local function windowCheck(window, x, y)
 end
 
 local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
-	if window.movingEnabled then
-		if e1 == "touch" then
-			e3, e4 = math.ceil(e3), math.ceil(e4)
+	if not window.movingEnabled then
+		return
+	end
 
-			if not windowCheck(window, e3, e4) then
-				window.lastTouchX, window.lastTouchY = e3, e4
-			end
+	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-			if window ~= window.parent.children[#window.parent.children] then
-				window:focus()
-				
-				workspace:draw()
-			end
-		
-		elseif e1 == "drag" and window.lastTouchX then
-			e3, e4 = math.ceil(e3), math.ceil(e4)
-
-			if windowCheck(window, e3, e4) then
-				return
-			end
-
-			window.localX, window.localY = window.localX + e3 - window.lastTouchX, window.localY + e4 - window.lastTouchY
+		if not windowCheck(window, e3, e4) then
 			window.lastTouchX, window.lastTouchY = e3, e4
+		end
+
+		if window ~= window.parent.children[#window.parent.children] then
+			window:focus()
 			
 			workspace:draw()
-		
-		elseif e1 == "drop" then
-			window.lastTouchX, window.lastTouchY = nil, nil
 		end
+	
+	elseif e1 == "drag" and window.lastTouchX then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
+		if windowCheck(window, e3, e4) then
+			return
+		end
+
+		window.localX, window.localY = window.localX + e3 - window.lastTouchX, window.localY + e4 - window.lastTouchY
+		window.lastTouchX, window.lastTouchY = e3, e4
+		
+		workspace:draw()
+	
+	elseif e1 == "drop" then
+		window.lastTouchX, window.lastTouchY = nil, nil
 	end
 end
 

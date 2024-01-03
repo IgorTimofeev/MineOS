@@ -15,19 +15,20 @@ local config = filesystem.exists(configPath) and filesystem.readTable(configPath
 
 local colors = {
 	background = 0xF0F0F0,
-	backgroundText = 0x555555,
-	panel = 0x2D2D2D,
-	panelText = 0x999999,
-	panelSeleciton = 0x444444,
-	panelSelecitonText = 0xE1E1E1,
+	backgroundText = 0x5A5A5A,
+	panel = 0x1E1E1E,
+	panelText = 0x5A5A5A,
+	panelSelection = 0x3C3C3C,
+	panelSelectionText = 0xE1E1E1,
 	selectionFrom = 0x990000,
 	selectionTo = 0x990000,
-	selectionText = 0xFFFFFF,
+	selectionText = 0xE1E1E1,
 	selectionBetween = 0xD2D2D2,
 	selectionBetweenText = 0x000000,
-	separator = 0xCCCCCC,
+	separator = 0xE1E1E1,
+	title = 0x2D2D2D,
 	titleBackground = 0x990000,
-	titleText = 0xFFFFFF,
+	titleText = 0xE1E1E1,
 	titleText2 = 0xE1E1E1,
 }
 
@@ -112,7 +113,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 		if e5 == 1 then
 			local menu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 			
-			menu:addItem("Select all").onTouch = function()
+			menu:addItem("✓", "Select all").onTouch = function()
 				selection.from = 1
 				selection.to = #bytes
 				
@@ -121,7 +122,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 			
 			menu:addSeparator()
 			
-			menu:addItem("Edit").onTouch = function()
+			menu:addItem("🖊", "Edit").onTouch = function()
 				local container = GUI.addBackgroundContainer(workspace, true, true, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, string.format("%02X" , bytes[selection.from]), "Type byte value"))
@@ -141,7 +142,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 				workspace:draw()
 			end
 			
-			menu:addItem("Insert").onTouch = function()
+			menu:addItem("⇲", "Insert").onTouch = function()
 				local container = GUI.addBackgroundContainer(workspace, true, true, "Insert bytes at position " .. selection.from .. "")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", "Type byte values separated by space", true))
@@ -171,7 +172,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 			
 			menu:addSeparator()
 			
-			menu:addItem("Delete").onTouch = function()
+			menu:addItem("🗑", "Delete").onTouch = function()
 				for i = selection.from, selection.to do
 					table.remove(bytes, selection.from)
 				end
@@ -235,7 +236,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-window:addChild(GUI.panel(1, 1, window.width, 3, 0x3C3C3C)):moveToBack()
+window:addChild(GUI.panel(1, 1, window.width, 3, colors.title)):moveToBack()
 
 local byteField = window:addChild(newByteField(13, 6, 64, 4, 2, false))
 local charField = window:addChild(newByteField(byteField.localX + byteField.width + 3, 6, 16, 1, 2, true))
@@ -258,8 +259,8 @@ verticalCounter.draw = function(object)
 		local textColor = colors.panelText
 
 		if index > selection.from and index < selection.to then
-			screen.drawRectangle(object.x, object.y + y - 1, object.width, 2, colors.panelSeleciton, colors.panelSelecitonText, " ")
-			textColor = colors.panelSelecitonText
+			screen.drawRectangle(object.x, object.y + y - 1, object.width, 2, colors.panelSelection, colors.panelSelectionText, " ")
+			textColor = colors.panelSelectionText
 		end
 
 		if selection.from >= index and selection.from <= index + 15 or selection.to >= index and selection.to <= index + 15 then
@@ -280,8 +281,8 @@ window:addChild(GUI.object(13, 4, 62, 1)).draw = function(object)
 	for x = 1, object.width, 4 do
 		local textColor = colors.panelText
 		if counter + 1 > restFrom and counter + 1 < restTo then
-			screen.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.panelSeleciton, colors.selectionText, " ")
-			textColor = colors.panelSelecitonText
+			screen.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.panelSelection, colors.selectionText, " ")
+			textColor = colors.panelSelectionText
 		elseif restFrom == counter + 1 or restTo == counter + 1 then
 			screen.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.selectionFrom, colors.selectionText, " ")
 			textColor = colors.selectionText
@@ -312,8 +313,8 @@ titleTextBox.localX = math.floor(window.width / 2 - titleTextBox.width / 2)
 titleTextBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 titleTextBox.eventHandler = nil
 
-local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Save"))
-local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 10, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Open"))
+local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelectionText, colors.panelSelectionText, colors.panel, "Save"))
+local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 10, 2, 2, 0, colors.panel, colors.panelSelectionText, colors.panelSelectionText, colors.panel, "Open"))
 
 ------------------------------------------------------------------------------------------------------------------
 
