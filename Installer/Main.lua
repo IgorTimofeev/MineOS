@@ -13,7 +13,7 @@ local EEPROMAddress, internetAddress, GPUAddress =
 component.invoke(GPUAddress, "bind", getComponentAddress("screen"))
 local screenWidth, screenHeight = component.invoke(GPUAddress, "getResolution")
 
-local repositoryURL = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/"
+local repositoryURL = "https://raw.githubusercontent.com/QM8782/MineOS/master/"
 local installerURL = "Installer/"
 local EFIURL = "EFI/Minified.lua"
 
