@@ -1379,7 +1379,7 @@ local function createEditOrRightClickMenu(menu)
 end
 
 local function checkScrollbar(y)
-	return codeView.horizontalScrollBar.hidden or y >= codeView.y + codeView.height - 1
+	return not codeView.horizontalScrollBar.hidden and y == codeView.y + codeView.height - 1
 end
 
 local uptime = computer.uptime()
