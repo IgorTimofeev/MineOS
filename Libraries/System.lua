@@ -34,7 +34,6 @@ local desktopWindowsContainer
 local dockContainer
 local desktopMenu
 local desktopMenuLayout
-local desktopMenuMineOSItem
 local desktopIconField
 local desktopBackground
 local desktopBackgroundWallpaperX
@@ -333,6 +332,80 @@ function system.setPackageUnloading(value)
 end
 
 --------------------------------------------------------------------------------
+
+
+local function addMainDesktopMenuItem(menu)
+	local item = menu:addContextMenuItem("❤", 0xF0F0F0)
+	
+	item:addItem(localization.aboutSystem).onTouch = function()
+		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
+		container.layout:removeChildren()
+		
+		local lines = {
+			"MineOS",
+			"Copyright © 2014-" .. os.date("%Y", system.getTime()),
+			" ",
+			"Developers:",
+			" ",
+			"Igor Timofeev, vk.com/id7799889",
+			"Gleb Trifonov, vk.com/id88323331",
+			"Yakov Verevkin, vk.com/id60991376",
+			"Alexey Smirnov, vk.com/id23897419",
+			"Timofey Shestakov, vk.com/id113499693",
+			"Fedor Cheremisenov, vk.com/id402150900",
+			"Alexander Fursenko, vk.com/id354154139",
+			" ",
+			"UX-advisers:",
+			" ",
+			"Nikita Yarichev, vk.com/id65873873",
+			"Vyacheslav Sazonov, vk.com/id21321257",
+			"Michail Prosin, vk.com/id75667079",
+			"Dmitrii Tiunov, vk.com/id151541414",
+			"Egor Paliev, vk.com/id83795932",
+			"Maxim Pakin, vk.com/id100687922",
+			"Andrey Kakoito, vk.com/id201043162",
+			"Maxim Omelaenko, vk.com/id54662296",
+			"Konstantin Mayakovskiy, vk.com/id10069748",
+			"Ruslan Isaev, vk.com/id181265169",
+			"Eugene8388608, vk.com/id287247631",
+			" ",
+			"Translators:",
+			" ",
+			"06Games, github.com/06Games",
+			"Xenia Mazneva, vk.com/id5564402",
+			"Yana Dmitrieva, vk.com/id155326634",
+		}
+
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
+		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+		textBox.eventHandler = container.panel.eventHandler
+
+		workspace:draw()
+	end
+
+	item:addItem(localization.updates).onTouch = function()
+		system.execute(paths.system.applicationAppMarket, "updates")
+	end
+
+	item:addSeparator()
+
+	item:addItem(localization.logout).onTouch = function()
+		system.authorize()
+	end
+
+	item:addItem(localization.reboot).onTouch = function()
+		require("Network").broadcastComputerState(false)
+		computer.shutdown(true)
+	end
+
+	item:addItem(localization.shutdown).onTouch = function()
+		require("Network").broadcastComputerState(false)
+		computer.shutdown()
+	end
+
+	return item
+end
+
 
 local function addBackgroundContainerInput(parent, ...)
 	return parent:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...))
@@ -2004,6 +2077,8 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					window.menu = GUI.menu(1, 1, 1)
 					window.menu.colors = desktopMenu.colors
 
+					addMainDesktopMenuItem(window.menu)
+
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
 					local contextMenu = window.menu:addContextMenuItem(name, 0xD2D2D2)
 
@@ -2668,73 +2743,7 @@ function system.updateDesktop()
 
 	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x1E1E1E, 0x787878, 0x3366CC, 0xFFFFFF))
 	
-	desktopMenuMineOSItem = desktopMenu:addContextMenuItem("MineOS", 0xD2D2D2)
-	
-	desktopMenuMineOSItem:addItem(localization.aboutSystem).onTouch = function()
-		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
-		container.layout:removeChildren()
-		
-		local lines = {
-			"MineOS",
-			"Copyright © 2014-" .. os.date("%Y", system.getTime()),
-			" ",
-			"Developers:",
-			" ",
-			"Igor Timofeev, vk.com/id7799889",
-			"Gleb Trifonov, vk.com/id88323331",
-			"Yakov Verevkin, vk.com/id60991376",
-			"Alexey Smirnov, vk.com/id23897419",
-			"Timofey Shestakov, vk.com/id113499693",
-			"Fedor Cheremisenov, vk.com/id402150900",
-			"Alexander Fursenko, vk.com/id354154139",
-			" ",
-			"UX-advisers:",
-			" ",
-			"Nikita Yarichev, vk.com/id65873873",
-			"Vyacheslav Sazonov, vk.com/id21321257",
-			"Michail Prosin, vk.com/id75667079",
-			"Dmitrii Tiunov, vk.com/id151541414",
-			"Egor Paliev, vk.com/id83795932",
-			"Maxim Pakin, vk.com/id100687922",
-			"Andrey Kakoito, vk.com/id201043162",
-			"Maxim Omelaenko, vk.com/id54662296",
-			"Konstantin Mayakovskiy, vk.com/id10069748",
-			"Ruslan Isaev, vk.com/id181265169",
-			"Eugene8388608, vk.com/id287247631",
-			" ",
-			"Translators:",
-			" ",
-			"06Games, github.com/06Games",
-			"Xenia Mazneva, vk.com/id5564402",
-			"Yana Dmitrieva, vk.com/id155326634",
-		}
-
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
-		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-		textBox.eventHandler = container.panel.eventHandler
-
-		workspace:draw()
-	end
-
-	desktopMenuMineOSItem:addItem(localization.updates).onTouch = function()
-		system.execute(paths.system.applicationAppMarket, "updates")
-	end
-
-	desktopMenuMineOSItem:addSeparator()
-
-	desktopMenuMineOSItem:addItem(localization.logout).onTouch = function()
-		system.authorize()
-	end
-
-	desktopMenuMineOSItem:addItem(localization.reboot).onTouch = function()
-		require("Network").broadcastComputerState(false)
-		computer.shutdown(true)
-	end
-
-	desktopMenuMineOSItem:addItem(localization.shutdown).onTouch = function()
-		require("Network").broadcastComputerState(false)
-		computer.shutdown()
-	end
+	addMainDesktopMenuItem(desktopMenu)
 		
 	desktopMenuLayout = workspace:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 	desktopMenuLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
@@ -2766,7 +2775,7 @@ function system.updateDesktop()
 		end
 	end
 
-	local RAMWidget, RAMPercent = system.addMenuWidget(system.menuWidget(16))
+	local RAMWidget, RAMPercent = system.addMenuWidget(system.menuWidget(15))
 	RAMWidget.draw = function(RAMWidget)
 		local text = "RAM: " .. math.ceil(RAMPercent * 100) .. "% "
 		local barWidth = RAMWidget.width - #text
