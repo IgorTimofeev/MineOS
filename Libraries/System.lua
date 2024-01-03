@@ -16,6 +16,9 @@ local system = {}
 local iconImageWidth = 8
 local iconImageHeight = 4
 
+local interfaceUpdateInterval = 1
+local interfaceDrawInterval = 1
+
 local bootUptime = computer.uptime()
 
 local user
@@ -83,7 +86,6 @@ function system.getDefaultUserSettings()
 		networkFTPConnections = {},
 		
 		interfaceScreenAddress = nil,
-		interfaceScreenUpdateInterval = 1,
 		interfaceWallpaperEnabled = false,
 		interfaceWallpaperPath = paths.system.pictures .. "Flight.lua",
 		interfaceWallpaperMode = 1,
@@ -2300,6 +2302,7 @@ end
 
 function system.updateWallpaper()
 	desktopBackground.draw = desktopBackgroundAmbientDraw
+	interfaceDrawInterval = 1
 
 	if userSettings.interfaceWallpaperEnabled and userSettings.interfaceWallpaperPath then
 		local extension = filesystem.extension(userSettings.interfaceWallpaperPath)
@@ -2346,37 +2349,33 @@ function system.updateWallpaper()
 
 				desktopBackground.draw = function(...)
 					desktopBackgroundAmbientDraw(...)
+
 					screen.drawImage(desktopBackgroundWallpaperX, desktopBackgroundWallpaperY, result)
 				end
 			else
 				GUI.alert(reason or "image file is corrupted")
 			end
-		
-			userSettings.interfaceScreenUpdateInterval = 1
 
 		elseif extension == ".lua" then
-			local result, reason = loadfile(userSettings.interfaceWallpaperPath)
+			local result, data = loadfile(userSettings.interfaceWallpaperPath)
 
 			if result then
-				result, functionOrReason = xpcall(result, debug.traceback)
+				result, data = xpcall(result, debug.traceback)
 				
 				if result then
-					if type(functionOrReason) == "function" then
-						desktopBackground.draw = functionOrReason
+					if type(data) == "function" then
+						desktopBackground.draw = data
+						interfaceDrawInterval = 0.01
 					else
 						GUI.alert("Wallpaper script didn't return drawing function")
 					end
 				else
-					GUI.alert(functionOrReason)
+					GUI.alert(data)
 				end
 			else
-				GUI.alert(reason)
+				GUI.alert(data)
 			end
-
-			userSettings.interfaceScreenUpdateInterval = 0.01
 		end
-	else
-		userSettings.interfaceScreenUpdateInterval = 1
 	end
 end
 
@@ -2801,7 +2800,8 @@ function system.updateDesktop()
 	end
 
 	local lastWindowHandled
-	local dateDeadline = bootUptime + 1
+	local interfaceUpdateDeadline = bootUptime + interfaceDrawInterval
+	local interfaceDrawDeadline = bootUptime + interfaceDrawInterval
 	local screensaverUptime = bootUptime
 	
 	workspace.eventHandler = function(workspace, object, e1, e2, e3, e4)
@@ -2832,30 +2832,35 @@ function system.updateDesktop()
 		elseif e1 == "network" then
 			if e2 == "accessDenied" then
 				GUI.alert(localization.networkAccessDenied)
+			
 			elseif e2 == "timeout" then
 				GUI.alert(localization.networkTimeout)
 			end
 		end
 
-		if computer.uptime() >= dateDeadline then
+		uptime = computer.uptime()
+
+		if uptime >= interfaceUpdateDeadline then
 			system.updateMenuWidgets()
+
+			interfaceUpdateDeadline = uptime + interfaceUpdateInterval
+		end
+
+		if uptime >= interfaceDrawDeadline then
 			workspace:draw()
 
-			dateDeadline = computer.uptime() + userSettings.interfaceScreenUpdateInterval
+			uptime = computer.uptime()
+			interfaceDrawDeadline = uptime + interfaceDrawInterval
 		end
 
 		if userSettings.interfaceScreensaverEnabled then
-			if e1 then
-				screensaverUptime = computer.uptime()
-			else
-				if computer.uptime() >= screensaverUptime + userSettings.interfaceScreensaverDelay then
-					if filesystem.exists(userSettings.interfaceScreensaverPath) then
-						system.execute(userSettings.interfaceScreensaverPath)
-						workspace:draw()
-					end
-
-					screensaverUptime = computer.uptime()
+			if not e1 and uptime >= screensaverUptime + userSettings.interfaceScreensaverDelay then
+				if filesystem.exists(userSettings.interfaceScreensaverPath) then
+					system.execute(userSettings.interfaceScreensaverPath)
+					workspace:draw()
 				end
+
+				screensaverUptime = computer.uptime()
 			end
 		end
 	end
