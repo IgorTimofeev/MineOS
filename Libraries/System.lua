@@ -368,7 +368,6 @@ local function addMainDesktopMenuItem(menu)
 			"Konstantin Mayakovskiy, vk.com/id10069748",
 			"Ruslan Isaev, vk.com/id181265169",
 			"Eugene8388608, vk.com/id287247631",
-			"Eugene8388608, vk.com/id287247631",
 			"Maxim Afonin, vk.com/id258714476",
 			" ",
 			"Translators:",
