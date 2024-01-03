@@ -172,6 +172,7 @@ end
 selector.eventHandler = tool.eventHandler
 
 selector.draw = function()
+	-- Border
 	local temp = true
 
 	for x = selector.x + 1, selector.x + selector.width - 2 do
@@ -194,9 +195,11 @@ selector.draw = function()
 	screen.drawText(selector.x + selector.width - 1, selector.y, 0x0, "┓")
 	screen.drawText(selector.x, selector.y + selector.height - 1, 0x0, "┗")
 
-	screen.drawText(selector.x, selector.y, 0x66FF80, "●")
-	screen.drawText(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x66FF80, "●")
+	-- Corners
+	screen.drawText(touchX, touchY, 0x66FF80, "●")
+	screen.drawText(dragX, dragY, 0x66FF80, "●")
 
+	-- Size
 	temp = selector.width .. " px"
 	screen.drawText(math.floor(selector.x + selector.width / 2 - #temp / 2), selector.y + selector.height, 0xFFFFFF, temp)
 
