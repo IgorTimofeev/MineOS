@@ -31,14 +31,15 @@ window.contentLayout = window:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 
 local function moduleDraw(object)
 	local textColor = object.pressed and 0x3C3C3C or 0xE1E1E1
+
 	if object.pressed then
 		screen.drawRectangle(object.x, object.y, object.width, object.height, 0xF0F0F0, textColor, " ")
-		screen.drawText(object.x, object.y - 1, 0xF0F0F0, string.rep("▄", object.width))
-		screen.drawText(object.x, object.y + object.height, 0xF0F0F0, string.rep("▀", object.width))
+		screen.drawText(object.x, object.y - 1, 0xF0F0F0, string.rep("⣀", object.width))
+		screen.drawText(object.x, object.y + object.height, 0xF0F0F0, string.rep("⠉", object.width))
 	end
 
-	screen.drawImage(object.x + 2, object.y, object.icon)
-	screen.drawText(object.x + 12, object.y + 1, textColor, object.module.name)
+	screen.drawImage(object.x + 1, object.y, object.icon)
+	screen.drawText(object.x + 11, object.y + 1, textColor, object.module.name)
 end
 
 local function runModule(object)

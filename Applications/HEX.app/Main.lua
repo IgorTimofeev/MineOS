@@ -28,8 +28,7 @@ local colors = {
 	separator = 0xE1E1E1,
 	title = 0x2D2D2D,
 	titleBackground = 0x990000,
-	titleText = 0xE1E1E1,
-	titleText2 = 0xE1E1E1,
+	titleText = 0xE1E1E1
 }
 
 local bytes = {}
@@ -39,7 +38,9 @@ local selection = {
 	to = 1,
 }
 
-local scrollBar, titleTextBox
+local titles = {"", "", ""}
+
+local scrollBar
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -62,10 +63,10 @@ local function byteArrayToNumber(b)
 	return n
 end
 
-local function status()
-	titleTextBox.lines[1] = "Selected byte" .. (selection.from == selection.to and "" or "s") .. ": " .. selection.from .. "-" .. selection.to
-	titleTextBox.lines[2].text = "UTF-8: \"" .. string.char(table.unpack(bytes, selection.from, selection.to)) .. "\""
-	titleTextBox.lines[3].text = "INT: " .. byteArrayToNumber({table.unpack(bytes, selection.from, selection.to)})
+local function updateTitles()
+	titles[1] = "Byte" .. (selection.from == selection.to and "" or "s") .. ": " .. selection.from .. "-" .. selection.to
+	titles[2] = "UTF-8: \"" .. string.char(table.unpack(bytes, selection.from, selection.to)) .. "\""
+	titles[3] = "Int: " .. byteArrayToNumber({table.unpack(bytes, selection.from, selection.to)})
 end
 
 local function byteFieldDraw(object)
@@ -204,17 +205,20 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 					end
 				end
 
-				status()
+				updateTitles()
 				workspace:draw()
 			end
 		end
+
 	elseif e1 == "scroll" then
 		offset = offset - 16 * e5
+		
 		if offset < 0 then
 			offset = 0
 		elseif offset > math.floor(#bytes / 16) * 16 then
 			offset = math.floor(#bytes / 16) * 16
 		end
+
 		scrollBar.value = offset
 
 		workspace:draw()
@@ -294,24 +298,26 @@ window:addChild(GUI.object(13, 4, 62, 1)).draw = function(object)
 end
 
 scrollBar = window:addChild(GUI.scrollBar(window.width, 5, 1, 1, 0xC3C3C3, 0x393939, 0, 1, 1, 160, 1, true))
-scrollBar.eventHandler = nil
+scrollBar.onTouch = function()
+	offset = math.floor(scrollBar.value / 16) * 16
+	
+	workspace:draw()
+end
 
-titleTextBox = window:addChild(
-	GUI.textBox(1, 1, math.floor(window.width * 0.35), 3,
-		colors.titleBackground,
-		colors.titleText,
-		{
-			"",
-			{text = "", color = colors.titleText2},
-			{text = "", color = colors.titleText2}
-		},
-		1, 1, 0
-	)
-)
+local titleTextBoxWidth = window.width * 0.35
+titleTextBox = window:addChild(GUI.object(math.floor(window.width / 2 - titleTextBoxWidth / 2), 1, math.floor(titleTextBoxWidth), #titles))
+titleTextBox.draw = function(titleTextBox)
+	screen.drawRectangle(titleTextBox.x, titleTextBox.y, titleTextBox.width, titleTextBox.height, colors.titleBackground, colors.titleText, " ")
+	
+	local title
 
-titleTextBox.localX = math.floor(window.width / 2 - titleTextBox.width / 2)
-titleTextBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-titleTextBox.eventHandler = nil
+	for y = 1, #titles do
+		title = titles[y]
+		title = #title < titleTextBox.width - 2 and title or unicode.wtrunc(title, titleTextBox.width - 2)
+
+		screen.drawText(math.floor(titleTextBox.x + titleTextBox.width / 2 - unicode.wlen(title) / 2), titleTextBox.y + y - 1, colors.titleText, title)
+	end
+end
 
 local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelectionText, colors.panelSelectionText, colors.panel, "Save"))
 local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 10, 2, 2, 0, colors.panel, colors.panelSelectionText, colors.panelSelectionText, colors.panel, "Open"))
@@ -340,7 +346,7 @@ local function load(path)
 		selection.from, selection.to = 1, 1
 		scrollBar.value, scrollBar.maximumValue = 0, #bytes
 		
-		status()
+		updateTitles()
 	else
 		GUI.alert("Failed to open file for reading: " .. tostring(reason))
 	end
@@ -370,10 +376,12 @@ saveFileButton.onTouch = function()
 	
 	filesystemDialog.onSubmit = function(path)
 		local file = filesystem.open(path, "wb")
+		
 		if file then
 			for i = 1, #bytes do
 				file:write(string.char(bytes[i]))
 			end
+			
 			file:close()
 		else
 			GUI.alert("Failed to open file for writing: " .. tostring(reason))
@@ -384,8 +392,8 @@ end
 window.onResize = function(width, height)
 	byteField.height = height - 6
 	charField.height = byteField.height
-	scrollBar.height = byteField.height
 	window.backgroundPanel.height = height - 4
+	scrollBar.height = window.backgroundPanel.height
 	verticalCounter.height = window.backgroundPanel.height + 1
 	separator.height = byteField.height + 2
 end

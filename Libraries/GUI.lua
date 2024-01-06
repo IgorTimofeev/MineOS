@@ -1458,20 +1458,23 @@ local function sliderEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 		if object.onValueChanged then
 			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
-	elseif e1 == "scroll" then
-		object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
 
-		if object.value > object.maximumValue then
-			object.value = object.maximumValue 
-		elseif object.value < object.minimumValue then
-			object.value = object.minimumValue
-		end
+	-- Sucks on scrollable views
 
-		workspace:draw()
+	-- elseif e1 == "scroll" then
+	-- 	object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
 
-		if object.onValueChanged then
-			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
-		end
+	-- 	if object.value > object.maximumValue then
+	-- 		object.value = object.maximumValue 
+	-- 	elseif object.value < object.minimumValue then
+	-- 		object.value = object.minimumValue
+	-- 	end
+
+	-- 	workspace:draw()
+
+	-- 	if object.onValueChanged then
+	-- 		object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
+	-- 	end
 	end
 end
 
