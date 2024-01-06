@@ -29,9 +29,9 @@ local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/") 
 
 local categories = {
-	localization.categoryApplications,
-	localization.categoryLibraries,
-	localization.categoryScripts,
+	{ icon = "🎸", name = localization.categoryApplications },
+	{ icon = "📖", name = localization.categoryLibraries },
+	{ icon = "˃.", name = localization.categoryScripts },
 }
 
 local orderDirections = {
@@ -112,7 +112,7 @@ local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, ni
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local sponsoredLabel = window:addChild(GUI.text(2, 1, 0x3C3C3C, "Sponsored by Smok1e"))
+local sponsoredLabel = window:addChild(GUI.text(3, 1, 0x3C3C3C, "Sponsored by Smok1e"))
 
 local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x00B640, 0x99FF80))
 
@@ -432,11 +432,11 @@ local function checkForUnreadMessages()
 	})
 
 	if dialogs then
-		messagesItem.has_unread_messages = false
+		messagesItem.showIndicator = false
 
 		for _, dialog in pairs(dialogs) do
 			if dialog.last_message_user_id ~= user.id and dialog.last_message_is_read == 0 then
-				messagesItem.has_unread_messages = true
+				messagesItem.showIndicator = true
 				workspace:draw()
 
 				return
@@ -714,29 +714,6 @@ local function containerScrollEventHandler(workspace, object, e1, e2, e3, e4, e5
 			end
 		end
 	end
-end
-
-local function messagesButtonDraw(pressable)
-	local backgroundColor = pressable.pressed and pressable.colors.pressed.background or pressable.disabled and pressable.colors.disabled.background or pressable.colors.default.background
-	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.disabled and pressable.colors.disabled.text or pressable.colors.default.text
-
-	if backgroundColor then
-		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, backgroundColor, textColor, " ")
-	end
-
-	-- Рисуем синюю писечку, просящую прочитать сообщения
-	if pressable.has_unread_messages then
-		local x = math.floor(pressable.x + 2)
-		local y = math.floor(pressable.y + pressable.height / 2)
-		local backgroundColor, _, _ = screen.get(x, y)
-
-		screen.set(x, y, backgroundColor, 0x005EFF, "●")
-	end	
-
-	screen.drawText(
-		math.floor(pressable.x + pressable.width / 2 - unicode.len(pressable.text) / 2), 
-		math.floor(pressable.y + pressable.height / 2), textColor, pressable.text
-	)
 end
 
 local newApplicationPreview, newPublicationInfo
@@ -1221,13 +1198,13 @@ local function dialogs()
 			dialogGUI()
 		end
 
-		messagesItem.has_unread_messages = false
+		messagesItem.showIndicator = false
 		if #dialogs > 0 then
 			local y = sendMessageButton.localY + 2
 
 			for i = 1, #dialogs do
-				if not messagesItem.has_unread_messages then
-					messagesItem.has_unread_messages = dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_id ~= user.id
+				if not messagesItem.showIndicator then
+					messagesItem.showIndicator = dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_id ~= user.id
 				end
 
 				local backgroundColor, nicknameColor, timestampColor, textColor = 0xFFFFFF, 0x0, 0xD2D2D2, 0x969696
@@ -1293,7 +1270,7 @@ newPublicationInfo = function(file_id)
 
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.developer, ": " .. publication.user_name)); y = y + 1
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.license, ": " .. licenses[publication.license_id])); y = y + 1
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.category, ": " .. categories[publication.category_id])); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.category, ": " .. categories[publication.category_id].name)); y = y + 1
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.version, ": " .. publication.version)); y = y + 1
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.updated, ": " .. os.date("%d.%m.%Y", publication.timestamp + system.getUserSettings().timeTimezone))); y = y + 1
 			
@@ -1629,7 +1606,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 	local categoryComboBox = addComboBox()
 	for i = 1, #categories do
-		categoryComboBox:addItem(categories[i])
+		categoryComboBox:addItem(categories[i].name)
 	end
 
 	local licenseComboBox = addComboBox()
@@ -2017,23 +1994,54 @@ end
 
 --------------------------------------------------------------------------------
 
-leftList:addItem(localization.categoryOverview).onTouch = overview
+local function leftListItemDraw(pressable)
+	local backgroundColor = pressable.pressed and pressable.colors.pressed.background or pressable.disabled and pressable.colors.disabled.background or pressable.colors.default.background
+	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.disabled and pressable.colors.disabled.text or pressable.colors.default.text
+
+	if backgroundColor then
+		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, backgroundColor, textColor, " ")
+	end
+
+	-- Рисуем синюю писечку, просящую прочитать сообщения
+	if pressable.showIndicator then
+		local x = math.floor(pressable.x + 2)
+		local y = math.floor(pressable.y + pressable.height / 2)
+		local backgroundColor, _, _ = screen.get(x, y)
+
+		screen.set(x, y, backgroundColor, 0x005EFF, "●")
+	end
+
+	local y = math.floor(pressable.y + pressable.height / 2)
+
+	screen.drawText(pressable.x + 3, y, textColor, pressable.icon)
+	screen.drawText(pressable.x + 7, y, textColor, pressable.text)
+end
+
+local function addLeftListItem(icon, title)
+	local item = leftList:addItem(title)
+
+	item.icon = icon
+	item.draw = leftListItemDraw
+
+	return item
+end
+
+addLeftListItem("🏠", localization.categoryOverview).onTouch = overview
 
 for i = 1, #categories do
-	leftList:addItem(categories[i]).onTouch = function()
+	addLeftListItem(categories[i].icon, categories[i].name).onTouch = function()
 		loadCategory(i)
 	end
 end
 
-leftList:addItem(localization.categoryUpdates).onTouch = function()
+addLeftListItem("🗘", localization.categoryUpdates).onTouch = function()
 	loadCategory(nil, true)
 end
 
-messagesItem = leftList:addItem(localization.messages)
+messagesItem = addLeftListItem("💬", localization.messages)
 messagesItem.onTouch = dialogs
-messagesItem.draw = messagesButtonDraw
 
-leftList:addItem(localization.settings).onTouch = settings
+addLeftListItem("⚙", localization.settings).onTouch = settings
 
 window.onResize = function(width, height)
 	leftListPanel.height = height
