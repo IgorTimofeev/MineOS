@@ -3938,7 +3938,14 @@ local function dropDownMenuItemDraw(item)
 		if item.pressed then
 			iconColor = item.parent.parent.colors.selected.icon
 			textColor = item.parent.parent.colors.selected.text
+
 			screen.drawRectangle(item.x, yText, item.width, 1, item.parent.parent.colors.selected.background, textColor, " ")
+
+			if item.height > 1 then
+				screen.drawText(item.x, yText - 1, item.parent.parent.colors.selected.background, string.rep("⣤", item.width))
+				screen.drawText(item.x, yText + item.height - 1, item.parent.parent.colors.selected.background, string.rep("⠛", item.width))
+			end
+		
 		elseif item.disabled then
 			iconColor = item.parent.parent.colors.disabled.icon
 			textColor = item.parent.parent.colors.disabled.text
