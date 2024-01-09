@@ -86,7 +86,7 @@ function system.getDefaultUserSettings()
 		
 		interfaceScreenAddress = nil,
 		interfaceWallpaperEnabled = false,
-		interfaceWallpaperPath = paths.system.pictures .. "Flight.lua",
+		interfaceWallpaperPath = paths.system.wallpapers .. "Flight.lua",
 		interfaceWallpaperMode = 1,
 		interfaceWallpaperBrightness = 0.9,
 
