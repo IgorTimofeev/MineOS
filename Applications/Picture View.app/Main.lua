@@ -10,7 +10,7 @@ local localization = system.getCurrentScriptLocalization()
 
 local args, options = system.parseArguments(...)
 local iconsPath = fs.path(system.getCurrentScript()) .. "Icons/"
-local currentDir, files = ((options.o or options.open) and args[1] and fs.exists(args[1])) and fs.path(args[1]) or paths.system.pictures
+local currentDir, files = ((options.o or options.open) and args[1] and fs.exists(args[1])) and fs.path(args[1]) or paths.system.wallpapers
 local fileIndex = 1
 local loadedImage, title
 

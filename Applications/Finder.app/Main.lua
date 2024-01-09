@@ -22,7 +22,7 @@ local config = {
 		{ name = "Root", path = "/" },
 		{ name = "Desktop", path = paths.user.desktop },
 		{ name = "Applications", path = paths.system.applications },
-		{ name = "Pictures", path = paths.system.pictures },
+		{ name = "Wallpapers", path = paths.system.wallpapers },
 		{ name = "Libraries", path = paths.system.libraries },
 		{ name = "User", path = paths.user.home },
 		{ name = "Trash", path = paths.user.trash },
