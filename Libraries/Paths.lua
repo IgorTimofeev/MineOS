@@ -43,7 +43,7 @@ function paths.getUser(name)
 	user.desktop = user.home .. "Desktop/"
 	user.libraries = user.home .. "Libraries/"
 	user.applications = user.home .. "Applications/"
-	user.pictures = user.home .. "Pictures/"
+	user.wallpapers = user.home .. "Wallpapers/"
 	user.screensavers = user.home .. "Screensavers/"
 	user.trash = user.home .. "Trash/"
 	user.settings = user.home .. "Settings.cfg"
