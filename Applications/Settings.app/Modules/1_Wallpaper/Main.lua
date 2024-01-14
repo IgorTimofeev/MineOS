@@ -1,6 +1,7 @@
-
 local GUI = require("GUI")
 local system = require("System")
+local fs = require("Filesystem")
+local paths = require("Paths")
 
 local module = {}
 
@@ -9,80 +10,56 @@ local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
+local wallpaperConfigurationControlsBegin, wallpaperConfigurationControlsEnd = nil, nil
+
+local function updateWallpaperConfigurationControls(layout)
+	-- Remove previously added controls from layout
+	if wallpaperConfigurationControlsBegin ~= nil then
+		layout:removeChildren(wallpaperConfigurationControlsBegin, wallpaperConfigurationControlsEnd)
+		wallpaperConfigurationControlsBegin, wallpaperConfigurationControlsEnd = nil, nil
+	end
+
+	-- Add new controls if needed
+	if system.wallpaper and system.wallpaper.configure then
+		wallpaperConfigurationControlsBegin = #layout.children + 1
+		system.wallpaper.configure(layout)
+		wallpaperCOnfigurationControlsEnd = #layout.children
+	end
+end
+
+--------------------------------------------------------------------------------
+
 module.name = localization.wallpaper
-module.margin = 5
+module.margin = 0
+
 module.onTouch = function()
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.wallpaperWallpaper))
 
-	local wallpaperChooser = window.contentLayout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5, userSettings.interfaceWallpaperPath, localization.open, localization.cancel, localization.wallpaperPath, "/"))
-	wallpaperChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-	wallpaperChooser:addExtensionFilter(".pic")
-	wallpaperChooser:addExtensionFilter(".lua")
-	wallpaperChooser.onSubmit = function(path)
-		userSettings.interfaceWallpaperPath = path
-		system.updateWallpaper()
-		workspace:draw()
-
-		system.saveUserSettings()
-	end
-
 	local comboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
-	comboBox.selectedItem = userSettings.interfaceWallpaperMode or 1
-	comboBox:addItem(localization.wallpaperStretch)
-	comboBox:addItem(localization.wallpaperCenter)
+	for _, filename in pairs(fs.list(paths.system.wallpapers)) do
+		local path = paths.system.wallpapers .. filename
+		
+		if fs.isDirectory(path) and fs.extension(path) == ".wlp" then
+			local item = comboBox:addItem(fs.hideExtension(filename))
 
-	local wallpaperSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.wallpaperEnabled .. ":", userSettings.interfaceWallpaperEnabled)).switch
-	wallpaperSwitch.onStateChanged = function()
-		userSettings.interfaceWallpaperEnabled = wallpaperSwitch.state
-		system.updateWallpaper()
-		workspace:draw()
+			item.onTouch = function() 
+				userSettings.interfaceWallpaperPath = path
+				system.updateWallpaper()
+				workspace:draw()
+				
+				system.saveUserSettings()
+				updateWallpaperConfigurationControls(window.contentLayout)
+			end
 
-		system.saveUserSettings()
+			if userSettings.interfaceWallpaperPath == path then
+				comboBox.selectedItem = comboBox:count()
+			end
+		end
 	end
 
-	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.wallpaperInfo}, 1, 0, 0, true, true))
-
-	local wallpaperSlider = window.contentLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 0, 100, userSettings.interfaceWallpaperBrightness * 100, false, localization.wallpaperBrightness .. ": ", "%"))
-	wallpaperSlider.height = 2
-	wallpaperSlider.roundValues = true
-	wallpaperSlider.onValueChanged = function()
-		userSettings.interfaceWallpaperBrightness = wallpaperSlider.value / 100
-		system.updateWallpaper()
-		workspace:draw()
-
-		system.saveUserSettings()
-	end
-	
-	comboBox.onItemSelected = function()
-		userSettings.interfaceWallpaperMode = comboBox.selectedItem
-		system.updateWallpaper()
-		workspace:draw()
-
-		system.saveUserSettings()
-	end
-
-	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.wallpaperScreensaver))
-
-	local screensaverChooser = window.contentLayout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5, userSettings.interfaceScreensaverPath, localization.open, localization.cancel, localization.wallpaperScreensaverPath, "/"))
-	screensaverChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-	screensaverChooser:addExtensionFilter(".lua")
-
-	local screensaverSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.wallpaperScreensaverEnabled .. ":", userSettings.interfaceScreensaverEnabled)).switch
-
-	local screensaverSlider = window.contentLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 1, 100, userSettings.interfaceScreensaverDelay, false, localization.wallpaperScreensaverDelay .. ": ", " s"))
-	
-	local function save()
-		userSettings.interfaceScreensaverEnabled = screensaverSwitch.state
-		userSettings.interfaceScreensaverPath = screensaverChooser.path
-		userSettings.interfaceScreensaverDelay = screensaverSlider.value
-
-		system.saveUserSettings()
-	end
-
-	screensaverChooser.onSubmit, screensaverSwitch.onStateChanged, screensaverSlider.onValueChanged = save, save, save
+	updateWallpaperConfigurationControls(window.contentLayout)
 end
 
 --------------------------------------------------------------------------------
 
 return module
-

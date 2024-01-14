@@ -86,14 +86,10 @@ function system.getDefaultUserSettings()
 		
 		interfaceScreenAddress = nil,
 		interfaceWallpaperEnabled = false,
-		interfaceWallpaperPath = paths.system.wallpapers .. "Flight.lua",
+		interfaceWallpaperPath = paths.system.wallpapers .. "Stars.wlp/",
 		interfaceWallpaperMode = 1,
 		interfaceWallpaperBrightness = 0.9,
 
-		interfaceScreensaverEnabled = false,
-		interfaceScreensaverPath = paths.system.screensavers .. "Matrix.lua",
-		interfaceScreensaverDelay = 20,
-		
 		interfaceTransparencyEnabled = true,
 		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
@@ -2386,78 +2382,32 @@ function system.updateWallpaper()
 	desktopBackground.draw = desktopBackgroundAmbientDraw
 	interfaceDrawInterval = 1
 
-	if userSettings.interfaceWallpaperEnabled and userSettings.interfaceWallpaperPath then
-		local extension = filesystem.extension(userSettings.interfaceWallpaperPath)
-		
-		if extension == ".pic" then
-			local result, reason = image.load(userSettings.interfaceWallpaperPath)
-			
-			if result then
-				-- Fit to screen size mode
-				if userSettings.interfaceWallpaperMode == 1 then
-					result = image.transform(result, desktopBackground.width, desktopBackground.height)
-					desktopBackgroundWallpaperX, desktopBackgroundWallpaperY = 1, 2
-				
-				-- Centerized mode
-				else
-					desktopBackgroundWallpaperX = math.floor(1 + desktopBackground.width / 2 - image.getWidth(result) / 2)
-					desktopBackgroundWallpaperY = math.floor(2 + desktopBackground.height / 2 - image.getHeight(result) / 2)
-				end
-
-				-- Brightness adjustment
-				local brightness, background, foreground, alpha, symbol, r, g, b = userSettings.interfaceWallpaperBrightness
-				
-				for y = 1, image.getHeight(result) do
-					for x = 1, image.getWidth(result) do
-						background, foreground, alpha, symbol = image.get(result, x, y)
-						
-						r, g, b = color.integerToRGB(background)
-						background = color.RGBToInteger(
-							math.floor(r * brightness),
-							math.floor(g * brightness),
-							math.floor(b * brightness)
-						)
-
-						r, g, b = color.integerToRGB(foreground)
-						foreground = color.RGBToInteger(
-							math.floor(r * brightness),
-							math.floor(g * brightness),
-							math.floor(b * brightness)
-						)
-
-						image.set(result, x, y, background, foreground, alpha, symbol)
-					end
-				end
-
-				desktopBackground.draw = function(...)
-					desktopBackgroundAmbientDraw(...)
-
-					screen.drawImage(desktopBackgroundWallpaperX, desktopBackgroundWallpaperY, result)
-				end
-			else
-				GUI.alert(reason or "image file is corrupted")
-			end
-
-		elseif extension == ".lua" then
-			local result, data = loadfile(userSettings.interfaceWallpaperPath)
-
-			if result then
-				result, data = xpcall(result, debug.traceback)
-				
-				if result then
-					if type(data) == "function" then
-						desktopBackground.draw = data
-						interfaceDrawInterval = 0.01
-					else
-						GUI.alert("Wallpaper script didn't return drawing function")
-					end
-				else
-					GUI.alert(data)
-				end
-			else
-				GUI.alert(data)
-			end
+	if userSettings.interfaceWallpaperPath then
+		local executable, reason = loadfile(userSettings.interfaceWallpaperPath .. "Main.lua")
+		if not executable then
+			GUI.alert(reason)
+			return
 		end
+
+		local success, wallpaperOrError = xpcall(executable, debug.traceback)
+		if not success then
+			GUI.alert(wallpaperOrError)
+			return
+		end
+
+		if type(wallpaperOrError) ~= "table" then
+			GUI.alert("Wallpaper script didn't return table")
+			return
+		end
+
+		if type(wallpaperOrError.draw) ~= "function" then
+			GUI.alert("Wallpaper does not contain proper draw function")
+			return
+		end
+
+		system.wallpaper = wallpaperOrError
+		desktopBackground.draw = system.wallpaper.draw
+		interfaceDrawInterval = 0.01
 	end
 end
 
@@ -2818,7 +2768,6 @@ function system.updateDesktop()
 	local lastWindowHandled
 	local interfaceUpdateDeadline = bootUptime + interfaceDrawInterval
 	local interfaceDrawDeadline = bootUptime + interfaceDrawInterval
-	local screensaverUptime = bootUptime
 	
 	workspace.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "key_down" then
@@ -2867,17 +2816,6 @@ function system.updateDesktop()
 
 			uptime = computer.uptime()
 			interfaceDrawDeadline = uptime + interfaceDrawInterval
-		end
-
-		if userSettings.interfaceScreensaverEnabled then
-			if e1 then
-				screensaverUptime = computer.uptime()
-			elseif uptime >= screensaverUptime + userSettings.interfaceScreensaverDelay then
-				if filesystem.exists(userSettings.interfaceScreensaverPath) then
-					system.execute(userSettings.interfaceScreensaverPath)
-					workspace:draw()
-				end
-			end
 		end
 	end
 
@@ -2988,7 +2926,7 @@ function system.updateWorkspace()
 	desktopBackground.draw = oldDraw or desktopBackgroundAmbientDraw
 end
 
-function system.createUser(name, language, password, wallpaper, screensaver)
+function system.createUser(name, language, password, wallpaper)
 	-- Generating default user userSettings
 	local defaultSettings = system.getDefaultUserSettings()	
 	
@@ -2996,7 +2934,6 @@ function system.createUser(name, language, password, wallpaper, screensaver)
 	defaultSettings.localizationLanguage = language
 	defaultSettings.securityPassword = password and require("SHA-256").hash(password)
 	defaultSettings.interfaceWallpaperEnabled = wallpaper
-	defaultSettings.interfaceScreensaverEnabled = screensaver
 
 	-- Generating user home directory tree
 	local userPaths = paths.getUser(name)
