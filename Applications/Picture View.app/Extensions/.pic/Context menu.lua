@@ -10,11 +10,15 @@ local localization = system.getSystemLocalization()
 menu:addItem("💻", localization.setAsWallpaper).onTouch = function()
 	local userSettings = system.getUserSettings()
 
-	userSettings.interfaceWallpaperPath = icon.path
-	userSettings.interfaceWallpaperEnabled = true
-	system.updateWallpaper()
-	workspace:draw()
+	local staticPictureWallpaperPath = paths.system.wallpapers .. "Static picture.wlp"
+	if userSettings.interfaceWallpaperPath ~= staticPictureWallpaperPath then
+		userSettings.interfaceWallpaperPath = staticPictureWallpaperPath
+		system.updateWallpaper()
+	end
+	
+	system.wallpaper.setPicture(icon.path)
 
+	workspace:draw()
 	system.saveUserSettings()
 end
 
