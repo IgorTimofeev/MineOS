@@ -86,7 +86,7 @@ function system.getDefaultUserSettings()
 		
 		interfaceScreenAddress = nil,
 		interfaceWallpaperEnabled = false,
-		interfaceWallpaperPath = paths.system.wallpapers .. "Stars.wlp",
+		interfaceWallpaperPath = paths.system.wallpapers .. "Stars.wlp/",
 		interfaceWallpaperMode = 1,
 		interfaceWallpaperBrightness = 0.9,
 
