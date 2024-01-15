@@ -308,7 +308,6 @@ local usernamePasswordText = GUI.text(1, 1, 0xCC0040, "")
 local withoutPasswordSwitchAndLabel = newSwitchAndLabel(30, 0x66DB80, "", false)
 
 local wallpapersSwitchAndLabel = newSwitchAndLabel(30, 0xFF4980, "", true)
-local screensaversSwitchAndLabel = newSwitchAndLabel(30, 0xFFB600, "", true)
 local applicationsSwitchAndLabel = newSwitchAndLabel(30, 0x33DB80, "", true)
 local localizationsSwitchAndLabel = newSwitchAndLabel(30, 0x33B6FF, "", true)
 
@@ -326,7 +325,6 @@ for i = 1, #files.localizations do
 		passwordSubmitInput.placeholderText = localization.submitPassword
 		withoutPasswordSwitchAndLabel.label.text = localization.withoutPassword
 		wallpapersSwitchAndLabel.label.text = localization.wallpapers
-		screensaversSwitchAndLabel.label.text = localization.screensavers
 		applicationsSwitchAndLabel.label.text = localization.applications
 		localizationsSwitchAndLabel.label.text = localization.languages
 		acceptSwitchAndLabel.label.text = localization.accept
@@ -519,7 +517,6 @@ addStage(function()
 	addTitle(0x696969, localization.customize)
 
 	layout:addChild(wallpapersSwitchAndLabel)
-	layout:addChild(screensaversSwitchAndLabel)
 	layout:addChild(applicationsSwitchAndLabel)
 	layout:addChild(localizationsSwitchAndLabel)
 end)
@@ -563,8 +560,7 @@ addStage(function()
 			usernameInput.text,
 			localizationComboBox:getItem(localizationComboBox.selectedItem).text,
 			not withoutPasswordSwitchAndLabel.switch.state and passwordInput.text or nil,
-			wallpapersSwitchAndLabel.switch.state,
-			screensaversSwitchAndLabel.switch.state
+			wallpapersSwitchAndLabel.switch.state
 		)
 	end)
 
@@ -618,7 +614,6 @@ addStage(function()
 	addToList(true, "localizations")
 	addToList(applicationsSwitchAndLabel.switch.state, "optional")
 	addToList(wallpapersSwitchAndLabel.switch.state, "wallpapers")
-	addToList(screensaversSwitchAndLabel.switch.state, "screensavers")
 
 	-- Downloading files from created list
 	local versions, path, id, version, shortcut = {}
