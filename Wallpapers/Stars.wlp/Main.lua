@@ -40,7 +40,7 @@ local colors
 
 local function resetColors()
 	-- This case uses default OC palette, which is based & redpilled
-	if config.starColor >= 0xF0F0F0 then
+	if config.starColor == 0xF0F0F0 and config.backgroundColor == 0x0F0F0F then
 		colors = {
 			0x0F0F0F,
 			0x1E1E1E,
