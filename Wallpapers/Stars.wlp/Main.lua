@@ -9,12 +9,12 @@ local color = require("Color")
 local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
 
 local config = {
-	starAmount = 100,
 	backgroundColor = 0x0F0F0F,
+
+	starAmount = 100,
 	starColor = 0xF0F0F0,
-	delay = 0.05,
-	offset = 0.01,
-	speed = 100
+	starBrightness = 1.5,
+	starOffset = 0.01
 }
 
 if filesystem.exists(configPath) then
@@ -31,9 +31,12 @@ end
 
 -- Faster access without tables indexing
 local computerUptime, tableRemove, mathSin, mathCos, mathRandom, screenUpdate = computer.uptime, table.remove, math.sin, math.cos, math.random
-
+-- Braille symbols that belongs to stars at specific positions
 local braille1, braille2, braille3, braille4, braille5, braille6, braille7, braille8, braille9, braille10 = "⠁", "⠈", "⠂", "⠐", "⠄", "⠠", "⡀", "⢀", "⠛", "⣤"
-local stars, deadline, colors
+
+local stars = {}
+local deadline = 0
+local colors
 
 local function resetColors()
 	-- This case uses default OC palette, which is based & redpilled
@@ -67,13 +70,7 @@ local function resetColors()
 	end
 end
 
-local function resetStars()
-	stars = {}
-	deadline = 0
-end
-
 resetColors()
-resetStars()
 
 --------------------------------------------------------------------------------
 
@@ -81,46 +78,54 @@ return {
 	draw = function(object)
 		local hitsDeadline = computerUptime() >= deadline
 
-		-- Spawning stars
-		while #stars < config.starAmount do
-			local rotationAngle = mathRandom(6265) / 1000
+		-- Drawing background
+		screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
 
-			local targetX = mathCos(rotationAngle) * object.width * 0.75  + object.width  / 2
-			local targetY = mathSin(rotationAngle) * object.width * 0.375 + object.height / 2
+		-- Spawning missing stars
+		local rotationAngle, targetX, targetY
+
+		while #stars < config.starAmount do
+			rotationAngle = mathRandom(6265) / 1000
+			targetX = mathCos(rotationAngle) * object.width * 0.75  + object.width  / 2
+			targetY = mathSin(rotationAngle) * object.width * 0.375 + object.height / 2
 
 			table.insert(stars, {
 				targetX = targetX,
 				targetY = targetY,
-				startX = (targetX - object.width  / 2) * config.offset + object.width  / 2,
-				startY = (targetY - object.height / 2) * config.offset + object.height / 2,
-				way = 0.01,
-				speed = (mathRandom(25, 75) / 1000 + 1) * (config.speed / 100)
+				startX = (targetX - object.width  / 2) * config.starOffset + object.width  / 2,
+				startY = (targetY - object.height / 2) * config.starOffset + object.height / 2,
+				speed = mathRandom(25, 75) / 1000 + 1,
+
+				-- Defines the star lifetime in range (0.0; 1.0]
+				-- Shouldn't be zero, because it will be mutiplied to
+				-- simulate "speed up" effect on sides of screen
+				age = 0.01
 			})
 		end
 
-		-- Clear background
-		screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
-
 		-- Drawing stars
+		local star, x, y, xmod, ymod, color
+
 		local i = 1
 		while i <= #stars do
-			local star = stars[i]
+			star = stars[i]
 
-			local x = star.startX + (star.targetX - star.startX) * star.way
-			local y = star.startY + (star.targetY - star.startY) * star.way
+			x = star.startX + (star.targetX - star.startX) * star.age
+			y = star.startY + (star.targetY - star.startY) * star.age
 
 			if x > object.width + 1 or x < 1 or y > object.height + 1 or y < 1 then
 				tableRemove(stars, i)
 			else
-				local xmod = x * 2; 
+				xmod = x * 2; 
 				xmod = (xmod - xmod % 1) % 2
 				
-				local ymod = y * 4; ymod = (ymod - ymod % 1) % 4
+				ymod = y * 4; ymod = (ymod - ymod % 1) % 4
 
-				local color = star.way * 4.0156862745098 * #colors
+				color = star.age * #colors * config.starBrightness
 				color = colors[color - color % 1 + 1] or colors[#colors]
 
-				if star.way < 0.3 then
+				-- Small stars
+				if star.age < 0.3 then
 					if xmod == 0 then
 						if     ymod == 0 then char = braille1
 						elseif ymod == 1 then char = braille3
@@ -134,6 +139,7 @@ return {
 						else                  char = braille8
 						end
 					end
+				-- Big stars
 				else
 					if ymod < 2 then
 						char = braille9
@@ -146,68 +152,69 @@ return {
 				i = i + 1
 
 				if hitsDeadline then
-					star.way = star.way * star.speed
+					star.age = star.age * star.speed
 				end
 			end
 		end
 
 		if hitsDeadline then
-			deadline = computerUptime() + config.delay
+			deadline = computerUptime() + 0.05
 		end
 	end,
 
 	configure = function(layout)
-	    layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
-	        config.backgroundColor = object.color
+		layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+			config.backgroundColor = object.color
 			resetColors()
-	        saveConfig()
-	    end
+			saveConfig()
+		end
 
 		layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.starColor, "Star color")).onColorSelected = function(_, object)
-	        config.starColor = object.color
+			config.starColor = object.color
 			resetColors()
-	        saveConfig()
-	    end
+			saveConfig()
+		end
 
-		local amountSlider = layout:addChild(
-	        GUI.slider(
-	            1, 1, 
-	            36,
-	            0x66DB80, 
-	            0xE1E1E1, 
-	            0xFFFFFF, 
-	            0xA5A5A5, 
-	            10, 200, 
-	            config.starAmount, 
-	            false, 
-	            "Star amount: "
-	        )
-	    )
-	    
-	    amountSlider.roundValues = true
-	    amountSlider.onValueChanged = function()
-	        config.starAmount = math.floor(amountSlider.value)
-	        saveConfig()
-	    end
+		local starAmountSlider = layout:addChild(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				10, 500, 
+				config.starAmount, 
+				false, 
+				"Star amount: "
+			)
+		)
+		
+		starAmountSlider.roundValues = true
+		starAmountSlider.onValueChanged = function()
+			config.starAmount = math.floor(starAmountSlider.value)
+			saveConfig()
+		end
 
-		local speedSlider = layout:addChild(GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			100, 200, 
-			config.speed,
-			false, 
-			"Speed: ",
-			"%"
-		))
-
-		speedSlider.roundValues = true
-		speedSlider.onValueChanged = function()
-			config.speed = speedSlider.value
-			resetStars()
+		local starBrightnessSlider = layout:addChild(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				50, 300, 
+				config.starBrightness * 100, 
+				false, 
+				"Star brightness: ",
+				"%"
+			)
+		)
+		
+		starBrightnessSlider.roundValues = true
+		starBrightnessSlider.onValueChanged = function()
+			config.starBrightness = starBrightnessSlider.value / 100
 			saveConfig()
 		end
 
@@ -219,7 +226,7 @@ return {
 			0xFFFFFF, 
 			0xA5A5A5, 
 			0, 100, 
-			config.offset * 100,
+			config.starOffset * 100,
 			false, 
 			"Offset: ",
 			"%"
@@ -227,8 +234,7 @@ return {
 
 		offsetSlider.roundValues = true
 		offsetSlider.onValueChanged = function()
-			config.offset = offsetSlider.value / 100
-			resetStars()
+			config.starOffset = offsetSlider.value / 100
 			saveConfig()
 		end
 	end
