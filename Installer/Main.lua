@@ -612,7 +612,7 @@ addStage(function()
 
 	addToList(true, "required")
 	addToList(true, "localizations")
-	addToList(true, "wallpapers")
+	addToList(true, "requiredWallpapers")
 	addToList(applicationsSwitchAndLabel.switch.state, "optional")
 	addToList(wallpapersSwitchAndLabel.switch.state, "optionalWallpapers")
 
