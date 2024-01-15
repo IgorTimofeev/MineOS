@@ -98,8 +98,6 @@ function system.getDefaultUserSettings()
 		interfaceBlurRadius = 3,
 		interfaceBlurTransparency = 0.6,
 
-		interfaceColorDesktopBackground = 0x1E1E1E,
-
 		filesShowExtension = false,
 		filesShowHidden = false,
 		filesShowApplicationIcon = true,
@@ -474,6 +472,23 @@ end
 function system.addUploadToPastebinMenuItem(menu, path)
 	menu:addItem("⤴", localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 		uploadToPastebin(path)
+	end
+end
+
+function system.addSetAsWallpaperMenuItem(menu, path)
+	menu:addItem("💻", localization.setAsWallpaper).onTouch = function()
+		local userSettings = system.getUserSettings()
+		local wallpaperPath = paths.system.wallpapers .. "Static picture.wlp/"
+		
+		if userSettings.interfaceWallpaperPath ~= wallpaperPath then
+			userSettings.interfaceWallpaperPath = wallpaperPath
+			system.updateWallpaper()
+		end
+		
+		system.wallpaper.setPicture(path)
+
+		workspace:draw()
+		system.saveUserSettings()
 	end
 end
 
@@ -2375,40 +2390,40 @@ function system.execute(path, ...)
 end
 
 local function desktopBackgroundAmbientDraw()
-	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, userSettings.interfaceColorDesktopBackground or 0x1E1E1E, 0, " ")
+	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, 0x1E1E1E, 0, " ")
 end
 
 function system.updateWallpaper()
 	desktopBackground.draw = desktopBackgroundAmbientDraw
 	interfaceDrawInterval = 1
 
-	if userSettings.interfaceWallpaperPath then
-		local executable, reason = loadfile(userSettings.interfaceWallpaperPath .. "Main.lua")
-		if not executable then
-			GUI.alert(reason)
-			return
-		end
-
-		local success, wallpaperOrError = xpcall(executable, debug.traceback)
-		if not success then
-			GUI.alert(wallpaperOrError)
-			return
-		end
-
-		if type(wallpaperOrError) ~= "table" then
-			GUI.alert("Wallpaper script didn't return table")
-			return
-		end
-
-		if type(wallpaperOrError.draw) ~= "function" then
-			GUI.alert("Wallpaper does not contain proper draw function")
-			return
-		end
-
-		system.wallpaper = wallpaperOrError
-		desktopBackground.draw = system.wallpaper.draw
-		interfaceDrawInterval = 0.01
+	if not userSettings.interfaceWallpaperPath then
+		return
 	end
+
+	local executable, reason = loadfile(userSettings.interfaceWallpaperPath .. "Main.lua")
+	if not executable then
+		GUI.alert(reason)
+		return
+	end
+
+	local success, wallpaperOrError = xpcall(executable, debug.traceback)
+	if not success then
+		GUI.alert(wallpaperOrError)
+		return
+	end
+
+	if type(wallpaperOrError) ~= "table" then
+		GUI.alert("Wallpaper script didn't return table")
+		return
+	elseif type(wallpaperOrError.draw) ~= "function" then
+		GUI.alert("Wallpaper does not contain proper draw function")
+		return
+	end
+
+	system.wallpaper = wallpaperOrError
+	desktopBackground.draw = system.wallpaper.draw
+	interfaceDrawInterval = 0.01
 end
 
 function system.updateScreen()
@@ -2830,7 +2845,7 @@ function system.updateDesktop()
 end
 
 function system.updateColorScheme()
-	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or userSettings.interfaceColorDesktopBackground
+	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or 0x1E1E1E
 	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
 end
 

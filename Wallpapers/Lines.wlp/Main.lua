@@ -1,109 +1,134 @@
 local screen = require("Screen")
-local fs = require("Filesystem")
+local filesystem = require("Filesystem")
 local system = require("System")
 local GUI = require("GUI")
 
-local wallpaper = {}
-
 --------------------------------------------------------------------------------
 
-local configPath = fs.path(system.getCurrentScript()) .. "Config.cfg"
+local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
+
+local config = {
+    backgroundColor = 0x161616,
+    lineCount = 10,
+    lineColor = 0xFFFFFF
+}
+
+if filesystem.exists(configPath) then
+    for key, value in pairs(filesystem.readTable(configPath)) do
+        config[key] = value
+    end
+end
 
 local function saveConfig()
-    fs.writeTable(configPath, wallpaper.config)
-end
-
-if fs.exists(configPath) then
-    wallpaper.config = fs.readTable(configPath)
-else
-    wallpaper.config = {
-        backgroundColor = 0x161616,
-        lineCount = 10,
-        lineColor = 0xFFFFFF
-    }
+    filesystem.writeTable(configPath, config)
 end
 
 --------------------------------------------------------------------------------
 
+local points = {}
+local lastUptime = computer.uptime()
+
 local function reset()
-    wallpaper.points = {}
+    points = {}
 
     local resX, resY = screen.getResolution()
-    for i = 1, wallpaper.config.lineCount do
-        table.insert(wallpaper.points, {
-            x = math.random(0, resX-1),
-            y = math.random(0, resY-1),
+    for i = 1, config.lineCount do
+        table.insert(points, {
+            x = math.random(0, resX - 1),
+            y = math.random(0, (resY - 1) * 2),
             vx = (2 * math.random() - 1) * 25,
             vy = (2 * math.random() - 1) * 25
         })
     end
 
-    wallpaper.lastUpdateTime = computer.uptime()
+    lastUptime = computer.uptime()
 end
 
 reset(object)
 
-function wallpaper.draw(object)
-    screen.drawRectangle(object.x, object.y, object.width, object.height, wallpaper.config.backgroundColor, 0, " ")
-
-    for i = 1, wallpaper.config.lineCount - 1 do
-        screen.drawSemiPixelLine(
-            math.floor(wallpaper.points[i  ].x), math.floor(wallpaper.points[i  ].y),
-            math.floor(wallpaper.points[i+1].x), math.floor(wallpaper.points[i+1].y),
-            wallpaper.config.lineColor
-        )
-    end
-
-    local currentTime = computer.uptime()
-    local dt = currentTime - wallpaper.lastUpdateTime
-    wallpaper.lastUpdateTime = currentTime
-
-    for i = 1, wallpaper.config.lineCount do
-        local point = wallpaper.points[i]
-
-        point.x = point.x + point.vx * dt
-        point.y = point.y + point.vy * dt
-
-        if point.x < 0 or point.x >= object.width  then point.vx = -point.vx end
-        if point.y < 0 or point.y >= object.height then point.vy = -point.vy end
-    end
-end
-
-function wallpaper.configure(layout)
-    layout:addChild(GUI.colorSelector(1, 1, 36, 3, wallpaper.config.backgroundColor, "Background color")).onColorSelected = function(_, object)
-        wallpaper.config.backgroundColor = object.color
-        saveConfig()
-    end
-
-    layout:addChild(GUI.colorSelector(1, 1, 36, 3, wallpaper.config.lineColor, "Line color")).onColorSelected = function(_, object)
-        wallpaper.config.lineColor = object.color
-        saveConfig()
-    end
-
-    local slider = layout:addChild(
-        GUI.slider(
-            1, 1, 
-            36,
-            0x66DB80, 
-            0xE1E1E1, 
-            0xFFFFFF, 
-            0xA5A5A5, 
-            1, 10, 
-            wallpaper.config.lineCount, 
-            false, 
-            "Line count: "
-        )
-    )
-    
-    slider.roundValues = true
-
-    slider.onValueChanged = function(workspace, object)
-        wallpaper.config.lineCount = math.floor(object.value)
-        saveConfig()
-        reset()
-    end
-end
-
 --------------------------------------------------------------------------------
 
-return wallpaper
+return {
+    draw = function(object)
+        screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
+
+        local point1, point2
+
+        for i = 1, config.lineCount - 1 do
+            point1, point2 = points[i], points[i + 1]
+
+            screen.drawSemiPixelLine(
+                math.floor(object.x + point1.x),
+                math.floor(object.y * 2 - 1 + point1.y),
+
+                math.floor(object.x + point2.x),
+                math.floor(object.y * 2 - 1 + point2.y),
+                
+                config.lineColor
+            )
+
+            screen.semiPixelSet(
+                math.floor(object.x + point1.x),
+                math.floor(object.y * 2 - 1 + point1.y),
+                
+                0x880000
+            )
+
+            screen.semiPixelSet(
+                math.floor(object.x + point2.x),
+                math.floor(object.y * 2 - 1 + point2.y),
+                
+                0x008800
+            )
+        end
+
+        local uptime = computer.uptime()
+        local deltaTime = uptime - lastUptime
+        lastUptime = uptime
+
+        for i = 1, config.lineCount do
+            point1 = points[i]
+
+            point1.x = point1.x + point1.vx * deltaTime
+            point1.y = point1.y + point1.vy * deltaTime
+
+            if point1.x < 0 or point1.x >= object.width then point1.vx = -point1.vx end
+            if point1.y < 0 or point1.y >= object.height * 2 then point1.vy = -point1.vy end
+        end
+    end,
+
+    configure = function(layout)
+        layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+            config.backgroundColor = object.color
+            saveConfig()
+        end
+
+        layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.lineColor, "Line color")).onColorSelected = function(_, object)
+            config.lineColor = object.color
+            saveConfig()
+        end
+
+        local slider = layout:addChild(
+            GUI.slider(
+                1, 1, 
+                36,
+                0x66DB80, 
+                0xE1E1E1, 
+                0xFFFFFF, 
+                0xA5A5A5, 
+                1, 10, 
+                config.lineCount, 
+                false, 
+                "Line count: "
+            )
+        )
+        
+        slider.roundValues = true
+
+        slider.onValueChanged = function(workspace, object)
+            config.lineCount = math.floor(object.value)
+            saveConfig()
+            reset()
+        end
+    end
+}
