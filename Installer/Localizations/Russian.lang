@@ -5,7 +5,7 @@
 	passwordsArentEqual = "Пароли не совпадают",
 	usernameInvalid = "Некорректное имя пользователя",
 	withoutPassword = "Без пароля:",
-	wallpapers = "Обои:",
+	wallpapers = "Дополнительные обои:",
 	screensavers = "Заставки:",
 	applications = "Приложения:",
 	languages = "Языковые пакеты:",
