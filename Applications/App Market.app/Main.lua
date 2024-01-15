@@ -112,7 +112,7 @@ local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, ni
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local sponsoredLabel = window:addChild(GUI.text(3, 1, 0x3C3C3C, "Sponsored by Smok1e"))
+local sponsoredLabel = window:addChild(GUI.text(3, 1, 0x3C3C3C, "Meow <3"))
 
 local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x00B640, 0x99FF80))
 
