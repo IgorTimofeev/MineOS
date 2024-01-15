@@ -612,8 +612,9 @@ addStage(function()
 
 	addToList(true, "required")
 	addToList(true, "localizations")
+	addToList(true, "wallpapers")
 	addToList(applicationsSwitchAndLabel.switch.state, "optional")
-	addToList(wallpapersSwitchAndLabel.switch.state, "wallpapers")
+	addToList(wallpapersSwitchAndLabel.switch.state, "optionalWallpapers")
 
 	-- Downloading files from created list
 	local versions, path, id, version, shortcut = {}
