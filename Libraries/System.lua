@@ -1067,9 +1067,10 @@ local function iconOnDoubleClick(icon)
 end
 
 local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" and icon:isPointInside(e3, e4) then
+	if e1 == "touch" then
 		local iconField = icon.parent
 		
+		icon.ignoresBoundsCheckOnScreenEvents = true
 		GUI.focusedObject = iconField
 
 		icon.lastTouchPosition = icon.lastTouchPosition or {}
@@ -1092,7 +1093,7 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 			end
 		end
 	
-	elseif e1 == "double_touch" and icon:isPointInside(e3, e4) and e5 == 0 then
+	elseif e1 == "double_touch" and e5 == 0 then
 		iconOnDoubleClick(icon, e1, e2, e3, e4, e5, ...)
 	
 	elseif e1 == "drag" and icon.parent.iconConfigEnabled and icon.lastTouchPosition then
@@ -1104,9 +1105,8 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 
 		workspace:draw()
 	
-	elseif e1 == "drop" and icon.dragStarted then
-		icon.dragStarted = nil
-		icon.lastTouchPosition = nil
+	elseif e1 == "drop" then
+		icon.dragStarted, icon.lastTouchPosition, icon.ignoresBoundsCheckOnScreenEvents = nil, nil, nil
 
 		iconFieldSaveIconPosition(
 			icon.parent,

@@ -642,6 +642,7 @@ end
 
 function loadfile(path)
 	local data, reason = filesystem.read(path)
+
 	if data then
 		return load(data, "=" .. path)
 	end
@@ -653,6 +654,7 @@ function dofile(path, ...)
 	local result, reason = loadfile(path)
 	if result then
 		local data = {xpcall(result, debug.traceback, ...)}
+		
 		if data[1] then
 			return table.unpack(data, 2)
 		else

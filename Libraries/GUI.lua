@@ -307,7 +307,7 @@ local function containerRemoveChildren(container, from, to)
 	end
 end
 
-local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2, R2Y2)
+local function getRectangleBounds(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2, R2Y2)
 	if R2X1 <= R1X2 and R2Y1 <= R1Y2 and R2X2 >= R1X1 and R2Y2 >= R1Y1 then
 		return
 			math.max(R2X1, R1X1),
@@ -321,7 +321,8 @@ end
 
 local function containerDraw(container)
 	local R1X1, R1Y1, R1X2, R1Y2, child = screen.getDrawLimit()
-	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
+
+	local boundsX1, boundsY1, boundsX2, boundsY2 = getRectangleBounds(
 		R1X1,
 		R1Y1,
 		R1X2,
@@ -332,8 +333,8 @@ local function containerDraw(container)
 		container.y + container.height - 1
 	)
 
-	if intersectionX1 then
-		screen.setDrawLimit(intersectionX1, intersectionY1, intersectionX2, intersectionY2)
+	if boundsX1 then
+		screen.setDrawLimit(boundsX1, boundsY1, boundsX2, boundsY2)
 		
 		for i = 1, #container.children do
 			child = container.children[i]
@@ -366,20 +367,23 @@ end
 --------------------------------------------------------------------------------
 
 local function workspaceStart(workspace, eventPullTimeout)
-	local animation, animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods, roundedX, roundedY, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
+	local animation, animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods, roundedX, roundedY, isScreenEvent, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
 	
-	local function handleContainer(isScreenEvent, currentContainer, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
-		local currentContainerPassed, child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2
+	local function handleContainer(currentContainer, boundsX1, boundsY1, boundsX2, boundsY2)
+		local currentContainerPassed, child, newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2
 		
 		if isScreenEvent then
 			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
 
-			if
-				roundedX < intersectionX1
-				or roundedX > intersectionX2
-				or roundedY < intersectionY1
-				or roundedY > intersectionY2
-			then
+			if not (
+				roundedX >= boundsX1
+				and roundedX <= boundsX2
+
+				and roundedY >= boundsY1
+				and roundedY <= boundsY2
+
+				or currentContainer.ignoresBoundsCheckOnScreenEvents
+			) then
 				return
 			end
 
@@ -397,12 +401,13 @@ local function workspaceStart(workspace, eventPullTimeout)
 			child = currentContainer.children[i]
 
 			if not child.hidden then
+				-- Container
 				if child.children then
-					newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
-						intersectionX1,
-						intersectionY1,
-						intersectionX2,
-						intersectionY2,
+					newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2 = getRectangleBounds(
+						boundsX1,
+						boundsY1,
+						boundsX2,
+						boundsY2,
 						child.x,
 						child.y,
 						child.x + child.width - 1,
@@ -410,19 +415,20 @@ local function workspaceStart(workspace, eventPullTimeout)
 					)
 
 					if 
-						newIntersectionX1
+						newBoundsX1
 						and handleContainer(
-							isScreenEvent,
 							child,
-							newIntersectionX1,
-							newIntersectionY1,
-							newIntersectionX2,
-							newIntersectionY2,
+							newBoundsX1,
+							newBoundsY1,
+							newBoundsX2,
+							newBoundsY2,
 							e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
 						)
 					then
 						return true
 					end
+
+				-- Not container
 				else
 					if workspace.needConsume then
 						workspace.needConsume = nil
@@ -431,7 +437,7 @@ local function workspaceStart(workspace, eventPullTimeout)
 					end
 
 					if isScreenEvent then
-						if child:isPointInside(roundedX, roundedY) then
+						if child:isPointInside(roundedX, roundedY) or child.ignoresBoundsCheckOnScreenEvents then
 							if child.eventHandler and not child.disabled then
 								child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
 							end
@@ -458,12 +464,14 @@ local function workspaceStart(workspace, eventPullTimeout)
 	repeat
 		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32 = event.pull(workspace.animations and 0 or workspace.eventPullTimeout)
 		
-		handleContainer(
+		isScreenEvent =
 			e1 == "touch" or
 			e1 == "drag" or
 			e1 == "drop" or
 			e1 == "scroll" or
-			e1 == "double_touch",
+			e1 == "double_touch"
+
+		handleContainer(
 			workspace,
 			workspace.x,
 			workspace.y,
@@ -473,6 +481,7 @@ local function workspaceStart(workspace, eventPullTimeout)
 
 		if workspace.animations then
 			animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods = 1, 1, {}
+			
 			-- Продрачиваем анимации и вызываем обработчики кадров
 			while animationIndex <= #workspace.animations do
 				animation = workspace.animations[animationIndex]
@@ -4494,7 +4503,7 @@ local function windowDraw(window)
 	return window
 end
 
-local function windowCheck(window, x, y)
+local function windowScreenEventCheck(window, x, y)
 	local child, result
 
 	for i = #window.children, 1, -1 do
@@ -4509,7 +4518,7 @@ local function windowCheck(window, x, y)
 				return true
 
 			elseif child.children then
-				result = windowCheck(child, x, y)
+				result = windowScreenEventCheck(child, x, y)
 				
 				-- Nil causes next child processing
 				if result == true then
@@ -4531,10 +4540,12 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	if e1 == "touch" then
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-		if not windowCheck(window, e3, e4) then
+		if not windowScreenEventCheck(window, e3, e4) then
+			window.ignoresBoundsCheckOnScreenEvents = true
 			window.lastTouchX, window.lastTouchY = e3, e4
 		end
 
+		-- Focusing window if it's not focused
 		if window ~= window.parent.children[#window.parent.children] then
 			window:focus()
 			
@@ -4544,7 +4555,7 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	elseif e1 == "drag" and window.lastTouchX then
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-		if windowCheck(window, e3, e4) then
+		if windowScreenEventCheck(window, e3, e4) then
 			return
 		end
 
@@ -4554,7 +4565,7 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 		workspace:draw()
 	
 	elseif e1 == "drop" then
-		window.lastTouchX, window.lastTouchY = nil, nil
+		window.lastTouchX, window.lastTouchY, window.ignoresBoundsCheckOnScreenEvents = nil, nil, nil
 	end
 end
 

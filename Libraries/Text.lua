@@ -97,7 +97,8 @@ end
 function text.deserialize(s)
 	checkArg(1, s, "string")
 	
-	local result, reason = load("return " .. s)
+	local result, reason = load("return " .. s, "=deserialization", "t", {})
+	
 	if result then
 		result, reason = pcall(result)
 		
