@@ -9,26 +9,43 @@ local GUI = require("GUI")
 local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
 
 local config = {
-    backgroundColor = 0x0F0F0F,
-    snowflakeColor = 0xFFFFFF,
-    snowflakeAmount = 20,
-    maxStackHeight = 10,
-    maxWind = 2
+	backgroundColor = 0x0F0F0F,
+	snowflakeColor = 0xFFFFFF,
+	snowflakeAmount = 20,
+	maxStackHeight = 10,
+	maxWind = 2
 }
 
 if filesystem.exists(configPath) then
-    for key, value in pairs(filesystem.readTable(configPath)) do
-        config[key] = value
-    end
+	for key, value in pairs(filesystem.readTable(configPath)) do
+		config[key] = value
+	end
 end
 
 local function saveConfig()
-    filesystem.writeTable(configPath, config)
+	filesystem.writeTable(configPath, config)
 end
 
 --------------------------------------------------------------------------------
 
-local mathRandom, mathFloor, tableInsert, tableRemove, screenSemiPixelSet, screenDrawSemiPixelRectangle = math.random, math.floor, table.insert, table.remove, screen.semiPixelSet, screen.drawSemiPixelRectangle
+local
+	mathRandom,
+	mathFloor,
+	tableInsert,
+	tableRemove,
+	colorTransition,
+	screenDrawRectangle,
+	screenSemiPixelSet,
+	screenDrawSemiPixelRectangle =
+
+	math.random,
+	math.floor,
+	table.insert,
+	table.remove,
+	color.transition,
+	screen.drawRectangle,
+	screen.semiPixelSet,
+	screen.drawSemiPixelRectangle
 
 local snowflakes = {}
 local stacks = {}
@@ -37,81 +54,100 @@ local wind = 0
 local lastUpdateTime = computer.uptime()
 
 return {
-    draw = function(object)
-        -- Spawning snowflakes
-        for i = 1, config.snowflakeAmount - #snowflakes do
-            local distance = math.random()
+	draw = function(wallpaper)
+		-- Spawning snowflakes
+		local distance
 
-            tableInsert(snowflakes, {
-                x = mathRandom(1, object.width) - 1,
-                y = 0,
-                color = color.transition(config.snowflakeColor, config.backgroundColor, .2 + .8 * distance),
-                speed = 2 - 1.5 * distance,
-                vx = 0
-            })
-        end
+		for i = 1, config.snowflakeAmount - #snowflakes do
+			distance = math.random()
 
-        -- Clear the area
-        screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
+			tableInsert(snowflakes, {
+				x = mathRandom(1, wallpaper.width) - 1,
+				y = 0,
+				color = colorTransition(config.snowflakeColor, config.backgroundColor, .2 + .8 * distance),
+				speed = 2 - 1.5 * distance,
+				vx = 0
+			})
+		end
 
-        -- Rendering snowflakes
-        for index, snowflake in pairs(snowflakes) do
-            local x, y = mathFloor(snowflake.x), mathFloor(snowflake.y)
+		-- Clearing the area
+		screenDrawRectangle(wallpaper.x, wallpaper.y, wallpaper.width, wallpaper.height, config.backgroundColor, 0, " ")
 
-            screenSemiPixelSet(
-                object.x + x,
-                object.y + y,
-                snowflake.color
-            )
-        end
-        
-        local maxHeight = object.height * 2
+		-- Rendering snowflakes
+		local snowflake
 
-        -- Rendering stacks
-        local removeRow = mathRandom(1, 100) == 1
-        for x, height in pairs(stacks) do
-            screenDrawSemiPixelRectangle(object.x + x, object.y + object.height * 2 - height, 1, height, config.snowflakeColor)
+		for i = 1, #snowflakes do
+			snowflake = snowflakes[i]
 
-            if height > config.maxStackHeight then
-                stacks[x] = 0
-            end
-        end
+			screenSemiPixelSet(
+				mathFloor(wallpaper.x + snowflake.x),
+				mathFloor(wallpaper.y + snowflake.y),
+				snowflake.color
+			)
+		end
+		
+		-- Rendering stacks
+		local stackHeight
 
-        -- Updating snowflakes
-        local currentTime = computer.uptime()
-        local deltaTime = (currentTime - lastUpdateTime) * 20
-        
-        wind = wind + .1 * (2 * mathRandom() - 1) * deltaTime
-        if wind >  config.maxWind then wind =  config.maxWind end
-        if wind < -config.maxWind then wind = -config.maxWind end
+		for x, stackHeight in pairs(stacks) do
+			screenDrawSemiPixelRectangle(wallpaper.x + x, wallpaper.y + wallpaper.height * 2 - stackHeight + 1, 1, stackHeight, config.snowflakeColor)
 
-        for index, snowflake in pairs(snowflakes) do
-            snowflake.y = snowflake.y + deltaTime *         snowflake.speed 
-            snowflake.x = snowflake.x + deltaTime * (wind * snowflake.speed + snowflake.vx)
-            
-            snowflake.vx = snowflake.vx + (mathRandom() * 2 - 1) * 0.1 * deltaTime
-            if snowflake.vx >  1 then snowflake.vx =  1 end
-            if snowflake.vx < -1 then snowflake.vx = -1 end
-            
-            if snowflake.x < 0 then
-                snowflake.x = object.width - snowflake.x
-            elseif snowflake.x >= object.width then
-                snowflake.x = snowflake.x - object.width
-            end
-            
-            local x, y = mathFloor(snowflake.x), mathFloor(snowflake.y)
-            local stack = stacks[x] or 0
-            if y >= maxHeight - stack then
-                stacks[x] = stack + 1
-                tableRemove(snowflakes, index)
-            end
-        end
+			if stackHeight > config.maxStackHeight then
+				stacks[x] = 0
+			end
+		end
 
-        lastUpdateTime = currentTime
-    end,
+		-- Updating snowflakes
+		local currentTime = computer.uptime()
+		local deltaTime = (currentTime - lastUpdateTime) * 20
+		
+		wind = wind + .1 * (2 * mathRandom() - 1) * deltaTime
+		if wind >  config.maxWind then wind =  config.maxWind end
+		if wind < -config.maxWind then wind = -config.maxWind end
 
-    configure = function(layout)
-        layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+		local doubleHeight = wallpaper.height * 2
+		local x, y
+
+		local i = 1
+		while i <= #snowflakes do
+			snowflake = snowflakes[i]
+
+			snowflake.y = snowflake.y + deltaTime *         snowflake.speed 
+			snowflake.x = snowflake.x + deltaTime * (wind * snowflake.speed + snowflake.vx)
+			
+			snowflake.vx = snowflake.vx + (mathRandom() * 2 - 1) * 0.1 * deltaTime
+			
+			if snowflake.vx > 1 then
+				snowflake.vx = 1
+			elseif snowflake.vx < -1 then
+				snowflake.vx = -1
+			end
+			
+			-- When snowflake moves out of wallpaper bounds - teleporting
+			-- it to the opposite side
+			if snowflake.x < 0 then
+				snowflake.x = wallpaper.width - snowflake.x
+			elseif snowflake.x >= wallpaper.width then
+				snowflake.x = snowflake.x - wallpaper.width
+			end
+			
+			x, y = mathFloor(snowflake.x), mathFloor(snowflake.y)
+			stackHeight = stacks[x] or 0
+			
+			if y >= doubleHeight - stackHeight then
+				stacks[x] = stackHeight + 1
+
+				tableRemove(snowflakes, i)
+			else
+				i = i + 1
+			end
+		end
+
+		lastUpdateTime = currentTime
+	end,
+
+	configure = function(layout)
+		layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
 			config.backgroundColor = object.color
 			saveConfig()
 		end
@@ -121,7 +157,7 @@ return {
 			saveConfig()
 		end
 
-        local snowflakeAmountSlider = layout:addChild(
+		local snowflakeAmountSlider = layout:addChild(
 			GUI.slider(
 				1, 1, 
 				36,
@@ -142,8 +178,8 @@ return {
 			saveConfig()
 		end
 
-        local maxStackHeightSlider = layout:addChild(
-            GUI.slider(
+		local maxStackHeightSlider = layout:addChild(
+			GUI.slider(
 				1, 1, 
 				36,
 				0x66DB80, 
@@ -154,15 +190,13 @@ return {
 				config.maxStackHeight, 
 				false, 
 				"Stack height limit: "
-            )
-        )
+			)
+		)
 
-        maxStackHeightSlider.roundValues = true
+		maxStackHeightSlider.roundValues = true
 		maxStackHeightSlider.onValueChanged = function()
 			config.maxStackHeight = math.floor(maxStackHeightSlider.value)
 			saveConfig()
 		end
-    end
+	end
 }
-
---------------------------------------------------------------------------------

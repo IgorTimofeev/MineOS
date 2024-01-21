@@ -75,25 +75,25 @@ resetColors()
 --------------------------------------------------------------------------------
 
 return {
-	draw = function(object)
+	draw = function(wallpaper)
 		local hitsDeadline = computerUptime() >= deadline
 
 		-- Drawing background
-		screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
+		screen.drawRectangle(wallpaper.x, wallpaper.y, wallpaper.width, wallpaper.height, config.backgroundColor, 0, " ")
 
 		-- Spawning missing stars
 		local rotationAngle, targetX, targetY
 
 		while #stars < config.starAmount do
 			rotationAngle = mathRandom(6265) / 1000
-			targetX = mathCos(rotationAngle) * object.width * 0.75  + object.width  / 2
-			targetY = mathSin(rotationAngle) * object.width * 0.375 + object.height / 2
+			targetX = mathCos(rotationAngle) * wallpaper.width * 0.75  + wallpaper.width  / 2
+			targetY = mathSin(rotationAngle) * wallpaper.width * 0.375 + wallpaper.height / 2
 
 			table.insert(stars, {
 				targetX = targetX,
 				targetY = targetY,
-				startX = (targetX - object.width  / 2) * config.starOffset + object.width  / 2,
-				startY = (targetY - object.height / 2) * config.starOffset + object.height / 2,
+				startX = (targetX - wallpaper.width  / 2) * config.starOffset + wallpaper.width  / 2,
+				startY = (targetY - wallpaper.height / 2) * config.starOffset + wallpaper.height / 2,
 				speed = mathRandom(25, 75) / 1000 + 1,
 
 				-- Defines the star lifetime in range (0.0; 1.0]
@@ -113,7 +113,7 @@ return {
 			x = star.startX + (star.targetX - star.startX) * star.age
 			y = star.startY + (star.targetY - star.startY) * star.age
 
-			if x > object.width + 1 or x < 1 or y > object.height + 1 or y < 1 then
+			if x > wallpaper.width + 1 or x < 1 or y > wallpaper.height + 1 or y < 1 then
 				tableRemove(stars, i)
 			else
 				xmod = x * 2; 
