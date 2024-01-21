@@ -93,7 +93,7 @@ return {
 			screenDrawSemiPixelRectangle(wallpaper.x + x, wallpaper.y + wallpaper.height * 2 - stackHeight + 1, 1, stackHeight, config.snowflakeColor)
 
 			if stackHeight > config.maxStackHeight then
-				stacks[x] = 0
+				stacks[x] = stackHeight - 2
 			end
 		end
 
@@ -136,6 +136,22 @@ return {
 			
 			if y >= doubleHeight - stackHeight then
 				stacks[x] = stackHeight + 1
+				
+				if x > 0 then
+					local leftStackHeight = stacks[x-1] or 0
+					if stacks[x] - leftStackHeight > 2 then
+						stacks[x-1] = leftStackHeight + 1
+						stacks[x] = stackHeight
+					end
+				end
+
+				if x < wallpaper.width-1 then
+					local rightStackHeight = stacks[x+1] or 0
+					if stacks[x] - rightStackHeight > 2 then
+						stacks[x+1] = rightStackHeight + 1
+						stacks[x] = stackHeight
+					end
+				end
 
 				tableRemove(snowflakes, i)
 			else
