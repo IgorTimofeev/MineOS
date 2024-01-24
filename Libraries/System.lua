@@ -581,20 +581,6 @@ function system.updateIconProperties()
 	computer.pushSignal("system", "updateFileList")
 end
 
-local function gridIconFieldGetSelectedIcons(iconField)
-	local selectedIcons, icon = {}
-
-	for i = 2, #iconField.children do
-		icon = iconField.children[i]
-
-		if icon.selected then
-			table.insert(selectedIcons, icon)
-		end
-	end
-
-	return selectedIcons
-end
-
 local function drawSelection(x, y, width, height, color, transparency)
 	screen.drawText(x, y, color, string.rep("▄", width), transparency)
 	screen.drawText(x, y + height - 1, color, string.rep("▀", width), transparency)
@@ -1353,8 +1339,6 @@ local function iconFieldUpdateFileList(iconField)
 		-- Updating sizes
 		iconField.yOffset = iconField.initialYOffset
 
-		iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
-
 		iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (userSettings.iconWidth + userSettings.iconHorizontalSpace))
 		iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (userSettings.iconHeight + userSettings.iconVerticalSpace))
 		iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
@@ -1394,11 +1378,11 @@ local function iconFieldUpdateFileList(iconField)
 		end
 
 		if #configList > 0 then
-			for i = 2, #iconField.children do
+			for i = 1, #iconField.children do
 				y = math.max(y, iconField.children[i].localY)
 			end
 
-			for i = 2, #iconField.children do
+			for i = 1, #iconField.children do
 				if iconField.children[i].localY == y then
 					x = math.max(x, iconField.children[i].localX)
 				end
@@ -1701,10 +1685,50 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 	workspace:draw()
 end
 
-local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" then
-		local iconField = object.parent
+local function iconFieldClearSelection(self)
+	for i = 1, #self.children do
+		self.children[i].selected = nil
+	end
+end
 
+local function iconFieldSetPath(iconField, path)
+	iconField.path = path
+	iconField.filenameMatcher = nil
+	iconField.fromFile = 1
+
+	return iconField
+end
+
+local function anyIconFieldAddInfo(iconField, path)
+	iconField.path = path
+	iconField.filenameMatcher = nil
+
+	iconField.setPath = iconFieldSetPath
+
+	-- Duplicate icon launchers for overriding possibility
+	iconField.launchers = {}
+
+	for key, value in pairs(defaultIconLaunchers) do
+		iconField.launchers[key] = value
+	end
+end
+
+local function gridIconFieldGetSelectedIcons(iconField)
+	local selectedIcons, icon = {}
+
+	for i = 1, #iconField.children do
+		icon = iconField.children[i]
+
+		if icon.selected then
+			table.insert(selectedIcons, icon)
+		end
+	end
+
+	return selectedIcons
+end
+
+local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
 		GUI.focusedObject = iconField
 
 		if e5 == 0 then
@@ -1721,7 +1745,6 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 		end
 	
 	elseif e1 == "drag" then
-		local iconField = object.parent
 		local selection = iconField.selection
 
 		if not selection then
@@ -1750,22 +1773,16 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 		end
 
 		iconFieldCheckSelection(iconField)
-		object:moveToFront()
 
 		workspace:draw()
 	
 	elseif e1 == "drop" then
-		local iconField = object.parent
-
 		iconField.selection = nil
 		iconFieldCheckSelection(iconField)
-		object:moveToBack()
 
 		workspace:draw()
 	
 	elseif e1 == "key_down" then
-		local iconField = object.parent
-
 		if GUI.focusedObject ~= iconField then
 			return
 		end
@@ -1775,7 +1792,7 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
 			local icon, selectedIcon
 			
-			for i = 2, #iconField.children do
+			for i = 1, #iconField.children do
 				icon = iconField.children[i]
 
 				if icon.selected then
@@ -1851,54 +1868,6 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 	end
 end
 
-local function iconFieldBackgroundObjectDraw(object)
-	local selection = object.parent.selection
-	
-	if selection and object.parent.selection.x2 then
-		local y1, y2
-		
-		if selection.y1Raw < selection.y2Raw then
-			y1, y2 = selection.y1 + object.parent.yOffset - object.parent.initialYOffset, selection.y2
-		else
-			y1, y2 = selection.y1, selection.y2 + object.parent.yOffset - object.parent.initialYOffset
-		end
-
-		if userSettings.interfaceTransparencyEnabled then	
-			screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, object.parent.colors.selectionFrame, 0x0, " ", 0.6)
-		else
-			screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, object.parent.colors.selectionFrame)
-		end
-	end
-end
-
-local function iconFieldClearSelection(self)
-	for i = 1, #self.children do
-		self.children[i].selected = nil
-	end
-end
-
-local function iconFieldSetPath(iconField, path)
-	iconField.path = path
-	iconField.filenameMatcher = nil
-	iconField.fromFile = 1
-
-	return iconField
-end
-
-local function anyIconFieldAddInfo(iconField, path)
-	iconField.path = path
-	iconField.filenameMatcher = nil
-
-	iconField.setPath = iconFieldSetPath
-
-	-- Duplicate icon launchers for overriding possibility
-	iconField.launchers = {}
-
-	for key, value in pairs(defaultIconLaunchers) do
-		iconField.launchers[key] = value
-	end
-end
-
 function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, selectionBackgroundColor, selectionTextColor, selectionFrameColor, selectionTransparency)
 	local iconField = GUI.container(x, y, width, height)
 
@@ -1916,16 +1885,37 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 	iconField.iconCount = {}
 	iconField.iconConfig = {}
 
-	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
-	iconField.backgroundObject.eventHandler = iconFieldBackgroundObjectEventHandler
-	iconField.backgroundObject.draw = iconFieldBackgroundObjectDraw
+	local overrideDraw = iconField.draw
+	iconField.draw = function(...)
+		overrideDraw(...)
+
+		local selection = iconField.selection
+		
+		if selection and iconField.selection.x2 then
+			local y1, y2
+			
+			if selection.y1Raw < selection.y2Raw then
+				y1, y2 = selection.y1 + iconField.yOffset - iconField.initialYOffset, selection.y2
+			else
+				y1, y2 = selection.y1, selection.y2 + iconField.yOffset - iconField.initialYOffset
+			end
+
+			if userSettings.interfaceTransparencyEnabled then	
+				screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame, 0x0, " ", 0.6)
+			else
+				screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame)
+			end
+		end
+	end
 
 	iconField.clearSelection = iconFieldClearSelection
 	iconField.loadIconConfig = iconFieldLoadIconConfig
 	iconField.saveIconConfig = iconFieldSaveIconConfig
 	iconField.deleteIconConfig = iconFieldDeleteIconConfig
 	iconField.updateFileList = iconFieldUpdateFileList
+
 	iconField.getSelectedIcons = gridIconFieldGetSelectedIcons
+	iconField.eventHandler = gridIconFieldEventHandler
 
 	anyIconFieldAddInfo(iconField, path)
 
@@ -2421,8 +2411,11 @@ function system.updateWallpaper()
 		return
 	end
 
+	desktopBackground.draw = wallpaperOrError.draw
+	desktopBackground.eventHandler = wallpaperOrError.eventHandler
+	
 	system.wallpaper = wallpaperOrError
-	desktopBackground.draw = system.wallpaper.draw
+
 	interfaceDrawInterval = 0.01
 end
 

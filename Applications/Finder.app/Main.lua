@@ -490,6 +490,8 @@ local function updateIconField()
 		)
 	)
 
+	iconField.passScreenEvents = false
+
 	iconField.launchers.directory = function(icon)
 		addPath(icon.path)
 		updateFileListAndDraw()
@@ -505,7 +507,9 @@ local function updateIconField()
 		updateFileListAndDraw()
 	end
 
-	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5)
+	local overrideIconFieldEventHandler = iconField.eventHandler
+
+	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5, ...)
 		if e1 == "scroll" then
 			setVerticalScroll(getVerticalScroll() + (config.gridMode and e5 * 2 or e5))
 
@@ -524,7 +528,7 @@ local function updateIconField()
 				workspace:draw()
 			end	
 		else
-			GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5)
+			overrideIconFieldEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 		end
 	end
 
