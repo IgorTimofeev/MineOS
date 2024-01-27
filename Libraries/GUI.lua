@@ -376,7 +376,6 @@ local function workspaceStart(workspace, eventPullTimeout)
 	local
 		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32,
 		isScreenEvent,
-		checkBounds,
 		roundedX,
 		roundedY,
 		capturedObject,
@@ -385,92 +384,93 @@ local function workspaceStart(workspace, eventPullTimeout)
 		animationOnFinishMethodsIndex,
 		animationOnFinishMethods
 
-	local processObject, processContainer
+	local function processObject(object, boundsX1, boundsY1, boundsX2, boundsY2)
+		local govno = false
 
-	processObject = function(child, boundsX1, boundsY1, boundsX2, boundsY2)
-		-- Container
-		if child.children then
-			newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2 = getRectangleBounds(
-				boundsX1,
-				boundsY1,
-				boundsX2,
-				boundsY2,
+		if isScreenEvent then
+			if workspace.capturedObject then
+				if workspace.capturedObject == object then
+					
 
-				child.x,
-				child.y,
-				child.x + child.width - 1,
-				child.y + child.height - 1
-			)
-
-			if 
-				newBoundsX1
-				and processContainer(
-					child,
-					newBoundsX1,
-					newBoundsY1,
-					newBoundsX2,
-					newBoundsY2
-				)
-			then
-				return true
+				elseif object.ignoresCapturedObject then
+					if not boundsX1 or not (
+						roundedX >= boundsX1
+						and roundedX <= boundsX2
+						and roundedY >= boundsY1
+						and roundedY <= boundsY2
+					) then
+						goto pizda
+					end
+				else
+					goto pizda
+				end
+			else
+				if
+					not boundsX1 or not (
+						roundedX >= boundsX1
+						and roundedX <= boundsX2
+						and roundedY >= boundsY1
+						and roundedY <= boundsY2
+					)
+				then
+					goto pizda
+				else
+					govno = not object.passScreenEvents
+				end
 			end
 
-		-- Not container
+			if object.eventHandler and not object.disabled then
+				object.eventHandler(workspace, object, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+			end
 		else
-			if isScreenEvent then
-				if not checkBounds or child:isPointInside(roundedX, roundedY)then
-					if child.eventHandler and not child.disabled then
-						child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-					end
+			if
+				not workspace.capturedObject
+				or workspace.capturedObject == object
+				or object.ignoresCapturedObject
+			then
+				if object.eventHandler and not object.disabled then
+					object.eventHandler(workspace, object, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+				end
+			end
+		end
+		
 
-					if not child.passScreenEvents then
+		-- Container
+		::pizda::
+
+		if object.children and boundsX1 then
+			local child, newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2
+
+			for i = #object.children, 1, -1 do
+				child = object.children[i]
+
+				if not child.hidden then
+					newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2 = getRectangleBounds(
+						boundsX1,
+						boundsY1,
+						boundsX2,
+						boundsY2,
+
+						child.x,
+						child.y,
+						child.x + child.width - 1,
+						child.y + child.height - 1
+					)
+
+					if processObject(
+						child,
+						newBoundsX1,
+						newBoundsY1,
+						newBoundsX2,
+						newBoundsY2
+					) then
 						return true
 					end
 				end
-
-			elseif child.eventHandler then
-				child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-			end
-		end
-	end
-
-	processContainer = function(currentContainer, boundsX1, boundsY1, boundsX2, boundsY2)
-		local currentContainerPassed, child, newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2
-		
-		if isScreenEvent then
-			if checkBounds and not (
-				roundedX >= boundsX1
-				and roundedX <= boundsX2
-
-				and roundedY >= boundsY1
-				and roundedY <= boundsY2
-			) then
-				return
-			end
-
-			if currentContainer.eventHandler and not currentContainer.disabled then
-				currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-			end
-
-			currentContainerPassed = not currentContainer.passScreenEvents
-		
-		elseif currentContainer.eventHandler then
-			currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-		end
-
-		for i = #currentContainer.children, 1, -1 do
-			child = currentContainer.children[i]
-
-			if not child.hidden then
-				checkBounds = true
-
-				if processObject(child, boundsX1, boundsY1, boundsX2, boundsY2) then
-					return true
-				end
 			end
 		end
 
-		if currentContainerPassed then
+		if govno then
 			return true
 		end
 	end
@@ -491,31 +491,13 @@ local function workspaceStart(workspace, eventPullTimeout)
 			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
 		end
 
-		capturedObject = workspace.capturedObject
-
-		if capturedObject then
-			if not capturedObject.hidden then
-				checkBounds = false
-
-				processObject(
-					capturedObject,
-					workspace.x,
-					workspace.y,
-					workspace.x + workspace.width - 1,
-					workspace.y + workspace.height - 1
-				)
-			end
-		else
-			checkBounds = true
-
-			processContainer(
-				workspace,
-				workspace.x,
-				workspace.y,
-				workspace.x + workspace.width - 1,
-				workspace.y + workspace.height - 1
-			)
-		end
+		processObject(
+			workspace,
+			workspace.x,
+			workspace.y,
+			workspace.x + workspace.width - 1,
+			workspace.y + workspace.height - 1
+		)
 
 		if workspace.animations then
 			animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods = 1, 1, {}

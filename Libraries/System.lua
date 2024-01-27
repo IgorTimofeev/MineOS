@@ -1333,6 +1333,8 @@ local function iconFieldUpdateFileList(iconField)
 			)
 
 			anyIconFieldAddIcon(iconField, icon)
+
+			icon.ignoresCapturedObject = true
 			icon.eventHandler = iconFieldIconEventHandler
 
 			iconField:addChild(icon)
@@ -2934,9 +2936,13 @@ function system.updateWorkspace()
 	-- Clearing workspace
 	workspace:removeChildren()
 
+	workspace.ignoresCapturedObject = true
+
 	-- Creating desktop background object
-	local oldDraw = desktopBackground and desktopBackground.draw
 	desktopBackground = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
+	desktopBackground.ignoresCapturedObject = true
+
+	local oldDraw = desktopBackground and desktopBackground.draw
 	desktopBackground.draw = oldDraw or desktopBackgroundAmbientDraw
 end
 
