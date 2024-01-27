@@ -104,7 +104,7 @@ local overrideCodeViewDraw = codeView.draw
 codeView.draw = function(...)
 	overrideCodeViewDraw(...)
 
-	if cursorBlinkState and GUI.focusedObject == window then
+	if cursorBlinkState and workspace.focusedObject == window then
 		local x, y = codeView.codeAreaPosition + cursorPositionSymbol - codeView.fromSymbol + 1, codeView.y + cursorPositionLine - codeView.fromLine
 		if
 			x >= codeView.codeAreaPosition + 1 and
@@ -1385,6 +1385,8 @@ end
 local uptime = computer.uptime()
 codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
+		workspace.focusedObject = window
+
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
 		if checkScrollbar(e4) then
@@ -1426,7 +1428,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 
 		tick(true)
 
-	elseif e1 == "key_down" and GUI.focusedObject == window then
+	elseif e1 == "key_down" and workspace.focusedObject == window then
 		-- Ctrl or CMD
 		if keyboard.isControlDown() or keyboard.isCommandDown() then
 			-- Slash

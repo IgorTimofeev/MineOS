@@ -1056,8 +1056,8 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 	if e1 == "touch" then
 		local iconField = icon.parent
 		
-		icon.ignoresBoundsCheckOnScreenEvents = true
-		GUI.focusedObject = iconField
+		workspace.focusedObject = iconField
+		workspace.capturedObject = icon
 
 		icon.lastTouchPosition = icon.lastTouchPosition or {}
 		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
@@ -1082,17 +1082,16 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 	elseif e1 == "double_touch" and e5 == 0 then
 		iconOnDoubleClick(icon, e1, e2, e3, e4, e5, ...)
 	
-	elseif e1 == "drag" and icon.parent.iconConfigEnabled and icon.lastTouchPosition then
-		-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
-		icon.dragStarted = true
+	-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
+	elseif e1 == "drag" and icon.parent.iconConfigEnabled and workspace.capturedObject == icon then
 		icon.localX = icon.localX + e3 - icon.lastTouchPosition.x
 		icon.localY = icon.localY + e4 - icon.lastTouchPosition.y
 		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
 
 		workspace:draw()
 	
-	elseif e1 == "drop" then
-		icon.dragStarted, icon.lastTouchPosition, icon.ignoresBoundsCheckOnScreenEvents = nil, nil, nil
+	elseif e1 == "drop" and workspace.capturedObject == icon then
+		icon.lastTouchPosition, workspace.capturedObject = nil, nil
 
 		iconFieldSaveIconPosition(
 			icon.parent,
@@ -1247,6 +1246,8 @@ end
 
 local function iconFieldSaveIconConfig(iconField)
 	filesystem.writeTable(iconField.path .. ".icons", iconField.iconConfig)
+
+	-- GUI.alert("SAVE", iconField.path .. ".icons", debug.traceback())
 end
 
 local function iconFieldDeleteIconConfig(iconField)
@@ -1291,6 +1292,7 @@ end
 
 local function anyIconFieldUpdateFileList(iconField, func)
 	local list, reason = filesystem.list(iconField.path, userSettings.filesSortingMethod)
+	
 	if list then
 		-- Hidden files and filename matcher
 		local i = 1
@@ -1344,7 +1346,7 @@ local function iconFieldUpdateFileList(iconField)
 		iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
 
 		-- Clearing eblo
-		iconField:removeChildren(2)
+		iconField:removeChildren()
 
 		-- Updating icon config if possible
 		if iconField.iconConfigEnabled then
@@ -1398,9 +1400,9 @@ local function iconFieldUpdateFileList(iconField)
 			nextX()
 		end
 
-		if iconField.iconConfigEnabled then
-			iconField:saveIconConfig()
-		end
+		-- if iconField.iconConfigEnabled then
+		-- 	iconField:saveIconConfig()
+		-- end
 	end)
 end
 
@@ -1729,7 +1731,8 @@ end
 
 local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
-		GUI.focusedObject = iconField
+		workspace.focusedObject = iconField
+		workspace.capturedObject = iconField
 
 		if e5 == 0 then
 			iconField:clearSelection()
@@ -1777,13 +1780,16 @@ local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e
 		workspace:draw()
 	
 	elseif e1 == "drop" then
+		workspace.focusedObject = nil
+		workspace.capturedObject = nil
+
 		iconField.selection = nil
 		iconFieldCheckSelection(iconField)
 
 		workspace:draw()
 	
 	elseif e1 == "key_down" then
-		if GUI.focusedObject ~= iconField then
+		if workspace.focusedObject ~= iconField then
 			return
 		end
 
@@ -2035,7 +2041,7 @@ local function windowRemove(window)
 
 	-- Удаляем само окошко
 	table.remove(window.parent.children, window:indexOf())
-	GUI.focusedObject = updateDesktopMenuAndGetTopmostWindow()
+	workspace.focusedObject = updateDesktopMenuAndGetTopmostWindow()
 end
 
 function system.addWindow(window, dontAddToDock, preserveCoordinates)
@@ -2051,7 +2057,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	-- Ебурим окно к окнам
 	desktopWindowsContainer:addChild(window)
 	
-	GUI.focusedObject = window
+	workspace.focusedObject = window
 	
 	if not dontAddToDock then
 		-- Получаем путь залупы

@@ -262,15 +262,33 @@ local function containerObjectAddAnimation(object, frameHandler, onFinish)
 		onFinish = onFinish,
 	}
 
-	object.firstParent.animations = object.firstParent.animations or {}
-	table.insert(object.firstParent.animations, animation)
+	object.workspace.animations = object.workspace.animations or {}
+	table.insert(object.workspace.animations, animation)
 
 	return animation
 end
 
 local function containerAddChild(container, object, atIndex)
+	-- Parent containers
+	object.parent = container
+
+	local function updateWorkspace(object, workspace)
+		object.workspace = workspace
+
+		if object.children then
+			for i = 1, #object.children do
+				updateWorkspace(object.children[i], workspace)
+			end
+		end
+	end
+
+	updateWorkspace(object, container.workspace or container)
+
+	-- Position
 	object.localX = object.x
 	object.localY = object.y
+
+	-- Additional methods after adding to parent container
 	object.indexOf = containerObjectIndexOf
 	object.moveToFront = containerObjectMoveToFront
 	object.moveToBack = containerObjectMoveToBack
@@ -278,18 +296,6 @@ local function containerAddChild(container, object, atIndex)
 	object.moveBackward = containerObjectMoveBackward
 	object.remove = containerObjectRemove
 	object.addAnimation = containerObjectAddAnimation
-
-	local function updateFirstParent(object, firstParent)
-		object.firstParent = firstParent
-		if object.children then
-			for i = 1, #object.children do
-				updateFirstParent(object.children[i], firstParent)
-			end
-		end
-	end
-
-	object.parent = container
-	updateFirstParent(object, container.firstParent or container)
 
 	if atIndex then
 		table.insert(container.children, atIndex, object)
@@ -367,22 +373,77 @@ end
 --------------------------------------------------------------------------------
 
 local function workspaceStart(workspace, eventPullTimeout)
-	local animation, animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods, roundedX, roundedY, isScreenEvent, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
-	
-	local function handleContainer(currentContainer, boundsX1, boundsY1, boundsX2, boundsY2)
+	local
+		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32,
+		isScreenEvent,
+		checkBounds,
+		roundedX,
+		roundedY,
+		capturedObject,
+		animation,
+		animationIndex,
+		animationOnFinishMethodsIndex,
+		animationOnFinishMethods
+
+	local processObject, processContainer
+
+	processObject = function(child, boundsX1, boundsY1, boundsX2, boundsY2)
+		-- Container
+		if child.children then
+			newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2 = getRectangleBounds(
+				boundsX1,
+				boundsY1,
+				boundsX2,
+				boundsY2,
+
+				child.x,
+				child.y,
+				child.x + child.width - 1,
+				child.y + child.height - 1
+			)
+
+			if 
+				newBoundsX1
+				and processContainer(
+					child,
+					newBoundsX1,
+					newBoundsY1,
+					newBoundsX2,
+					newBoundsY2
+				)
+			then
+				return true
+			end
+
+		-- Not container
+		else
+			if isScreenEvent then
+				if not checkBounds or child:isPointInside(roundedX, roundedY)then
+					if child.eventHandler and not child.disabled then
+						child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+					end
+
+					if not child.passScreenEvents then
+						return true
+					end
+				end
+
+			elseif child.eventHandler then
+				child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+			end
+		end
+	end
+
+	processContainer = function(currentContainer, boundsX1, boundsY1, boundsX2, boundsY2)
 		local currentContainerPassed, child, newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2
 		
 		if isScreenEvent then
-			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
-
-			if not (
+			if checkBounds and not (
 				roundedX >= boundsX1
 				and roundedX <= boundsX2
 
 				and roundedY >= boundsY1
 				and roundedY <= boundsY2
-
-				or currentContainer.ignoresBoundsCheckOnScreenEvents
 			) then
 				return
 			end
@@ -401,55 +462,10 @@ local function workspaceStart(workspace, eventPullTimeout)
 			child = currentContainer.children[i]
 
 			if not child.hidden then
-				-- Container
-				if child.children then
-					newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2 = getRectangleBounds(
-						boundsX1,
-						boundsY1,
-						boundsX2,
-						boundsY2,
-						child.x,
-						child.y,
-						child.x + child.width - 1,
-						child.y + child.height - 1
-					)
+				checkBounds = true
 
-					if 
-						newBoundsX1
-						and handleContainer(
-							child,
-							newBoundsX1,
-							newBoundsY1,
-							newBoundsX2,
-							newBoundsY2,
-							e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
-						)
-					then
-						return true
-					end
-
-				-- Not container
-				else
-					if workspace.needConsume then
-						workspace.needConsume = nil
-
-						return true
-					end
-
-					if isScreenEvent then
-						if child:isPointInside(roundedX, roundedY) or child.ignoresBoundsCheckOnScreenEvents then
-							if child.eventHandler and not child.disabled then
-								child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-							end
-
-							if not child.passScreenEvents then
-								return true
-							end
-						end
-
-					elseif child.eventHandler then
-						child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-					end
+				if processObject(child, boundsX1, boundsY1, boundsX2, boundsY2) then
+					return true
 				end
 			end
 		end
@@ -471,13 +487,35 @@ local function workspaceStart(workspace, eventPullTimeout)
 			e1 == "scroll" or
 			e1 == "double_touch"
 
-		handleContainer(
-			workspace,
-			workspace.x,
-			workspace.y,
-			workspace.x + workspace.width - 1,
-			workspace.y + workspace.height - 1
-		)
+		if isScreenEvent then
+			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
+		end
+
+		capturedObject = workspace.capturedObject
+
+		if capturedObject then
+			if not capturedObject.hidden then
+				checkBounds = false
+
+				processObject(
+					capturedObject,
+					workspace.x,
+					workspace.y,
+					workspace.x + workspace.width - 1,
+					workspace.y + workspace.height - 1
+				)
+			end
+		else
+			checkBounds = true
+
+			processContainer(
+				workspace,
+				workspace.x,
+				workspace.y,
+				workspace.x + workspace.width - 1,
+				workspace.y + workspace.height - 1
+			)
+		end
 
 		if workspace.animations then
 			animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods = 1, 1, {}
@@ -532,12 +570,9 @@ local function workspaceStop(workspace)
 	workspace.needClose = true
 end
 
-local function workspaceConsumeEvent(workspace)
-	workspace.needConsume = true
-end
-
 local function workspaceDraw(object, ...)
 	containerDraw(object)
+
 	screen.update(...)
 end
 
@@ -547,7 +582,6 @@ function GUI.workspace(x, y, width, height)
 	workspace.draw = workspaceDraw
 	workspace.start = workspaceStart
 	workspace.stop = workspaceStop
-	workspace.consumeEvent = workspaceConsumeEvent
 
 	return workspace
 end
@@ -2112,7 +2146,7 @@ function GUI.addFilesystemDialog(parentContainer, addPanel, ...)
 
 	local function onAnyTouch()
 		container:remove()
-		filesystemDialog.firstParent:draw()
+		filesystemDialog.workspace:draw()
 	end
 
 	filesystemDialog.cancelButton.onTouch = function()
@@ -2846,13 +2880,15 @@ end
 local function inputDraw(input)
 	local background, foreground, transparency, text
 	
-	if input.focused then
+	if input.workspace.focusedObject == input then
 		background, transparency = input.colors.focused.background, input.colors.focused.transparency
+		
 		if input.text == "" then
 			input.textCutFrom = 1
 			foreground, text = input.colors.placeholderText, input.text
 		else
 			foreground = input.colors.focused.text
+			
 			if input.textMask then
 				text = string.rep(input.textMask, unicode.len(input.text))
 			else
@@ -2905,8 +2941,8 @@ local function inputCursorBlink(workspace, input, state)
 end
 
 local function inputStopInput(workspace, input)
-	input.stopInputObject:remove()
-	input.focused = false
+	input.workspace.capturedObject = nil
+	input.workspace.focusedObject = nil
 
 	if input.validator then
 		if not input.validator(input.text) then
@@ -2926,7 +2962,8 @@ end
 
 local function inputStartInput(input)
 	input.startText = input.text
-	input.focused = true
+	input.workspace.capturedObject = input
+	input.workspace.focusedObject = input
 
 	if input.historyEnabled then
 		input.historyIndex = input.historyIndex + 1
@@ -2937,26 +2974,26 @@ local function inputStartInput(input)
 	end
 	
 	input:setCursorPosition(input.cursorPosition)
-
-	input.stopInputObject.width, input.stopInputObject.height = input.firstParent.width, input.firstParent.height
-	input.firstParent:addChild(input.stopInputObject)
-
-	inputCursorBlink(input.firstParent, input, true)
+	inputCursorBlink(input.workspace, input, true)
 end
 
 local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
+	local focused = workspace.focusedObject == input
+
 	if e1 == "touch" or e1 == "drag" then
-		input:setCursorPosition(input.textCutFrom + math.ceil(e3) - input.x - input.textOffset)
+		if input:isPointInside(math.ceil(e3), math.ceil(e4)) then
+			input:setCursorPosition(input.textCutFrom + math.ceil(e3) - input.x - input.textOffset)
 
-		if input.focused then
-			inputCursorBlink(workspace, input, true)
+			if focused then
+				inputCursorBlink(workspace, input, true)
+			else
+				input:startInput()
+			end
 		else
-			input:startInput()
+			inputStopInput(workspace, input)
 		end
-	
-	elseif e1 == "key_down" and input.focused then
-		workspace:consumeEvent()
 
+	elseif e1 == "key_down" and focused then
 		-- Return
 		if e4 == 28 then
 			if input.historyEnabled then
@@ -3050,14 +3087,13 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 
 		inputCursorBlink(workspace, input, true)
 	
-	elseif e1 == "clipboard" and input.focused then
+	elseif e1 == "clipboard" and focused then
 		input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e3 .. unicode.sub(input.text, input.cursorPosition, -1)
 		input:setCursorPosition(input.cursorPosition + unicode.len(e3))
 		
 		inputCursorBlink(workspace, input, true)
-		workspace:consumeEvent()
 	
-	elseif not e1 and input.focused and computer.uptime() - input.cursorBlinkUptime > input.cursorBlinkDelay then
+	elseif not e1 and focused and computer.uptime() - input.cursorBlinkUptime > input.cursorBlinkDelay then
 		inputCursorBlink(workspace, input, not input.cursorBlinkState)
 	end
 end
@@ -3096,17 +3132,6 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.historyLimit = 20
 	input.historyIndex = 0
 	input.historyEnabled = false
-
-	input.stopInputObject = GUI.object(1, 1, 1, 1)
-	input.stopInputObject.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
-		if e1 == "touch" or e1 == "drop" then
-			if input:isPointInside(math.ceil(e3), math.ceil(e4)) then
-				input.eventHandler(workspace, input, e1, e2, e3, e4, ...)
-			else
-				inputStopInput(workspace, input)
-			end
-		end
-	end
 
 	input.textDrawMethod = inputTextDrawMethod
 	input.draw = inputDraw
@@ -3493,7 +3518,7 @@ function GUI.palette(x, y, startColor)
 	local function onAnyInputFinished()
 		paletteRefreshBigImage()
 		paletteUpdateCrestsCoordinates()
-		palette.firstParent:draw()
+		palette.workspace:draw()
 	end
 
 	local function onHexInputFinished()
@@ -4471,7 +4496,7 @@ function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBack
 	comboBox.dropDownMenu.onMenuClosed = function(index)
 		comboBox.pressed = false
 		comboBox.selectedItem = index or comboBox.selectedItem
-		comboBox.firstParent:draw()
+		comboBox.workspace:draw()
 		
 		if index and comboBox.onItemSelected then
 			comboBox.onItemSelected(index)
@@ -4541,7 +4566,7 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
 		if not windowScreenEventCheck(window, e3, e4) then
-			window.ignoresBoundsCheckOnScreenEvents = true
+			workspace.capturedObject = window
 			window.lastTouchX, window.lastTouchY = e3, e4
 		end
 
@@ -4555,17 +4580,13 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	elseif e1 == "drag" and window.lastTouchX then
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-		if windowScreenEventCheck(window, e3, e4) then
-			return
-		end
-
 		window.localX, window.localY = window.localX + e3 - window.lastTouchX, window.localY + e4 - window.lastTouchY
 		window.lastTouchX, window.lastTouchY = e3, e4
 		
 		workspace:draw()
 	
 	elseif e1 == "drop" then
-		window.lastTouchX, window.lastTouchY, window.ignoresBoundsCheckOnScreenEvents = nil, nil, nil
+		window.lastTouchX, window.lastTouchY, workspace.capturedObject = nil, nil, nil
 	end
 end
 
@@ -4632,7 +4653,7 @@ function GUI.windowMaximize(window, animationDisabled)
 end
 
 local function windowFocus(window)
-	GUI.focusedObject = window
+	window.workspace.focusedObject = window
 	window.hidden = false
 	window:moveToFront()
 
@@ -4751,7 +4772,7 @@ local function menuAddContextMenuItem(menu, ...)
 	item.contextMenu = contextMenuCreate(1, 1)
 	item.contextMenu.onMenuClosed = function()
 		item.pressed = false
-		item.firstParent:draw()
+		item.workspace:draw()
 	end
 
 	return item.contextMenu
