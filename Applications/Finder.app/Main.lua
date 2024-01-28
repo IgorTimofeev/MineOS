@@ -103,7 +103,7 @@ end
 
 local function setVerticalScroll(value)
 	if config.gridMode then
-		local iconsCount = #iconField.children
+		local iconsCount = #iconField.children - 1
 		local rows = math.ceil((iconsCount - 1) / iconField.iconCount.horizontal)
 		local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
 		
@@ -112,13 +112,13 @@ local function setVerticalScroll(value)
 		local delta = iconField.yOffset - value
 		iconField.yOffset = value
 
-		local iconsCount, child = #iconField.children
-
 		if iconsCount < 2 then
 			return
 		end
 
-		for i = 1, iconsCount do
+		local child
+
+		for i = 2, iconsCount do
 			child = iconField.children[i]
 
 			if child ~= iconField.backgroundObject then
@@ -507,8 +507,6 @@ local function updateIconField()
 		updateFileListAndDraw()
 	end
 
-	local overrideIconFieldEventHandler = iconField.eventHandler
-
 	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5, ...)
 		if e1 == "scroll" then
 			setVerticalScroll(getVerticalScroll() + (config.gridMode and e5 * 2 or e5))
@@ -527,8 +525,6 @@ local function updateIconField()
 				updateSidebar()
 				workspace:draw()
 			end	
-		else
-			overrideIconFieldEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 		end
 	end
 

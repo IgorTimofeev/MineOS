@@ -1060,11 +1060,12 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 		icon.lastTouchY = e4
 
 		workspace.focusedObject = iconField
-		workspace.capturedObject = icon
 
 		icon:moveToFront()
 
 		if e5 == 0 then
+			workspace.capturedObject = icon
+
 			iconDeselectAndSelect(icon)
 
 			workspace:draw()
@@ -1271,7 +1272,7 @@ local function iconFieldCheckSelection(iconField)
 	if selection and selection.x2 then
 		local child, xCenter, yCenter
 
-		for i = 1, #iconField.children do
+		for i = 2, #iconField.children do
 			child = iconField.children[i]
 
 			xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
@@ -1342,7 +1343,6 @@ local function iconFieldUpdateFileList(iconField)
 
 			anyIconFieldAddIcon(iconField, icon)
 
-			icon.ignoresCapturedObject = true
 			icon.eventHandler = iconFieldIconEventHandler
 
 			iconField:addChild(icon)
@@ -1356,7 +1356,7 @@ local function iconFieldUpdateFileList(iconField)
 		iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
 
 		-- Clearing eblo
-		iconField:removeChildren()
+		iconField:removeChildren(2)
 
 		-- Updating icon config if possible
 		if iconField.iconConfigEnabled then
@@ -1390,11 +1390,11 @@ local function iconFieldUpdateFileList(iconField)
 		end
 
 		if #configList > 0 then
-			for i = 1, #iconField.children do
+			for i = 2, #iconField.children do
 				y = math.max(y, iconField.children[i].localY)
 			end
 
-			for i = 1, #iconField.children do
+			for i = 2, #iconField.children do
 				if iconField.children[i].localY == y then
 					x = math.max(x, iconField.children[i].localX)
 				end
@@ -1728,7 +1728,7 @@ end
 local function gridIconFieldGetSelectedIcons(iconField)
 	local selectedIcons, icon = {}
 
-	for i = 1, #iconField.children do
+	for i = 2, #iconField.children do
 		icon = iconField.children[i]
 
 		if icon.selected then
@@ -1739,17 +1739,22 @@ local function gridIconFieldGetSelectedIcons(iconField)
 	return selectedIcons
 end
 
-local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e5, ...)
+local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundObject, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
+		local iconField = backgroundObject.parent
+
 		workspace.focusedObject = iconField
-		workspace.capturedObject = iconField
 
 		if e5 == 0 then
+			workspace.capturedObject = backgroundObject
+
 			iconField:clearSelection()
+			
 			iconField.selection = {
 				x1Raw = e3,
 				y1Raw = e4
 			}
+
 			iconFieldCheckSelection(iconField)
 
 			workspace:draw()
@@ -1757,7 +1762,8 @@ local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e
 			iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		end
 	
-	elseif e1 == "drag" then
+	elseif e1 == "drag" and workspace.capturedObject == backgroundObject then
+		local iconField = backgroundObject.parent
 		local selection = iconField.selection
 
 		if not selection then
@@ -1771,7 +1777,6 @@ local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e
 		selection.y1,
 		selection.x2,
 		selection.y2 =
-		
 		math.ceil(selection.x1Raw),
 		math.ceil(selection.y1Raw),
 		math.ceil(selection.x2Raw),
@@ -1789,9 +1794,16 @@ local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e
 
 		workspace:draw()
 	
-	elseif e1 == "drop" then
+	elseif e1 == "drop" and workspace.capturedObject == backgroundObject then
 		workspace.focusedObject = nil
 		workspace.capturedObject = nil
+
+		local iconField = backgroundObject.parent
+		local selection = iconField.selection
+
+		if not selection or not selection.x2 then
+			return
+		end
 
 		iconField.selection = nil
 		iconFieldCheckSelection(iconField)
@@ -1799,6 +1811,8 @@ local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e
 		workspace:draw()
 	
 	elseif e1 == "key_down" then
+		local iconField = backgroundObject.parent
+
 		if workspace.focusedObject ~= iconField then
 			return
 		end
@@ -1808,7 +1822,7 @@ local function gridIconFieldEventHandler(workspace, iconField, e1, e2, e3, e4, e
 			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
 			local icon, selectedIcon
 			
-			for i = 1, #iconField.children do
+			for i = 2, #iconField.children do
 				icon = iconField.children[i]
 
 				if icon.selected then
@@ -1894,6 +1908,7 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 		selectionFrame = selectionFrameColor,
 		selectionTransparency = selectionTransparency,
 	}
+
 	iconField.iconConfigEnabled = false
 	iconField.xOffset = xOffset
 	iconField.initialYOffset = yOffset
@@ -1901,37 +1916,41 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 	iconField.iconCount = {}
 	iconField.iconConfig = {}
 
-	local overrideDraw = iconField.draw
-	iconField.draw = function(...)
-		overrideDraw(...)
-
-		local selection = iconField.selection
-		
-		if selection and iconField.selection.x2 then
-			local y1, y2
-			
-			if selection.y1Raw < selection.y2Raw then
-				y1, y2 = selection.y1 + iconField.yOffset - iconField.initialYOffset, selection.y2
-			else
-				y1, y2 = selection.y1, selection.y2 + iconField.yOffset - iconField.initialYOffset
-			end
-
-			if userSettings.interfaceTransparencyEnabled then	
-				screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame, 0x0, " ", 0.6)
-			else
-				screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame)
-			end
-		end
-	end
-
 	iconField.clearSelection = iconFieldClearSelection
 	iconField.loadIconConfig = iconFieldLoadIconConfig
 	iconField.saveIconConfig = iconFieldSaveIconConfig
 	iconField.deleteIconConfig = iconFieldDeleteIconConfig
 	iconField.updateFileList = iconFieldUpdateFileList
-
 	iconField.getSelectedIcons = gridIconFieldGetSelectedIcons
-	iconField.eventHandler = gridIconFieldEventHandler
+
+	local overrideDraw = iconField.draw
+	iconField.draw = function(iconField)
+		overrideDraw(iconField)
+
+		iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
+
+		local selection = iconField.selection
+		
+		if not selection or not selection.x2 then
+			return
+		end
+
+		local y1, y2
+		if selection.y1Raw < selection.y2Raw then
+			y1, y2 = selection.y1 + iconField.yOffset - iconField.initialYOffset, selection.y2
+		else
+			y1, y2 = selection.y1, selection.y2 + iconField.yOffset - iconField.initialYOffset
+		end
+
+		if userSettings.interfaceTransparencyEnabled then	
+			screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame, 0x0, " ", 0.6)
+		else
+			screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame)
+		end
+	end
+
+	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
+	iconField.backgroundObject.eventHandler = gridIconFieldBackgroundObjectEventHandler
 
 	anyIconFieldAddInfo(iconField, path)
 
@@ -1941,7 +1960,7 @@ end
 local function listIconFieldGetSelectedIcons(iconField)
 	local selectedIcons, icon = {}
 
-	for i = 1, #iconField.children do
+	for i = 2, #iconField.children do
 		icon = iconField.children[i]
 
 		if icon.selected and icon.path then
@@ -2499,17 +2518,15 @@ local function dockIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, e6, ...
 end
 
 function system.updateDesktop()
-	desktopIconField = workspace:addChild(
-		system.gridIconField(
-			1, 2, 1, 1, 3, 2,
-			paths.user.desktop,
-			0xFFFFFF,
-			0xD2D2D2,
-			0xFFFFFF,
-			0xD2D2D2,
-			0.5
-		)
-	)
+	desktopIconField = workspace:addChild(system.gridIconField(
+		1, 2, 1, 1, 3, 2,
+		paths.user.desktop,
+		0xFFFFFF,
+		0xD2D2D2,
+		0xFFFFFF,
+		0xD2D2D2,
+		0.5
+	))
 	
 	desktopIconField.iconConfigEnabled = true
 	
@@ -2943,7 +2960,6 @@ end
 function system.updateWorkspace()
 	-- Clearing workspace
 	workspace:removeChildren()
-
 	workspace.ignoresCapturedObject = true
 
 	-- Creating desktop background object
