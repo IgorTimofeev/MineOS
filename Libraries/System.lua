@@ -1055,12 +1055,12 @@ end
 local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
 		local iconField = icon.parent
-		
+
+		icon.lastTouchX = e3
+		icon.lastTouchY = e4
+
 		workspace.focusedObject = iconField
 		workspace.capturedObject = icon
-
-		icon.lastTouchPosition = icon.lastTouchPosition or {}
-		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
 
 		icon:moveToFront()
 
@@ -1084,21 +1084,29 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 	
 	-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
 	elseif e1 == "drag" and icon.parent.iconConfigEnabled and workspace.capturedObject == icon then
-		icon.localX = icon.localX + e3 - icon.lastTouchPosition.x
-		icon.localY = icon.localY + e4 - icon.lastTouchPosition.y
-		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
+		icon.localX = icon.localX + e3 - icon.lastTouchX
+		icon.localY = icon.localY + e4 - icon.lastTouchY
+		icon.lastTouchX = e3
+		icon.lastTouchY = e4
+		icon.dragged = true
 
 		workspace:draw()
 	
 	elseif e1 == "drop" and workspace.capturedObject == icon then
-		icon.lastTouchPosition, workspace.capturedObject = nil, nil
+		-- We don't need to save the same position
+		if icon.dragged then
+			iconFieldSaveIconPosition(
+				icon.parent,
+				icon.filename .. (icon.isDirectory and "/" or ""),
+				icon.localX,
+				icon.localY
+			)
+		end
 
-		iconFieldSaveIconPosition(
-			icon.parent,
-			icon.filename .. (icon.isDirectory and "/" or ""),
-			icon.localX,
-			icon.localY
-		)
+		icon.lastTouchX = nil
+		icon.lastTouchY = nil
+		icon.dragged = nil
+		workspace.capturedObject = nil
 	end
 end
 
