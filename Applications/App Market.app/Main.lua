@@ -112,8 +112,6 @@ local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, ni
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local sponsoredLabel = window:addChild(GUI.text(3, 1, 0x3C3C3C, "Meow <3"))
-
 local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x00B640, 0x99FF80))
 
 window.actionButtons.localX = 3
@@ -764,6 +762,7 @@ local function overview()
 			contentContainer:removeChildren()
 
 			local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
+			iconsContainer.blockScreenEvents = true
 
 			local width = appWidth + 4
 			local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
@@ -1213,6 +1212,8 @@ local function dialogs()
 				end
 
 				local dialogContainer = dialogsContainer:addChild(GUI.container(3, y, dialogsContainer.width - 4, 4))
+				dialogContainer.blockScreenEvents = true
+
 				addPanel(dialogContainer,backgroundColor)
 				
 				dialogContainer:addChild(GUI.keyAndValue(3, 2, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp + system.getUserSettings().timeTimezone)))
@@ -2004,7 +2005,7 @@ local function leftListItemDraw(pressable)
 
 	-- Рисуем синюю писечку, просящую прочитать сообщения
 	if pressable.showIndicator then
-		local x = math.floor(pressable.x + 2)
+		local x = math.floor(pressable.x + 1)
 		local y = math.floor(pressable.y + pressable.height / 2)
 		local backgroundColor, _, _ = screen.get(x, y)
 
@@ -2056,7 +2057,6 @@ window.onResize = function(width, height)
 	contentContainer.height = window.backgroundPanel.height
 
 	progressIndicator.localY = height - progressIndicator.height
-	sponsoredLabel.localY = height
 end
 
 window.onResizeFinished = function()

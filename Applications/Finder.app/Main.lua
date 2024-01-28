@@ -490,8 +490,8 @@ local function updateIconField()
 		)
 	)
 
-	iconField.passScreenEvents = false
-
+	iconField.blockScreenEvents = true
+	
 	iconField.launchers.directory = function(icon)
 		addPath(icon.path)
 		updateFileListAndDraw()

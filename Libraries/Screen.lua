@@ -682,11 +682,14 @@ local function drawFrame(x, y, width, height, color)
 	local stringUp, stringDown, x2 = "┌" .. string.rep("─", width - 2) .. "┐", "└" .. string.rep("─", width - 2) .. "┘", x + width - 1
 	
 	drawText(x, y, color, stringUp); y = y + 1
+	
 	for i = 1, height - 2 do
 		drawText(x, y, color, "│")
 		drawText(x2, y, color, "│")
+		
 		y = y + 1
 	end
+
 	drawText(x, y, color, stringDown)
 end
 

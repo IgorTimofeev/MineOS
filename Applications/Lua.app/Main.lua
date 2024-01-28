@@ -21,7 +21,7 @@ local treePanel = window:addChild(GUI.panel(1, 1, 22, 3, 0x2D2D2D))
 local tree = window:addChild(GUI.tree(1, 4, treePanel.width, 1, 0x2D2D2D, 0xD2D2D2, 0x878787, 0x696969, 0xE1E1E1, 0x2D2D2D, 0x696969, 0x696969, 0x4B4B4B, 0x696969, GUI.IO_MODE_BOTH, GUI.IO_MODE_BOTH))
 
 local textBox = window:addChild(GUI.textBox(1, 2, 1, 1, nil, 0x3C3C3C, lines, 1, 0, 0, true))
-textBox.passScreenEvents = true
+textBox.blockScreenEvents = false
 
 local input = window:addChild(GUI.input(1, 1, 1, 3, 0xD2D2D2, 0x3C3C3C, 0x969696, 0xD2D2D2, 0x3C3C3C, "", "Type statement here"))
 local lastInput = input.text

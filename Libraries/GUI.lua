@@ -181,6 +181,7 @@ function GUI.object(x, y, width, height)
 		width = width,
 		height = height,
 		isPointInside = objectIsPointInside,
+		blockScreenEvents = true,
 		draw = objectDraw
 	}
 end
@@ -354,6 +355,10 @@ local function containerDraw(container)
 		screen.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
 	end
 
+	-- if container.workspace and container.workspace.capturedObject == container then
+	-- 	screen.drawRectangle(container.x, container.y, container.width, 1, 0xFF0000, 0x0, " ")
+	-- end
+
 	return container
 end
 
@@ -361,7 +366,7 @@ function GUI.container(x, y, width, height)
 	local container = GUI.object(x, y, width, height)
 
 	container.children = {}
-	container.passScreenEvents = true
+	container.blockScreenEvents = false
 	
 	container.draw = containerDraw
 	container.removeChildren = containerRemoveChildren
@@ -391,7 +396,6 @@ local function workspaceStart(workspace, eventPullTimeout)
 			if workspace.capturedObject then
 				if workspace.capturedObject == object then
 					
-
 				elseif object.ignoresCapturedObject then
 					if not boundsX1 or not (
 						roundedX >= boundsX1
@@ -399,10 +403,10 @@ local function workspaceStart(workspace, eventPullTimeout)
 						and roundedY >= boundsY1
 						and roundedY <= boundsY2
 					) then
-						goto pizda
+						goto skipEventHandling
 					end
 				else
-					goto pizda
+					goto skipEventHandling
 				end
 			else
 				if
@@ -413,9 +417,9 @@ local function workspaceStart(workspace, eventPullTimeout)
 						and roundedY <= boundsY2
 					)
 				then
-					goto pizda
+					goto skipEventHandling
 				else
-					govno = not object.passScreenEvents
+					govno = object.blockScreenEvents
 				end
 			end
 
@@ -436,7 +440,7 @@ local function workspaceStart(workspace, eventPullTimeout)
 		
 
 		-- Container
-		::pizda::
+		::skipEventHandling::
 
 		if object.children and boundsX1 then
 			local child, newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2
@@ -1199,7 +1203,7 @@ end
 function GUI.codeView(x, y, width, height, fromSymbol, fromLine, maximumLineLength, selections, highlights, syntaxPatterns, syntaxColorScheme, syntaxHighlight, lines)	
 	local codeView = GUI.container(x, y, width, height)
 	
-	codeView.passScreenEvents = false
+	codeView.blockScreenEvents = true
 	codeView.lines = lines
 	codeView.fromSymbol = fromSymbol
 	codeView.fromLine = fromLine
@@ -3417,7 +3421,7 @@ function GUI.palette(x, y, startColor)
 		paletteDrawBigCrestPixel(object.x + 2, object.y + 2, "│")
 	end
 	
-	bigCrest.passScreenEvents = true
+	bigCrest.blockScreenEvents = false
 	
 	local miniImage = palette:addChild(GUI.image(53, 1, image.create(3, 25)))
 	
@@ -3819,7 +3823,7 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 		},
 	}
 
-	list.passScreenEvents = false
+	list.blockScreenEvents = true
 	list.selectedItem = 1
 	list.offsetMode = offsetMode
 	list.itemSize = itemSize
@@ -4510,29 +4514,23 @@ local function windowDraw(window)
 	return window
 end
 
-local function windowScreenEventCheck(window, x, y)
+local function windowCheckForBlockingScreenEvent(object, x, y)
 	local child, result
 
-	for i = #window.children, 1, -1 do
-		child = window.children[i]
+	for i = #object.children, 1, -1 do
+		child = object.children[i]
 		
 		if
-			not child.hidden and
-			not child.disabled and
-			child:isPointInside(x, y)
+			not child.hidden
+			and not child.disabled
+			and child:isPointInside(x, y)
 		then
-			if not child.passScreenEvents and child.eventHandler then
+			if child.blockScreenEvents and child.eventHandler then
 				return true
 
 			elseif child.children then
-				result = windowScreenEventCheck(child, x, y)
-				
-				-- Nil causes next child processing
-				if result == true then
+				if windowCheckForBlockingScreenEvent(child, x, y) then
 					return true
-				
-				elseif result == false then
-					return false
 				end
 			end
 		end
@@ -4547,7 +4545,7 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	if e1 == "touch" then
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-		if not windowScreenEventCheck(window, e3, e4) then
+		if not windowCheckForBlockingScreenEvent(window, e3, e4) then
 			workspace.capturedObject = window
 			window.lastTouchX, window.lastTouchY = e3, e4
 		end
@@ -4651,7 +4649,7 @@ end
 function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
-	window.passScreenEvents = false
+	window.blockScreenEvents = true
 	window.movingEnabled = true
 	window.drawShadow = true
 
@@ -4717,7 +4715,19 @@ end
 
 local function menuDraw(menu)
 	screen.drawRectangle(menu.x, menu.y, menu.width, 1, menu.colors.default.background, menu.colors.default.text, " ", menu.colors.transparency)
-	layoutDraw(menu)
+	
+	local x = 1
+
+	local child
+	for i = 1, #menu.children do
+		child = menu.children[i]
+
+		child.localX = x
+
+		x = x + child.width
+	end
+
+	containerDraw(menu)
 end
 
 local function menuAddItem(menu, text, textColor)
@@ -4761,7 +4771,7 @@ local function menuAddContextMenuItem(menu, ...)
 end
 
 function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency)
-	local menu = GUI.layout(x, y, width, 1, 1, 1)
+	local menu = GUI.container(x, y, width, 1)
 	
 	menu.colors = {
 		default = {
@@ -4775,16 +4785,16 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 		transparency = backgroundTransparency
 	}
 	
-	menu.passScreenEvents = false
+	menu.blockScreenEvents = true
 	menu.addContextMenuItem = menuAddContextMenuItem
 	menu.addItem = menuAddItem
 	menu.getItem = menuGetItem
 	menu.draw = menuDraw
 
-	menu:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-	menu:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
-	menu:setSpacing(1, 1, 0)
-	menu:setMargin(1, 1, 1, 0)
+	-- menu:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	-- menu:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+	-- menu:setSpacing(1, 1, 0)
+	-- menu:setMargin(1, 1, 1, 0)
 
 	return menu
 end

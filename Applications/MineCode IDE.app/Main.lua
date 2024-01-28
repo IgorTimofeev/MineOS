@@ -848,7 +848,7 @@ showTip = function(errorCode, matchCode, beep, force)
 	local container = zalupa()
 	local tip, tipLines = container:addChild(GUI.object(1, 1, 40))
 
-	tip.passScreenEvents = true
+	tip.blockScreenEvents = false
 	tip.draw = function()
 		screen.drawText(math.floor(tip.x + tip.width / 2 - 1), tip.y, 0xE1E1E1, "◢◣")
 		screen.drawRectangle(tip.x, tip.y + 1, tip.width, tip.height - 1, 0xE1E1E1, 0x2D2D2D, " ")
