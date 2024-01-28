@@ -655,9 +655,9 @@ addStage(function()
 	addTitle(0x969696, localization.flashing)
 	workspace:draw()
 	
-	--component.invoke(EEPROMAddress, "set", download("https://raw.githubusercontent.com/AFellowSpeedrunner/LunaEFI/main/EFI/init.lua?token=GHSAT0AAAAAACMEKG5MEZMW7HZPOCJ5IRKMZMUXHWQ"))
-	--component.invoke(EEPROMAddress, "setLabel", "LunaEFI")
-	--component.invoke(EEPROMAddress, "setData", selectedFilesystemProxy.address)
+	component.invoke(EEPROMAddress, "set", request(EFIURL))
+	component.invoke(EEPROMAddress, "setLabel", "MineOS EFI")
+	component.invoke(EEPROMAddress, "setData", selectedFilesystemProxy.address)
 
 
 	-- Saving system versions
