@@ -108,11 +108,11 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 
 local leftListPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 23, 1)
 
-local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, 0x787878, nil, 0x787878, 0xF0F0F0, 0x2D2D2D, false))
+local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, 0x787878, nil, 0x787878, 0x2D2D2D, 0xE1E1E1, false))
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x00B640, 0x99FF80))
+local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x996D00, 0xFFDB40))
 
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
@@ -1198,6 +1198,7 @@ local function dialogs()
 		end
 
 		messagesItem.showIndicator = false
+
 		if #dialogs > 0 then
 			local y = sendMessageButton.localY + 2
 
@@ -1996,20 +1997,17 @@ end
 --------------------------------------------------------------------------------
 
 local function leftListItemDraw(pressable)
-	local backgroundColor = pressable.pressed and pressable.colors.pressed.background or pressable.disabled and pressable.colors.disabled.background or pressable.colors.default.background
-	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.disabled and pressable.colors.disabled.text or pressable.colors.default.text
+	local backgroundColor = pressable.pressed and pressable.colors.pressed.background or pressable.colors.default.background
+	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.colors.default.text
 
-	if backgroundColor then
-		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, backgroundColor, textColor, " ")
+	if pressable.pressed then
+		screen.drawRectangle(pressable.x, pressable.y, 1, pressable.height, backgroundColor, 0xFFDB80, "▎")
+		screen.drawRectangle(pressable.x + 1, pressable.y, pressable.width - 1, pressable.height, backgroundColor, textColor, " ")
 	end
 
 	-- Рисуем синюю писечку, просящую прочитать сообщения
 	if pressable.showIndicator then
-		local x = math.floor(pressable.x + 1)
-		local y = math.floor(pressable.y + pressable.height / 2)
-		local backgroundColor, _, _ = screen.get(x, y)
-
-		screen.set(x, y, backgroundColor, 0x005EFF, "●")
+		screen.drawText(pressable.x + 1, pressable.y + 2, 0x005EFF, "●")
 	end
 
 	local y = math.floor(pressable.y + pressable.height / 2)

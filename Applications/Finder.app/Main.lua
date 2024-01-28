@@ -36,7 +36,7 @@ if filesystem.exists(configPath) then
 end
 
 local sidebarTitleColor = 0xC3C3C3
-local sidebarItemColor = 0x696969
+local sidebarItemColor = 0x5A5A5A
 
 local pathHistory = {}
 local pathHistoryCurrent = 0
@@ -73,10 +73,10 @@ local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth
 
 local sidebarPanel = system.addBlurredOrDefaultPanel(sidebarContainer, 1, 1, 1, 1)
 
-local itemsLayout = sidebarContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
-itemsLayout:setSpacing(1, 1, 0)
-itemsLayout:setMargin(1, 1, 0, 0)
+local sidebarItemsLayout = sidebarContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
+sidebarItemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+sidebarItemsLayout:setSpacing(1, 1, 0)
+sidebarItemsLayout:setMargin(1, 1, 0, 0)
 
 local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x3C3C3C, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
 
@@ -174,13 +174,16 @@ end
 
 local function sidebarItemDraw(object)
 	local textColor, limit = object.textColor, object.width - 2
+	
 	if object.path == iconField.path then
-		textColor = 0x5A5A5A
-		screen.drawRectangle(object.x, object.y, object.width, 1, 0xF0F0F0, textColor, " ")
+		textColor = 0xB4B4B4
+
+		screen.drawRectangle(object.x, object.y, object.width, 1, 0x2D2D2D, textColor, " ")
+		screen.drawText(object.x, object.y, 0xFFDB80, "▎ ")
 
 		if object.onRemove then
 			limit = limit - 2
-			screen.drawText(object.x + object.width - 2, object.y, 0x969696, "x")
+			screen.drawText(object.x + object.width - 2, object.y, 0x3C3C3C, "x")
 		end
 	end
 	
@@ -191,6 +194,7 @@ local function sidebarItemEventHandler(workspace, object, e1, e2, e3, ...)
 	if e1 == "touch" then
 		if object.onRemove and math.ceil(e3) == object.x + object.width - 2 then
 			object.onRemove()
+		
 		elseif object.onTouch then
 			object.onTouch(e1, e2, e3, ...)
 		end
@@ -198,7 +202,7 @@ local function sidebarItemEventHandler(workspace, object, e1, e2, e3, ...)
 end
 
 local function addSidebarObject(textColor, text, path)
-	local object = itemsLayout:addChild(GUI.object(1, 1, itemsLayout.width, 1))
+	local object = sidebarItemsLayout:addChild(GUI.object(1, 1, sidebarItemsLayout.width, 1))
 	
 	object.textColor = textColor
 	object.text = text
@@ -219,7 +223,7 @@ local function addSidebarItem(...)
 end
 
 local function addSidebarSeparator()
-	return itemsLayout:addChild(GUI.object(1, 1, itemsLayout.width, 1))
+	return sidebarItemsLayout:addChild(GUI.object(1, 1, sidebarItemsLayout.width, 1))
 end
 
 local function onFavouriteTouch(path)
@@ -247,7 +251,7 @@ openFTP = function(...)
 end
 
 updateSidebar = function()
-	itemsLayout:removeChildren()
+	sidebarItemsLayout:removeChildren()
 
 	-- Favourites
 	addSidebarTitle(localization.favourite)
@@ -328,9 +332,9 @@ updateSidebar = function()
 	end
 end
 
-itemsLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
+sidebarItemsLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
-		local cell = itemsLayout.cells[1][1]
+		local cell = sidebarItemsLayout.cells[1][1]
 		local from = 0
 		local to = -cell.childrenHeight + 1
 
@@ -424,10 +428,10 @@ local function calculateSizes()
 	sidebarPanel.width = sidebarContainer.width
 	sidebarPanel.height = sidebarContainer.height
 	
-	itemsLayout.width = sidebarContainer.width
-	itemsLayout.height = sidebarContainer.height
-	for i = 1, #itemsLayout.children do
-		itemsLayout.children[i].width = itemsLayout.width
+	sidebarItemsLayout.width = sidebarContainer.width
+	sidebarItemsLayout.height = sidebarContainer.height
+	for i = 1, #sidebarItemsLayout.children do
+		sidebarItemsLayout.children[i].width = sidebarItemsLayout.width
 	end
 
 	resizer.localX = sidebarContainer.width
