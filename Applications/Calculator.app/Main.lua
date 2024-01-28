@@ -29,7 +29,7 @@ local workspace, window, menu = system.addWindow(GUI.window(1, 1, buttonWidth * 
 
 local displayContainer = window:addChild(GUI.container(1, 1, window.width, displayHeight + binaryHeight))
 
-local displayPanel = displayContainer:addChild(GUI.panel(1, 1, window.width, displayHeight, 0x2D2D2D, 0.1))
+local displayPanel = displayContainer:addChild(GUI.panel(1, 1, window.width, displayHeight, 0x1E1E1E, 0.1))
 
 local actionButtons = window:addChild(GUI.actionButtons(3, 3, true))
 
@@ -41,7 +41,7 @@ actionButtons.minimize.onTouch = function()
 	window:minimize()
 end
 
-local binaryPanel = displayContainer:addChild(GUI.panel(1, displayHeight + 1, window.width, binaryHeight, 0x3C3C3C))
+local binaryPanel = displayContainer:addChild(GUI.panel(1, displayHeight + 1, window.width, binaryHeight, 0x2D2D2D))
 
 local binaryLayout = displayContainer:addChild(GUI.layout(1, displayHeight + 2, window.width, binaryHeight, 1, 1))
 binaryLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -230,8 +230,10 @@ end
 local function addBinaryButtonsContainer(row, leftText, rightText)
 	local container = row:addChild(GUI.container(1, 1, 15, 2))
 	local x = 1
+
 	for i = 1, 8 do
-		local button = container:addChild(GUI.button(x, 1, 1, 1, nil, 0x969696, nil, 0xFFFFFF, "0"))
+		local button = container:addChild(GUI.button(x, 1, 1, 1, nil, 0x696969, nil, 0xFFFFFF, "0"))
+	
 		button.onTouch = function()
 			button.text = button.text == "0" and "1" or "0"
 			binaryToNumber()

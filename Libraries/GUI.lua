@@ -35,14 +35,17 @@ local GUI = {
 	SWITCH_ANIMATION_DURATION = 0.3,
 	FILESYSTEM_DIALOG_ANIMATION_DURATION = 0.5,
 	
-	CONTEXT_MENU_SEPARATOR_COLOR = 0xA5A5A5,
-	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0x2D2D2D,
-	CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = 0xFFFFFF,
+	CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = 0x1E1E1E,
+	CONTEXT_MENU_DEFAULT_ICON_COLOR = 0x696969,
+	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0xD2D2D2,
 	CONTEXT_MENU_PRESSED_BACKGROUND_COLOR = 0x3366CC,
+	CONTEXT_MENU_PRESSED_ICON_COLOR = 0xB4B4B4,
 	CONTEXT_MENU_PRESSED_TEXT_COLOR = 0xFFFFFF,
-	CONTEXT_MENU_DISABLED_COLOR = 0x878787,
-	CONTEXT_MENU_BACKGROUND_TRANSPARENCY = 0.18,
+	CONTEXT_MENU_DISABLED_ICON_COLOR = 0x5A5A5A,
+	CONTEXT_MENU_DISABLED_TEXT_COLOR = 0x5A5A5A,
+	CONTEXT_MENU_BACKGROUND_TRANSPARENCY = nil,
 	CONTEXT_MENU_SHADOW_TRANSPARENCY = 0.4,
+	CONTEXT_MENU_SEPARATOR_COLOR = 0x2D2D2D,
 
 	BACKGROUND_CONTAINER_PANEL_COLOR = 0x0,
 	BACKGROUND_CONTAINER_TITLE_COLOR = 0xE1E1E1,
@@ -178,6 +181,7 @@ function GUI.object(x, y, width, height)
 		width = width,
 		height = height,
 		isPointInside = objectIsPointInside,
+		blockScreenEvents = true,
 		draw = objectDraw
 	}
 end
@@ -259,15 +263,33 @@ local function containerObjectAddAnimation(object, frameHandler, onFinish)
 		onFinish = onFinish,
 	}
 
-	object.firstParent.animations = object.firstParent.animations or {}
-	table.insert(object.firstParent.animations, animation)
+	object.workspace.animations = object.workspace.animations or {}
+	table.insert(object.workspace.animations, animation)
 
 	return animation
 end
 
 local function containerAddChild(container, object, atIndex)
+	-- Parent containers
+	object.parent = container
+
+	local function updateWorkspace(object, workspace)
+		object.workspace = workspace
+
+		if object.children then
+			for i = 1, #object.children do
+				updateWorkspace(object.children[i], workspace)
+			end
+		end
+	end
+
+	updateWorkspace(object, container.workspace or container)
+
+	-- Position
 	object.localX = object.x
 	object.localY = object.y
+
+	-- Additional methods after adding to parent container
 	object.indexOf = containerObjectIndexOf
 	object.moveToFront = containerObjectMoveToFront
 	object.moveToBack = containerObjectMoveToBack
@@ -275,18 +297,6 @@ local function containerAddChild(container, object, atIndex)
 	object.moveBackward = containerObjectMoveBackward
 	object.remove = containerObjectRemove
 	object.addAnimation = containerObjectAddAnimation
-
-	local function updateFirstParent(object, firstParent)
-		object.firstParent = firstParent
-		if object.children then
-			for i = 1, #object.children do
-				updateFirstParent(object.children[i], firstParent)
-			end
-		end
-	end
-
-	object.parent = container
-	updateFirstParent(object, container.firstParent or container)
 
 	if atIndex then
 		table.insert(container.children, atIndex, object)
@@ -304,7 +314,7 @@ local function containerRemoveChildren(container, from, to)
 	end
 end
 
-local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2, R2Y2)
+local function getRectangleBounds(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2, R2Y2)
 	if R2X1 <= R1X2 and R2Y1 <= R1Y2 and R2X2 >= R1X1 and R2Y2 >= R1Y1 then
 		return
 			math.max(R2X1, R1X1),
@@ -318,7 +328,8 @@ end
 
 local function containerDraw(container)
 	local R1X1, R1Y1, R1X2, R1Y2, child = screen.getDrawLimit()
-	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
+
+	local boundsX1, boundsY1, boundsX2, boundsY2 = getRectangleBounds(
 		R1X1,
 		R1Y1,
 		R1X2,
@@ -329,8 +340,8 @@ local function containerDraw(container)
 		container.y + container.height - 1
 	)
 
-	if intersectionX1 then
-		screen.setDrawLimit(intersectionX1, intersectionY1, intersectionX2, intersectionY2)
+	if boundsX1 then
+		screen.setDrawLimit(boundsX1, boundsY1, boundsX2, boundsY2)
 		
 		for i = 1, #container.children do
 			child = container.children[i]
@@ -344,6 +355,10 @@ local function containerDraw(container)
 		screen.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
 	end
 
+	-- if container.workspace and container.workspace.capturedObject == container then
+	-- 	screen.drawRectangle(container.x, container.y, container.width, 1, 0xFF0000, 0x0, " ")
+	-- end
+
 	return container
 end
 
@@ -351,7 +366,7 @@ function GUI.container(x, y, width, height)
 	local container = GUI.object(x, y, width, height)
 
 	container.children = {}
-	container.passScreenEvents = true
+	container.blockScreenEvents = false
 	
 	container.draw = containerDraw
 	container.removeChildren = containerRemoveChildren
@@ -363,89 +378,103 @@ end
 --------------------------------------------------------------------------------
 
 local function workspaceStart(workspace, eventPullTimeout)
-	local animation, animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods, roundedX, roundedY, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
-	
-	local function handleContainer(isScreenEvent, currentContainer, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
-		local currentContainerPassed, child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2
-		
+	local
+		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32,
+		isScreenEvent,
+		roundedX,
+		roundedY,
+		capturedObject,
+		animation,
+		animationIndex,
+		animationOnFinishMethodsIndex,
+		animationOnFinishMethods
+
+	local function processObject(object, boundsX1, boundsY1, boundsX2, boundsY2)
+		local govno = false
+
 		if isScreenEvent then
-			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
+			if workspace.capturedObject then
+				if workspace.capturedObject == object then
+					
+				elseif object.ignoresCapturedObject then
+					if not boundsX1 or not (
+						roundedX >= boundsX1
+						and roundedX <= boundsX2
+						and roundedY >= boundsY1
+						and roundedY <= boundsY2
+					) then
+						goto skipEventHandling
+					end
+				else
+					goto skipEventHandling
+				end
+			else
+				if
+					not boundsX1 or not (
+						roundedX >= boundsX1
+						and roundedX <= boundsX2
+						and roundedY >= boundsY1
+						and roundedY <= boundsY2
+					)
+				then
+					goto skipEventHandling
+				else
+					govno = object.blockScreenEvents
+				end
+			end
 
+			if object.eventHandler and not object.disabled then
+				object.eventHandler(workspace, object, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+			end
+		else
 			if
-				roundedX < intersectionX1
-				or roundedX > intersectionX2
-				or roundedY < intersectionY1
-				or roundedY > intersectionY2
+				not workspace.capturedObject
+				or workspace.capturedObject == object
+				or object.ignoresCapturedObject
 			then
-				return
+				if object.eventHandler and not object.disabled then
+					object.eventHandler(workspace, object, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+				end
 			end
-
-			if currentContainer.eventHandler and not currentContainer.disabled then
-				currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-			end
-
-			currentContainerPassed = not currentContainer.passScreenEvents
-		
-		elseif currentContainer.eventHandler then
-			currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
 		end
+		
 
-		for i = #currentContainer.children, 1, -1 do
-			child = currentContainer.children[i]
+		-- Container
+		::skipEventHandling::
 
-			if not child.hidden then
-				if child.children then
-					newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
-						intersectionX1,
-						intersectionY1,
-						intersectionX2,
-						intersectionY2,
+		if object.children and boundsX1 then
+			local child, newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2
+
+			for i = #object.children, 1, -1 do
+				child = object.children[i]
+
+				if not child.hidden then
+					newBoundsX1, newBoundsY1, newBoundsX2, newBoundsY2 = getRectangleBounds(
+						boundsX1,
+						boundsY1,
+						boundsX2,
+						boundsY2,
+
 						child.x,
 						child.y,
 						child.x + child.width - 1,
 						child.y + child.height - 1
 					)
 
-					if 
-						newIntersectionX1
-						and handleContainer(
-							isScreenEvent,
-							child,
-							newIntersectionX1,
-							newIntersectionY1,
-							newIntersectionX2,
-							newIntersectionY2,
-							e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
-						)
-					then
+					if processObject(
+						child,
+						newBoundsX1,
+						newBoundsY1,
+						newBoundsX2,
+						newBoundsY2
+					) then
 						return true
-					end
-				else
-					if workspace.needConsume then
-						workspace.needConsume = nil
-
-						return true
-					end
-
-					if isScreenEvent then
-						if child:isPointInside(roundedX, roundedY) then
-							if child.eventHandler and not child.disabled then
-								child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-							end
-
-							if not child.passScreenEvents then
-								return true
-							end
-						end
-
-					elseif child.eventHandler then
-						child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
 					end
 				end
 			end
 		end
 
-		if currentContainerPassed then
+		if govno then
 			return true
 		end
 	end
@@ -455,12 +484,18 @@ local function workspaceStart(workspace, eventPullTimeout)
 	repeat
 		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32 = event.pull(workspace.animations and 0 or workspace.eventPullTimeout)
 		
-		handleContainer(
+		isScreenEvent =
 			e1 == "touch" or
 			e1 == "drag" or
 			e1 == "drop" or
 			e1 == "scroll" or
-			e1 == "double_touch",
+			e1 == "double_touch"
+
+		if isScreenEvent then
+			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
+		end
+
+		processObject(
 			workspace,
 			workspace.x,
 			workspace.y,
@@ -470,6 +505,7 @@ local function workspaceStart(workspace, eventPullTimeout)
 
 		if workspace.animations then
 			animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods = 1, 1, {}
+			
 			-- Продрачиваем анимации и вызываем обработчики кадров
 			while animationIndex <= #workspace.animations do
 				animation = workspace.animations[animationIndex]
@@ -520,12 +556,9 @@ local function workspaceStop(workspace)
 	workspace.needClose = true
 end
 
-local function workspaceConsumeEvent(workspace)
-	workspace.needConsume = true
-end
-
 local function workspaceDraw(object, ...)
 	containerDraw(object)
+
 	screen.update(...)
 end
 
@@ -535,7 +568,6 @@ function GUI.workspace(x, y, width, height)
 	workspace.draw = workspaceDraw
 	workspace.start = workspaceStart
 	workspace.stop = workspaceStop
-	workspace.consumeEvent = workspaceConsumeEvent
 
 	return workspace
 end
@@ -1171,7 +1203,7 @@ end
 function GUI.codeView(x, y, width, height, fromSymbol, fromLine, maximumLineLength, selections, highlights, syntaxPatterns, syntaxColorScheme, syntaxHighlight, lines)	
 	local codeView = GUI.container(x, y, width, height)
 	
-	codeView.passScreenEvents = false
+	codeView.blockScreenEvents = true
 	codeView.lines = lines
 	codeView.fromSymbol = fromSymbol
 	codeView.fromLine = fromLine
@@ -1211,7 +1243,7 @@ local function colorSelectorDraw(colorSelector)
 		screen.drawText(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 0.8)
 	end
 	
-	screen.drawText(colorSelector.x + 1, colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, text.limit(colorSelector.text, colorSelector.width - 2))
+	screen.drawText(math.ceil(colorSelector.x + colorSelector.height / 2), colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, text.limit(colorSelector.text, colorSelector.width - 2))
 	
 	return colorSelector
 end
@@ -1455,20 +1487,23 @@ local function sliderEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 		if object.onValueChanged then
 			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
-	elseif e1 == "scroll" then
-		object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
 
-		if object.value > object.maximumValue then
-			object.value = object.maximumValue 
-		elseif object.value < object.minimumValue then
-			object.value = object.minimumValue
-		end
+	-- Sucks on scrollable views
 
-		workspace:draw()
+	-- elseif e1 == "scroll" then
+	-- 	object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
 
-		if object.onValueChanged then
-			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
-		end
+	-- 	if object.value > object.maximumValue then
+	-- 		object.value = object.maximumValue 
+	-- 	elseif object.value < object.minimumValue then
+	-- 		object.value = object.minimumValue
+	-- 	end
+
+	-- 	workspace:draw()
+
+	-- 	if object.onValueChanged then
+	-- 		object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
+	-- 	end
 	end
 end
 
@@ -2097,7 +2132,7 @@ function GUI.addFilesystemDialog(parentContainer, addPanel, ...)
 
 	local function onAnyTouch()
 		container:remove()
-		filesystemDialog.firstParent:draw()
+		filesystemDialog.workspace:draw()
 	end
 
 	filesystemDialog.cancelButton.onTouch = function()
@@ -2142,7 +2177,7 @@ local function filesystemChooserDraw(object)
 	screen.drawRectangle(object.x, object.y, object.width - tipWidth, object.height, object.colors.background, object.colors.text, " ")
 	screen.drawRectangle(object.x + object.width - tipWidth, object.y, tipWidth, object.height, object.pressed and object.colors.tipText or object.colors.tipBackground, object.pressed and object.colors.tipBackground or object.colors.tipText, " ")
 	screen.drawText(object.x + object.width - math.floor(tipWidth / 2) - 1, y, object.pressed and object.colors.tipBackground or object.colors.tipText, "…")
-	screen.drawText(object.x + 1, y, object.colors.text, text.limit(object.path or object.placeholderText, object.width - tipWidth - 2, "left"))
+	screen.drawText(math.ceil(object.x + object.height / 2), y, object.colors.text, text.limit(object.path or object.placeholderText, object.width - tipWidth - 2, "left"))
 
 	return object
 end
@@ -2689,9 +2724,11 @@ local function textBoxDraw(object)
 
 	local x, y = nil, object.y + object.offset.vertical
 	local lineType, line, textColor
+	
 	for i = object.currentLine, object.currentLine + object.textHeight - 1 do
 		if object.linesCopy[i] then
 			lineType = type(object.linesCopy[i])
+			
 			if lineType == "string" then
 				line, textColor = text.limit(object.linesCopy[i], object.textWidth), object.colors.text
 			elseif lineType == "table" then
@@ -2829,13 +2866,15 @@ end
 local function inputDraw(input)
 	local background, foreground, transparency, text
 	
-	if input.focused then
+	if input.workspace.focusedObject == input then
 		background, transparency = input.colors.focused.background, input.colors.focused.transparency
+		
 		if input.text == "" then
 			input.textCutFrom = 1
 			foreground, text = input.colors.placeholderText, input.text
 		else
 			foreground = input.colors.focused.text
+			
 			if input.textMask then
 				text = string.rep(input.textMask, unicode.len(input.text))
 			else
@@ -2888,8 +2927,8 @@ local function inputCursorBlink(workspace, input, state)
 end
 
 local function inputStopInput(workspace, input)
-	input.stopInputObject:remove()
-	input.focused = false
+	input.workspace.capturedObject = nil
+	input.workspace.focusedObject = nil
 
 	if input.validator then
 		if not input.validator(input.text) then
@@ -2909,7 +2948,8 @@ end
 
 local function inputStartInput(input)
 	input.startText = input.text
-	input.focused = true
+	input.workspace.capturedObject = input
+	input.workspace.focusedObject = input
 
 	if input.historyEnabled then
 		input.historyIndex = input.historyIndex + 1
@@ -2920,26 +2960,26 @@ local function inputStartInput(input)
 	end
 	
 	input:setCursorPosition(input.cursorPosition)
-
-	input.stopInputObject.width, input.stopInputObject.height = input.firstParent.width, input.firstParent.height
-	input.firstParent:addChild(input.stopInputObject)
-
-	inputCursorBlink(input.firstParent, input, true)
+	inputCursorBlink(input.workspace, input, true)
 end
 
 local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
+	local focused = workspace.focusedObject == input
+
 	if e1 == "touch" or e1 == "drag" then
-		input:setCursorPosition(input.textCutFrom + math.ceil(e3) - input.x - input.textOffset)
+		if input:isPointInside(math.ceil(e3), math.ceil(e4)) then
+			input:setCursorPosition(input.textCutFrom + math.ceil(e3) - input.x - input.textOffset)
 
-		if input.focused then
-			inputCursorBlink(workspace, input, true)
+			if focused then
+				inputCursorBlink(workspace, input, true)
+			else
+				input:startInput()
+			end
 		else
-			input:startInput()
+			inputStopInput(workspace, input)
 		end
-	
-	elseif e1 == "key_down" and input.focused then
-		workspace:consumeEvent()
 
+	elseif e1 == "key_down" and focused then
 		-- Return
 		if e4 == 28 then
 			if input.historyEnabled then
@@ -3033,14 +3073,13 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 
 		inputCursorBlink(workspace, input, true)
 	
-	elseif e1 == "clipboard" and input.focused then
+	elseif e1 == "clipboard" and focused then
 		input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e3 .. unicode.sub(input.text, input.cursorPosition, -1)
 		input:setCursorPosition(input.cursorPosition + unicode.len(e3))
 		
 		inputCursorBlink(workspace, input, true)
-		workspace:consumeEvent()
 	
-	elseif not e1 and input.focused and computer.uptime() - input.cursorBlinkUptime > input.cursorBlinkDelay then
+	elseif not e1 and focused and computer.uptime() - input.cursorBlinkUptime > input.cursorBlinkDelay then
 		inputCursorBlink(workspace, input, not input.cursorBlinkState)
 	end
 end
@@ -3079,17 +3118,6 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.historyLimit = 20
 	input.historyIndex = 0
 	input.historyEnabled = false
-
-	input.stopInputObject = GUI.object(1, 1, 1, 1)
-	input.stopInputObject.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
-		if e1 == "touch" or e1 == "drop" then
-			if input:isPointInside(math.ceil(e3), math.ceil(e4)) then
-				input.eventHandler(workspace, input, e1, e2, e3, e4, ...)
-			else
-				inputStopInput(workspace, input)
-			end
-		end
-	end
 
 	input.textDrawMethod = inputTextDrawMethod
 	input.draw = inputDraw
@@ -3393,7 +3421,7 @@ function GUI.palette(x, y, startColor)
 		paletteDrawBigCrestPixel(object.x + 2, object.y + 2, "│")
 	end
 	
-	bigCrest.passScreenEvents = true
+	bigCrest.blockScreenEvents = false
 	
 	local miniImage = palette:addChild(GUI.image(53, 1, image.create(3, 25)))
 	
@@ -3476,7 +3504,7 @@ function GUI.palette(x, y, startColor)
 	local function onAnyInputFinished()
 		paletteRefreshBigImage()
 		paletteUpdateCrestsCoordinates()
-		palette.firstParent:draw()
+		palette.workspace:draw()
 	end
 
 	local function onHexInputFinished()
@@ -3795,7 +3823,7 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 		},
 	}
 
-	list.passScreenEvents = false
+	list.blockScreenEvents = true
 	list.selectedItem = 1
 	list.offsetMode = offsetMode
 	list.itemSize = itemSize
@@ -3923,23 +3951,40 @@ end
 local function dropDownMenuItemDraw(item)
 	local yText = item.y + math.floor(item.height / 2)
 
-	if item.type == 1 then
+	if item.isTextItem then
+		local iconColor = item.color or item.parent.parent.colors.default.icon
 		local textColor = item.color or item.parent.parent.colors.default.text
 
 		if item.pressed then
+			iconColor = item.parent.parent.colors.selected.icon
 			textColor = item.parent.parent.colors.selected.text
-			screen.drawRectangle(item.x, item.y, item.width, item.height, item.parent.parent.colors.selected.background, textColor, " ")
+
+			screen.drawRectangle(item.x, yText, item.width, 1, item.parent.parent.colors.selected.background, textColor, " ")
+
+			if item.height > 1 then
+				screen.drawText(item.x, yText - 1, item.parent.parent.colors.selected.background, string.rep("⣤", item.width))
+				screen.drawText(item.x, yText + item.height - 1, item.parent.parent.colors.selected.background, string.rep("⠛", item.width))
+			end
+		
 		elseif item.disabled then
+			iconColor = item.parent.parent.colors.disabled.icon
 			textColor = item.parent.parent.colors.disabled.text
 		end
 
-		screen.drawText(item.x + 1, yText, textColor, item.text)
+		-- Icon & text
+		if item.icon then
+			screen.drawText(item.x + item.height, yText, iconColor, item.icon)
+			screen.drawText(item.x + item.height * 2 + 2, yText, textColor, item.text)
+		else
+			screen.drawText(item.x + item.height, yText, textColor, item.text)
+		end
 
+		-- shortcut
 		if item.shortcut then
-			screen.drawText(item.x + item.width - unicode.wlen(item.shortcut) - 1, yText, textColor, item.shortcut)
+			screen.drawText(item.x + item.width - unicode.wlen(item.shortcut) - item.height, yText, textColor, item.shortcut)
 		end
 	else
-		screen.drawText(item.x, yText, item.parent.parent.colors.separator, string.rep("─", item.width))
+		screen.drawText(item.x, yText, item.parent.parent.colors.separator, string.rep(item.parent.parent.itemHeight % 2 == 0 and "▁" or "─", item.width))
 	end
 
 	return item
@@ -3955,9 +4000,9 @@ end
 
 local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 	if e1 == "touch" then
-		if object.type == 1 and not object.pressed then
-
+		if object.isTextItem and not object.pressed then
 			dropDownMenuReleaseItems(object.parent.parent)
+			
 			if #object.parent.parent.subMenus then
 				for i, subMenu in ipairs(object.parent.parent.subMenus) do
 			 		subMenu:remove()
@@ -3972,11 +4017,14 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 				object.parent.parent.parent:addChild(object.subMenu:releaseItems())
 				object.subMenu.localX = object.parent.parent.localX + object.parent.parent.width
 				object.subMenu.localY = object.parent.parent.localY + object.localY - 1
+				
 				if screen.getWidth() - object.parent.parent.localX - object.parent.parent.width + 1 < object.subMenu.width then
 					object.subMenu.localX = object.parent.parent.localX - object.subMenu.width
 					object.parent.parent:moveToFront()
 				end
+				
 				table.insert(object.parent.parent.subMenus, object.subMenu)
+				
 				workspace:draw()
 			else
 				event.sleep(0.2)
@@ -3984,6 +4032,7 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 				object.parent.parent.parent:remove()
 				
 				local objectIndex = object:indexOf()
+				
 				for i = 2, #object.parent.parent.parent.children do
 					if object.parent.parent.parent.children[i].onMenuClosed then
 						object.parent.parent.parent.children[i].onMenuClosed(objectIndex)
@@ -4001,9 +4050,10 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 end
 
 local function dropDownMenuGetHeight(menu)
-	local height = 0
+	local height = menu.itemHeight % 2 == 0 and 1 or 0
+
 	for i = 1, #menu.itemsContainer.children do
-		height = height + (menu.itemsContainer.children[i].type == 2 and 1 or menu.itemHeight)
+		height = height + menu.itemsContainer.children[i].height
 	end
 
 	return height
@@ -4015,9 +4065,11 @@ local function dropDownMenuReposition(menu)
 	menu.nextButton.localY = menu.height
 
 	local y = menu.itemsContainer.children[1].localY
+	
 	for i = 1, #menu.itemsContainer.children do
 		menu.itemsContainer.children[i].localY = y
 		menu.itemsContainer.children[i].width = menu.itemsContainer.width
+		
 		y = y + menu.itemsContainer.children[i].height
 	end
 
@@ -4028,6 +4080,7 @@ end
 local function dropDownMenuUpdate(menu)
 	if #menu.itemsContainer.children > 0 then
 		menu.height = math.min(dropDownMenuGetHeight(menu), menu.maximumHeight, screen.getHeight() - menu.y)
+
 		dropDownMenuReposition(menu)
 	end
 end
@@ -4040,15 +4093,25 @@ local function dropDownMenuRemoveItem(menu, index)
 	return menu
 end
 
-local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
+local function dropDownMenuAddItem(menu, a1, a2, a3, a4, a5)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, menu.itemHeight))
-	item.type = 1
-	item.text = text
-	item.disabled = disabled
-	item.shortcut = shortcut
-	item.color = color
+
+	if type(a1) == "string" and type(a2) == "string" then
+		item.icon = a1
+		item.text = a2
+		item.disabled = a3
+		item.shortcut = a4
+		item.color = a5
+	else
+		item.text = a1
+		item.disabled = a2
+		item.shortcut = a3
+		item.color = a4
+	end
+
 	item.draw = dropDownMenuItemDraw
 	item.eventHandler = dropDownMenuItemEventHandler
+	item.isTextItem = true
 
 	menu:update()
 
@@ -4057,7 +4120,7 @@ end
 
 local function dropDownMenuAddSeparator(menu)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, 1))
-	item.type = 2
+	
 	item.draw = dropDownMenuItemDraw
 	item.eventHandler = dropDownMenuItemEventHandler
 
@@ -4070,6 +4133,7 @@ local function dropDownMenuScrollDown(workspace, menu)
 	local limit, first = 1, menu.itemsContainer.children[1]
 
 	first.localY = first.localY + menu.scrollSpeed
+	
 	if first.localY > limit then
 		first.localY = limit
 	end
@@ -4079,9 +4143,10 @@ local function dropDownMenuScrollDown(workspace, menu)
 end
 
 local function dropDownMenuScrollUp(workspace, menu)
-	local limit, first = -(#menu.itemsContainer.children * menu.itemHeight - menu.height - 1), menu.itemsContainer.children[1]
+	local limit, first = -(dropDownMenuGetHeight(menu) - menu.height - 1), menu.itemsContainer.children[1]
 
 	first.localY = first.localY - menu.scrollSpeed
+
 	if first.localY < limit then
 		first.localY = limit
 	end
@@ -4134,20 +4199,40 @@ local function dropDownMenuAdd(parentContainer, menu)
 	return container:addChild(menu:releaseItems())
 end
 
-function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColor, textColor, backgroundPressedColor, textPressedColor, disabledColor, separatorColor, backgroundTransparency, shadowTransparency)
+function GUI.dropDownMenu(
+	x,
+	y,
+	width,
+	maximumHeight,
+	itemHeight,
+	backgroundColor,
+	iconColor,
+	textColor,
+	backgroundPressedColor,
+	iconPressedColor,
+	textPressedColor,
+	disabledIconColor,
+	disabledTextColor,
+	separatorColor,
+	backgroundTransparency,
+	shadowTransparency
+)
 	local menu = GUI.container(x, y, width, 1)
 	
 	menu.colors = {
 		default = {
 			background = backgroundColor,
-			text = textColor
+			text = textColor,
+			icon = iconColor
 		},
 		selected = {
 			background = backgroundPressedColor,
-			text = textPressedColor
+			text = textPressedColor,
+			icon = iconPressedColor
 		},
 		disabled = {
-			text = disabledColor
+			text = disabledTextColor,
+			icon = disabledIconColor
 		},
 		separator = separatorColor,
 		transparency = {
@@ -4186,24 +4271,40 @@ end
 
 local function contextMenuUpdate(menu)
 	if #menu.itemsContainer.children > 0 then
-		local widestItem, widestShortcut = 0, 0
+		local widestItem, widestShortcut, haveIcon, item = 0, 0, false
+		
 		for i = 1, #menu.itemsContainer.children do
-			if menu.itemsContainer.children[i].type == 1 then
-				widestItem = math.max(widestItem, unicode.wlen(menu.itemsContainer.children[i].text))
+			item = menu.itemsContainer.children[i]
+
+			if item.isTextItem then
+				if item.icon then
+					haveIcon = true
+				end
+
+				widestItem = math.max(widestItem, unicode.wlen(item.text))
 				
-				if menu.itemsContainer.children[i].shortcut then
-					widestShortcut = math.max(widestShortcut, unicode.wlen(menu.itemsContainer.children[i].shortcut))
+				if item.shortcut then
+					widestShortcut = math.max(widestShortcut, unicode.wlen(item.shortcut))
 				end
 			end
 		end
 
-		menu.width, menu.height = 2 + widestItem + (widestShortcut > 0 and 3 + widestShortcut or 0), math.min(dropDownMenuGetHeight(menu), menu.maximumHeight)
+		menu.width =
+			menu.itemHeight * 2 +
+			(haveIcon and menu.itemHeight + 2 or 0) +
+			widestItem +
+			(widestShortcut > 0 and widestShortcut + menu.itemHeight + 1 or 0)
+		
+		menu.height = math.min(dropDownMenuGetHeight(menu), menu.maximumHeight)
+		
 		dropDownMenuReposition(menu)
 
 		local bufferWidth, bufferHeight = screen.getResolution()
+		
 		if menu.x + menu.width + 1 >= bufferWidth then
 			menu.localX = bufferWidth - menu.width - 1
 		end
+		
 		if menu.y + menu.height >= bufferHeight then
 			menu.localY = bufferHeight - menu.height
 		end
@@ -4212,8 +4313,15 @@ end
 
 local contextMenuCreate, contextMenuaddSubMenuItem
 
-contextMenuaddSubMenuItem = function(menu, text, disabled)
-	local item = menu:addItem(text, disabled, "►")
+contextMenuaddSubMenuItem = function(menu, a1, a2, a3)
+	local item
+
+	if type(a1) == "string" and type(a2) == "string" then
+		item = menu:addItem(a1, a2, a3, "►")
+	else
+		item = menu:addItem(a1, a2, "►")
+	end
+
 	item.subMenu = contextMenuCreate(1, 1)
 	item.subMenu.colors = menu.colors
 	
@@ -4225,16 +4333,22 @@ contextMenuCreate = function(x, y, backgroundColor, textColor, backgroundPressed
 		x,
 		y,
 		1,
-		math.ceil(screen.getHeight() * 0.5),
-		1,
-		backgroundColor or GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
-		textColor or GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
-		backgroundPressedColor or GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
-		textPressedColor or GUI.CONTEXT_MENU_PRESSED_TEXT_COLOR,
-		disabledColor or GUI.CONTEXT_MENU_DISABLED_COLOR,
-		separatorColor or GUI.CONTEXT_MENU_SEPARATOR_COLOR,
-		backgroundTransparency or GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY,
-		shadowTransparency or GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+		math.ceil(screen.getHeight() * 0.7),
+		2,
+		GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
+		GUI.CONTEXT_MENU_DEFAULT_ICON_COLOR,
+		GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
+
+		GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
+		GUI.CONTEXT_MENU_PRESSED_ICON_COLOR,
+		GUI.CONTEXT_MENU_PRESSED_TEXT_COLOR,
+
+		GUI.CONTEXT_MENU_DISABLED_ICON_COLOR,
+		GUI.CONTEXT_MENU_DISABLED_TEXT_COLOR,
+		
+		GUI.CONTEXT_MENU_SEPARATOR_COLOR,
+		GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY,
+		GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
 	)
 
 	menu.update = contextMenuUpdate
@@ -4263,7 +4377,7 @@ local function comboBoxDraw(object)
 	-- Item
 	if object.dropDownMenu.itemsContainer.children[object.selectedItem] then
 		screen.drawText(
-			object.x + 1,
+			math.ceil(object.x + object.height / 2),
 			math.floor(object.y + object.height / 2),
 			object.colors.default.text,
 			text.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 2, "right")
@@ -4328,8 +4442,8 @@ local function comboBoxAddSeparator(object)
 	return object.dropDownMenu:addSeparator()
 end
 
-function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
-	local comboBox = GUI.object(x, y, width, itemSize)
+function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
+	local comboBox = GUI.object(x, y, width, height)
 	
 	comboBox.colors = {
 		default = {
@@ -4351,12 +4465,15 @@ function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBa
 		1,
 		1,
 		math.ceil(screen.getHeight() * 0.5),
-		itemSize,
+		height == 1 and 1 or 2,
 		comboBox.colors.default.background, 
+		comboBox.colors.default.text, 
 		comboBox.colors.default.text, 
 		comboBox.colors.selected.background,
 		comboBox.colors.selected.text,
-		GUI.CONTEXT_MENU_DISABLED_COLOR,
+		comboBox.colors.selected.text,
+		GUI.CONTEXT_MENU_DISABLED_ICON_COLOR,
+		GUI.CONTEXT_MENU_DISABLED_TEXT_COLOR,
 		GUI.CONTEXT_MENU_SEPARATOR_COLOR,
 		GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY, 
 		GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
@@ -4365,7 +4482,7 @@ function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBa
 	comboBox.dropDownMenu.onMenuClosed = function(index)
 		comboBox.pressed = false
 		comboBox.selectedItem = index or comboBox.selectedItem
-		comboBox.firstParent:draw()
+		comboBox.workspace:draw()
 		
 		if index and comboBox.onItemSelected then
 			comboBox.onItemSelected(index)
@@ -4397,29 +4514,23 @@ local function windowDraw(window)
 	return window
 end
 
-local function windowCheck(window, x, y)
+local function windowCheckForBlockingScreenEvent(object, x, y)
 	local child, result
 
-	for i = #window.children, 1, -1 do
-		child = window.children[i]
+	for i = #object.children, 1, -1 do
+		child = object.children[i]
 		
 		if
-			not child.hidden and
-			not child.disabled and
-			child:isPointInside(x, y)
+			not child.hidden
+			and not child.disabled
+			and child:isPointInside(x, y)
 		then
-			if not child.passScreenEvents and child.eventHandler then
+			if child.blockScreenEvents and child.eventHandler then
 				return true
 
 			elseif child.children then
-				result = windowCheck(child, x, y)
-				
-				-- Nil causes next child processing
-				if result == true then
+				if windowCheckForBlockingScreenEvent(child, x, y) then
 					return true
-				
-				elseif result == false then
-					return false
 				end
 			end
 		end
@@ -4427,35 +4538,35 @@ local function windowCheck(window, x, y)
 end
 
 local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
-	if window.movingEnabled then
-		if e1 == "touch" then
-			e3, e4 = math.ceil(e3), math.ceil(e4)
+	if not window.movingEnabled then
+		return
+	end
 
-			if not windowCheck(window, e3, e4) then
-				window.lastTouchX, window.lastTouchY = e3, e4
-			end
+	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-			if window ~= window.parent.children[#window.parent.children] then
-				window:focus()
-				
-				workspace:draw()
-			end
-		
-		elseif e1 == "drag" and window.lastTouchX then
-			e3, e4 = math.ceil(e3), math.ceil(e4)
-
-			if windowCheck(window, e3, e4) then
-				return
-			end
-
-			window.localX, window.localY = window.localX + e3 - window.lastTouchX, window.localY + e4 - window.lastTouchY
+		if not windowCheckForBlockingScreenEvent(window, e3, e4) then
+			workspace.capturedObject = window
 			window.lastTouchX, window.lastTouchY = e3, e4
+		end
+
+		-- Focusing window if it's not focused
+		if window ~= window.parent.children[#window.parent.children] then
+			window:focus()
 			
 			workspace:draw()
-		
-		elseif e1 == "drop" then
-			window.lastTouchX, window.lastTouchY = nil, nil
 		end
+	
+	elseif e1 == "drag" and window.lastTouchX then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
+		window.localX, window.localY = window.localX + e3 - window.lastTouchX, window.localY + e4 - window.lastTouchY
+		window.lastTouchX, window.lastTouchY = e3, e4
+		
+		workspace:draw()
+	
+	elseif e1 == "drop" then
+		window.lastTouchX, window.lastTouchY, workspace.capturedObject = nil, nil, nil
 	end
 end
 
@@ -4522,7 +4633,7 @@ function GUI.windowMaximize(window, animationDisabled)
 end
 
 local function windowFocus(window)
-	GUI.focusedObject = window
+	window.workspace.focusedObject = window
 	window.hidden = false
 	window:moveToFront()
 
@@ -4538,7 +4649,7 @@ end
 function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
-	window.passScreenEvents = false
+	window.blockScreenEvents = true
 	window.movingEnabled = true
 	window.drawShadow = true
 
@@ -4604,7 +4715,19 @@ end
 
 local function menuDraw(menu)
 	screen.drawRectangle(menu.x, menu.y, menu.width, 1, menu.colors.default.background, menu.colors.default.text, " ", menu.colors.transparency)
-	layoutDraw(menu)
+	
+	local x = 1
+
+	local child
+	for i = 1, #menu.children do
+		child = menu.children[i]
+
+		child.localX = x
+
+		x = x + child.width
+	end
+
+	containerDraw(menu)
 end
 
 local function menuAddItem(menu, text, textColor)
@@ -4641,14 +4764,14 @@ local function menuAddContextMenuItem(menu, ...)
 	item.contextMenu = contextMenuCreate(1, 1)
 	item.contextMenu.onMenuClosed = function()
 		item.pressed = false
-		item.firstParent:draw()
+		item.workspace:draw()
 	end
 
 	return item.contextMenu
 end
 
 function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency)
-	local menu = GUI.layout(x, y, width, 1, 1, 1)
+	local menu = GUI.container(x, y, width, 1)
 	
 	menu.colors = {
 		default = {
@@ -4662,16 +4785,16 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 		transparency = backgroundTransparency
 	}
 	
-	menu.passScreenEvents = false
+	menu.blockScreenEvents = true
 	menu.addContextMenuItem = menuAddContextMenuItem
 	menu.addItem = menuAddItem
 	menu.getItem = menuGetItem
 	menu.draw = menuDraw
 
-	menu:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-	menu:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
-	menu:setSpacing(1, 1, 0)
-	menu:setMargin(1, 1, 1, 0)
+	-- menu:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	-- menu:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+	-- menu:setSpacing(1, 1, 0)
+	-- menu:setMargin(1, 1, 1, 0)
 
 	return menu
 end

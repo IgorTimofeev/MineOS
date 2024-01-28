@@ -21,7 +21,11 @@ MineOS is a GUI based operating system for the OpenComputers Minecraft mod. It h
 
 ## How to install?
 
-The easiest way is to use default **wget** script. Insert an OpenOS floppy disk and an Internet Card into the computer, turn it on and type the following command to console to install MineOS:
+The easiest way is to use default `pastebin` script. Insert an OpenOS floppy disk and an Internet Card into the computer, turn it on and type the following command to console to install MineOS:
+
+	pastebin run PDE3eVsL
+
+If for some reason pastebin website is not available to you, use alternative installation command:
 
 	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
 

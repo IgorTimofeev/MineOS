@@ -111,7 +111,7 @@ rightLayout:setMargin(1, 1, 0, 0)
 rightLayout:setSpacing(1, 1, 0)
 
 local chat = window:addChild(GUI.object(1, 1, 1, 1))
-chat.passScreenEvents = true
+chat.blockScreenEvents = false
 
 local scrollBar = window:addChild(GUI.scrollBar(1, 1, 1, 1, 0xD2D2D2, 0x878787, 1, 1, 1, 1, 1, true))
 

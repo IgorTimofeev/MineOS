@@ -16,6 +16,9 @@ local system = {}
 local iconImageWidth = 8
 local iconImageHeight = 4
 
+local interfaceUpdateInterval = 1
+local interfaceDrawInterval = 1
+
 local bootUptime = computer.uptime()
 
 local user
@@ -31,10 +34,8 @@ local desktopWindowsContainer
 local dockContainer
 local desktopMenu
 local desktopMenuLayout
-local desktopMenuMineOSItem
 local desktopIconField
 local desktopBackground
-local desktopBackgroundColor = 0x1E1E1E
 local desktopBackgroundWallpaperX
 local desktopBackgroundWallpaperY
 
@@ -84,16 +85,11 @@ function system.getDefaultUserSettings()
 		networkFTPConnections = {},
 		
 		interfaceScreenAddress = nil,
-		interfaceScreenUpdateInterval = 1,
 		interfaceWallpaperEnabled = false,
-		interfaceWallpaperPath = paths.system.pictures .. "Flight.lua",
+		interfaceWallpaperPath = paths.system.wallpapers .. "Stars.wlp/",
 		interfaceWallpaperMode = 1,
 		interfaceWallpaperBrightness = 0.9,
 
-		interfaceScreensaverEnabled = false,
-		interfaceScreensaverPath = paths.system.screensavers .. "Matrix.lua",
-		interfaceScreensaverDelay = 20,
-		
 		interfaceTransparencyEnabled = true,
 		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
@@ -101,13 +97,6 @@ function system.getDefaultUserSettings()
 		interfaceBlurEnabled = false,
 		interfaceBlurRadius = 3,
 		interfaceBlurTransparency = 0.6,
-
-		interfaceColorDesktopBackground = 0x1E1E1E,
-		interfaceColorDock = 0xE1E1E1,
-		interfaceColorMenu = 0xF0F0F0,
-		interfaceColorDropDownMenuSeparator = 0xA5A5A5,
-		interfaceColorDropDownMenuDefaultBackground = 0xFFFFFF,
-		interfaceColorDropDownMenuDefaultText = 0x2D2D2D,
 
 		filesShowExtension = false,
 		filesShowHidden = false,
@@ -338,6 +327,83 @@ end
 
 --------------------------------------------------------------------------------
 
+
+local function addMainDesktopMenuItem(menu)
+	local item = menu:addContextMenuItem("💻", 0xF0F0F0)
+	
+	item:addItem("🛈", localization.aboutSystem).onTouch = function()
+		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
+		container.layout:removeChildren()
+		
+		local lines = {
+			"MineOS",
+			"Copyright © 2014-" .. os.date("%Y", system.getTime()),
+			" ",
+			"Developers:",
+			" ",
+			"Igor Timofeev, vk.com/id7799889",
+			"Gleb Trifonov, vk.com/id88323331",
+			"Fedor Cheremisenov, vk.com/id402150900",
+			"Yakov Verevkin, vk.com/id60991376",
+			"Alexey Smirnov, vk.com/id23897419",
+			"Timofey Shestakov, vk.com/id113499693",
+			"Alexander Fursenko, vk.com/id354154139",
+			" ",
+			"UX-advisers:",
+			" ",
+			"Nikita Yarichev, vk.com/id65873873",
+			"Vyacheslav Sazonov, vk.com/id21321257",
+			"Michail Prosin, vk.com/id75667079",
+			"Dmitrii Tiunov, vk.com/id151541414",
+			"Egor Paliev, vk.com/id83795932",
+			"Maxim Pakin, vk.com/id100687922",
+			"Andrey Kakoito, vk.com/id201043162",
+			"Maxim Omelaenko, vk.com/id54662296",
+			"Konstantin Mayakovskiy, vk.com/id10069748",
+			"Ruslan Isaev, vk.com/id181265169",
+			"Eugene8388608, vk.com/id287247631",
+			"Maxim Afonin, vk.com/id258714476",
+			" ",
+			"Translators:",
+			" ",
+			"06Games, github.com/06Games",
+			"Xenia Mazneva, vk.com/id5564402",
+			"Yana Dmitrieva, vk.com/id155326634",
+		}
+
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
+		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+		textBox.eventHandler = container.panel.eventHandler
+
+		workspace:draw()
+	end
+
+	item:addItem("🛒", localization.updates).onTouch = function()
+		system.execute(paths.system.applicationAppMarket, "updates")
+	end
+
+	item:addSeparator()
+
+	local logoutItems = {"🥰", "😭", "😎", "🥺", "🤔", "🤓"}
+
+	item:addItem(logoutItems[math.random(1, #logoutItems)], localization.logout).onTouch = function()
+		system.authorize()
+	end
+
+	item:addItem("🗘", localization.reboot).onTouch = function()
+		require("Network").broadcastComputerState(false)
+		computer.shutdown(true)
+	end
+
+	item:addItem("⏻", localization.shutdown).onTouch = function()
+		require("Network").broadcastComputerState(false)
+		computer.shutdown()
+	end
+
+	return item
+end
+
+
 local function addBackgroundContainerInput(parent, ...)
 	return parent:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...))
 end
@@ -404,8 +470,25 @@ local function uploadToPastebin(path)
 end
 
 function system.addUploadToPastebinMenuItem(menu, path)
-	menu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+	menu:addItem("⤴", localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 		uploadToPastebin(path)
+	end
+end
+
+function system.addSetAsWallpaperMenuItem(menu, path)
+	menu:addItem("💻", localization.setAsWallpaper).onTouch = function()
+		local userSettings = system.getUserSettings()
+		local wallpaperPath = paths.system.wallpapers .. "Static picture.wlp/"
+		
+		if userSettings.interfaceWallpaperPath ~= wallpaperPath then
+			userSettings.interfaceWallpaperPath = wallpaperPath
+			system.updateWallpaper()
+		end
+		
+		system.wallpaper.setPicture(path)
+
+		workspace:draw()
+		system.saveUserSettings()
 	end
 end
 
@@ -498,20 +581,6 @@ function system.updateIconProperties()
 	computer.pushSignal("system", "updateFileList")
 end
 
-local function gridIconFieldGetSelectedIcons(iconField)
-	local selectedIcons, icon = {}
-
-	for i = 2, #iconField.children do
-		icon = iconField.children[i]
-
-		if icon.selected then
-			table.insert(selectedIcons, icon)
-		end
-	end
-
-	return selectedIcons
-end
-
 local function drawSelection(x, y, width, height, color, transparency)
 	screen.drawText(x, y, color, string.rep("▄", width), transparency)
 	screen.drawText(x, y + height - 1, color, string.rep("▀", width), transparency)
@@ -520,34 +589,42 @@ end
 
 local function iconDraw(icon)
 	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.selectionTransparency
-	local xCenter, yText = icon.x + iconHalfWidth, icon.y + iconImageHeight + 1
+	local xCenter = icon.x + iconHalfWidth
 
-	local function iconDrawNameLine(y, line)
-		local lineLength = unicode.len(line)
-		local x = math.floor(xCenter - lineLength / 2)
+	-- Name
+	if not icon.hideName then
+		local yText = icon.y + iconImageHeight + 1
 
-		local foreground
-		if icon.selected then
-			foreground = icon.colors.selectionText
-			screen.drawRectangle(x, y, lineLength, 1, icon.colors.selectionBackground, foreground or 0xFF00FF, " ", selectionTransparency)
-		else
-			foreground = icon.colors.defaultText
+		local function iconDrawNameLine(y, line)
+			local lineLength = unicode.len(line)
+			local x = math.floor(xCenter - lineLength / 2)
+
+			local foreground
+			if icon.selected then
+				foreground = icon.colors.selectionText
+				screen.drawRectangle(x, y, lineLength, 1, icon.colors.selectionBackground, foreground or 0xFF00FF, " ", selectionTransparency)
+			else
+				foreground = icon.colors.defaultText
+			end
+
+			screen.drawText(x, y, foreground or 0xFF00FF, line)
 		end
 
-		screen.drawText(x, y, foreground or 0xFF00FF, line)
-	end
-
-	local charIndex = 1
-	for lineIndex = 1, iconTextHeight do
-		if lineIndex < iconTextHeight then
-			iconDrawNameLine(yText, unicode.sub(icon.name, charIndex, charIndex + icon.width - 1))
-			charIndex, yText = charIndex + icon.width, yText + 1
-		else
-			iconDrawNameLine(yText, text.limit(unicode.sub(icon.name, charIndex, -1), icon.width, "center"))
+		local charIndex = 1
+		
+		for lineIndex = 1, iconTextHeight do
+			if lineIndex < iconTextHeight then
+				iconDrawNameLine(yText, unicode.sub(icon.name, charIndex, charIndex + icon.width - 1))
+				charIndex, yText = charIndex + icon.width, yText + 1
+			else
+				iconDrawNameLine(yText, text.limit(unicode.sub(icon.name, charIndex, -1), icon.width, "center"))
+			end
 		end
 	end
 
+	-- Image
 	local xImage = icon.x + iconImageHorizontalOffset
+	
 	if icon.selected then
 		drawSelection(xImage - 1, icon.y - 1, iconImageWidth + 2, iconImageHeight + 2, icon.colors.selectionBackground, selectionTransparency)
 	end
@@ -556,8 +633,10 @@ local function iconDraw(icon)
 		if icon.cut then
 			if not icon.semiTransparentImage then
 				icon.semiTransparentImage = image.copy(icon.image)
+				
 				for i = 3, #icon.semiTransparentImage, 4 do
 					icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
+					
 					if icon.semiTransparentImage[i + 2] > 1 then
 						icon.semiTransparentImage[i + 2] = 1
 					end
@@ -568,8 +647,6 @@ local function iconDraw(icon)
 		else
 			screen.drawImage(xImage, icon.y, icon.image)
 		end
-	elseif icon.liveImage then
-		icon.liveImage(xImage, icon.y)
 	end
 
 	local xShortcut = xImage + iconImageWidth
@@ -681,7 +758,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
 	if #selectedIcons > 1 then
-		contextMenu:addItem(localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
+		contextMenu:addItem("📂", localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
 			local container = addBackgroundContainerWithInput("", localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")", localization.folderName)
 
 			container.input.onInputFinished = function()
@@ -707,15 +784,15 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	else
 		if icon.isDirectory then
 			if icon.extension == ".app" then
-				contextMenu:addItem(localization.edit .. " Main.lua").onTouch = function()
+				contextMenu:addItem("🖊", localization.edit .. " Main.lua").onTouch = function()
 					system.execute(paths.system.applicationMineCodeIDE, icon.path .. "Main.lua")
 				end
 
-				contextMenu:addItem(localization.showPackageContent).onTouch = function()
+				contextMenu:addItem("📂", localization.showPackageContent).onTouch = function()
 					icon.parent.launchers.showPackageContent(icon)
 				end		
 
-				contextMenu:addItem(localization.launchWithArguments).onTouch = function()
+				contextMenu:addItem("˃", localization.launchWithArguments).onTouch = function()
 					system.launchWithArguments(icon.path .. "Main.lua")
 				end
 
@@ -723,7 +800,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			end
 
 			if icon.extension ~= ".app" then
-				contextMenu:addItem(localization.addToFavourites).onTouch = function()
+				contextMenu:addItem("⭐", localization.addToFavourites).onTouch = function()
 					local container = GUI.addBackgroundContainer(workspace, true, true, localization.addToFavourites)
 
 					local input = addBackgroundContainerInput(container.layout, icon.name, localization.name)
@@ -742,7 +819,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			end
 		else
 			if icon.isShortcut then
-				contextMenu:addItem(localization.editShortcut).onTouch = function()
+				contextMenu:addItem("🖊", localization.editShortcut).onTouch = function()
 					local text = system.readShortcut(icon.path)
 					local container = addBackgroundContainerWithInput(text, localization.editShortcut, localization.rename)
 
@@ -762,21 +839,23 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 					workspace:draw()
 				end
 
-				contextMenu:addItem(localization.showContainingFolder).onTouch = function()
+				contextMenu:addItem("📂", localization.showContainingFolder).onTouch = function()
 					icon.parent.launchers.showContainingFolder(icon)
 				end
 
 				contextMenu:addSeparator()
 			else
 				local function addDefault()
-					contextMenu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+					contextMenu:addItem("⤴", localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 						uploadToPastebin(icon.path)
 					end
+
 					contextMenu:addSeparator()
 				end
 
 				if userSettings.extensions[icon.extension] then
 					local result, reason = loadfile(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Context menu.lua")
+					
 					if result then
 						result, reason = pcall(result, workspace, icon, contextMenu)
 
@@ -793,7 +872,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 				end
 
 				-- Open with
-				local subMenu = contextMenu:addSubMenuItem(localization.openWith)
+				local subMenu = contextMenu:addSubMenuItem("🔎", localization.openWith)
 				
 				local function setAssociation(path)
 					userSettings.extensions[icon.extension] = path
@@ -806,7 +885,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 					system.saveUserSettings()
 				end
 
-				subMenu:addItem(localization.select).onTouch = function()
+				subMenu:addItem("🗸", localization.select).onTouch = function()
 					local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), localization.open, localization.cancel, localization.fileName, "/")
 					
 					filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_DIRECTORY)
@@ -823,6 +902,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 				subMenu:addSeparator()
 
 				local list = filesystem.list(paths.system.applications)
+				
 				for i = 1, #list do
 					local path = paths.system.applications .. list[i]
 
@@ -837,10 +917,10 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	end
 
 	if not icon.isShortcut or #selectedIcons > 1 then
-		local subMenu = contextMenu:addSubMenuItem(localization.createShortcut)
+		local subMenu = contextMenu:addSubMenuItem("🔖", localization.createShortcut)
 		
-		local function addShortcutItem(name, pathGetter)
-			subMenu:addItem(name).onTouch = function()
+		local function addShortcutItem(icon, name, pathGetter)
+			subMenu:addItem(icon, name).onTouch = function()
 				local selectedIcon
 
 				for i = 1, #selectedIcons do
@@ -858,19 +938,20 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			end
 		end
 
-		addShortcutItem(localization.inCurrentDirectory, function(selectedIcon)
+		addShortcutItem("📂", localization.inCurrentDirectory, function(selectedIcon)
 			return filesystem.path(selectedIcon.path)
 		end)
 
-		addShortcutItem(localization.onDesktop, function(selectedIcon)
+		addShortcutItem("💻", localization.onDesktop, function(selectedIcon)
 			return paths.user.desktop
 		end)
 	end
 
-	local subMenu = contextMenu:addSubMenuItem(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
+	local subMenu = contextMenu:addSubMenuItem("📦", localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
 	
 	local function archive(where)
 		local itemsToArchive = {}
+		
 		for i = 1, #selectedIcons do
 			table.insert(itemsToArchive, selectedIcons[i].path)
 		end
@@ -884,16 +965,16 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		computer.pushSignal("system", "updateFileList")
 	end
 
-	subMenu:addItem(localization.inCurrentDirectory).onTouch = function()
+	subMenu:addItem("📂", localization.inCurrentDirectory).onTouch = function()
 		archive(filesystem.path(icon.path))
 	end
 
-	subMenu:addItem(localization.onDesktop).onTouch = function()
+	subMenu:addItem("💻", localization.onDesktop).onTouch = function()
 		archive(paths.user.desktop)
 	end
 
 	if #selectedIcons == 1 then
-		contextMenu:addItem(localization.addToDock).onTouch = function()
+		contextMenu:addItem("📌", localization.addToDock).onTouch = function()
 			dockContainer.addIcon(icon.path).keepInDock = true
 			dockContainer.saveUserSettings()
 		end
@@ -907,22 +988,23 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		end
 
 		system.clipboard = {cut = cut}
+		
 		for i = 1, #selectedIcons do
 			selectedIcons[i].cut = cut
 			table.insert(system.clipboard, selectedIcons[i].path)
 		end
 	end
 
-	contextMenu:addItem(localization.cut).onTouch = function()
+	contextMenu:addItem("✂", localization.cut).onTouch = function()
 		cutOrCopy(true)
 	end
 
-	contextMenu:addItem(localization.copy).onTouch = function()
+	contextMenu:addItem("⧉", localization.copy).onTouch = function()
 		cutOrCopy()
 	end
 
 	if #selectedIcons == 1 then
-		contextMenu:addItem(localization.rename).onTouch = function()
+		contextMenu:addItem("Aa", localization.rename).onTouch = function()
 			local container = addBackgroundContainerWithInput(filesystem.name(icon.path), localization.rename, localization.newName)
 
 			container.input.onInputFinished = function()
@@ -938,16 +1020,15 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 
 	if icon.path == paths.user.trash then
-		contextMenu:addItem(localization.emptyTrash).onTouch = emptyTrash
+		contextMenu:addItem("❌", localization.emptyTrash).onTouch = emptyTrash
 	else
-		contextMenu:addItem(localization.delete).onTouch = function()
+		contextMenu:addItem("❌", localization.delete).onTouch = function()
 			moveSelectedIconsToTrash(selectedIcons)
 		end
 	end
 	
-
 	if icon.isShortcut then
-		contextMenu:addItem(localization.deleteWithSource).onTouch = function()
+		contextMenu:addItem("𝕩", localization.deleteWithSource).onTouch = function()
 			moveToTrash({
 				icon.shortcutPath,
 				icon.path
@@ -957,7 +1038,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 	contextMenu:addSeparator()
 
-	contextMenu:addItem(localization.properties).onTouch = function()
+	contextMenu:addItem("👁", localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
 			system.addPropertiesWindow(math.ceil(e3), math.ceil(e4), 46, selectedIcons[i])
 		end
@@ -972,17 +1053,19 @@ local function iconOnDoubleClick(icon)
 end
 
 local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" and icon:isPointInside(e3, e4) then
+	if e1 == "touch" then
 		local iconField = icon.parent
-		
-		GUI.focusedObject = iconField
 
-		icon.lastTouchPosition = icon.lastTouchPosition or {}
-		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
+		icon.lastTouchX = e3
+		icon.lastTouchY = e4
+
+		workspace.focusedObject = iconField
 
 		icon:moveToFront()
 
 		if e5 == 0 then
+			workspace.capturedObject = icon
+
 			iconDeselectAndSelect(icon)
 
 			workspace:draw()
@@ -997,28 +1080,34 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 			end
 		end
 	
-	elseif e1 == "double_touch" and icon:isPointInside(e3, e4) and e5 == 0 then
+	elseif e1 == "double_touch" and e5 == 0 then
 		iconOnDoubleClick(icon, e1, e2, e3, e4, e5, ...)
 	
-	elseif e1 == "drag" and icon.parent.iconConfigEnabled and icon.lastTouchPosition then
-		-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
-		icon.dragStarted = true
-		icon.localX = icon.localX + e3 - icon.lastTouchPosition.x
-		icon.localY = icon.localY + e4 - icon.lastTouchPosition.y
-		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
+	-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
+	elseif e1 == "drag" and icon.parent.iconConfigEnabled and workspace.capturedObject == icon then
+		icon.localX = icon.localX + e3 - icon.lastTouchX
+		icon.localY = icon.localY + e4 - icon.lastTouchY
+		icon.lastTouchX = e3
+		icon.lastTouchY = e4
+		icon.dragged = true
 
 		workspace:draw()
 	
-	elseif e1 == "drop" and icon.dragStarted then
-		icon.dragStarted = nil
-		icon.lastTouchPosition = nil
+	elseif e1 == "drop" and workspace.capturedObject == icon then
+		-- We don't need to save the same position
+		if icon.dragged then
+			iconFieldSaveIconPosition(
+				icon.parent,
+				icon.filename .. (icon.isDirectory and "/" or ""),
+				icon.localX,
+				icon.localY
+			)
+		end
 
-		iconFieldSaveIconPosition(
-			icon.parent,
-			icon.filename .. (icon.isDirectory and "/" or ""),
-			icon.localX,
-			icon.localY
-		)
+		icon.lastTouchX = nil
+		icon.lastTouchY = nil
+		icon.dragged = nil
+		workspace.capturedObject = nil
 	end
 end
 
@@ -1142,7 +1231,7 @@ local function anyIconAddInfo(icon, path)
 	icon.analyseExtension = anyIconAnalyseExtension
 end
 
-function system.icon(x, y, path, colors)
+local function newIcon(x, y, path, colors)
 	local icon = GUI.object(x, y, userSettings.iconWidth, userSettings.iconHeight)
 	
 	anyIconAddInfo(icon, path)
@@ -1166,6 +1255,8 @@ end
 
 local function iconFieldSaveIconConfig(iconField)
 	filesystem.writeTable(iconField.path .. ".icons", iconField.iconConfig)
+
+	-- GUI.alert("SAVE", iconField.path .. ".icons", debug.traceback())
 end
 
 local function iconFieldDeleteIconConfig(iconField)
@@ -1181,7 +1272,7 @@ local function iconFieldCheckSelection(iconField)
 	if selection and selection.x2 then
 		local child, xCenter, yCenter
 
-		for i = 1, #iconField.children do
+		for i = 2, #iconField.children do
 			child = iconField.children[i]
 
 			xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
@@ -1210,6 +1301,7 @@ end
 
 local function anyIconFieldUpdateFileList(iconField, func)
 	local list, reason = filesystem.list(iconField.path, userSettings.filesSortingMethod)
+	
 	if list then
 		-- Hidden files and filename matcher
 		local i = 1
@@ -1242,7 +1334,7 @@ end
 local function iconFieldUpdateFileList(iconField)
 	anyIconFieldUpdateFileList(iconField, function(list)
 		local function addGridIcon(x, y, path)
-			local icon = system.icon(
+			local icon = newIcon(
 				x,
 				y,
 				iconField.path .. path,
@@ -1250,6 +1342,7 @@ local function iconFieldUpdateFileList(iconField)
 			)
 
 			anyIconFieldAddIcon(iconField, icon)
+
 			icon.eventHandler = iconFieldIconEventHandler
 
 			iconField:addChild(icon)
@@ -1257,8 +1350,6 @@ local function iconFieldUpdateFileList(iconField)
 
 		-- Updating sizes
 		iconField.yOffset = iconField.initialYOffset
-
-		iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
 
 		iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (userSettings.iconWidth + userSettings.iconHorizontalSpace))
 		iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (userSettings.iconHeight + userSettings.iconVerticalSpace))
@@ -1319,9 +1410,9 @@ local function iconFieldUpdateFileList(iconField)
 			nextX()
 		end
 
-		if iconField.iconConfigEnabled then
-			iconField:saveIconConfig()
-		end
+		-- if iconField.iconConfigEnabled then
+		-- 	iconField:saveIconConfig()
+		-- end
 	end)
 end
 
@@ -1392,9 +1483,9 @@ end
 local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
-	local subMenu = contextMenu:addSubMenuItem(localization.create)
+	local subMenu = contextMenu:addSubMenuItem("➕", localization.create)
 
-	subMenu:addItem(localization.newFile).onTouch = function()
+	subMenu:addItem("🗎", localization.newFile).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newFile, localization.fileName)
 
 		container.input.onInputFinished = function()
@@ -1412,7 +1503,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		workspace:draw()
 	end
 	
-	subMenu:addItem(localization.newFolder).onTouch = function()
+	subMenu:addItem("📂", localization.newFolder).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newFolder, localization.folderName)
 
 		container.input.onInputFinished = function()
@@ -1428,7 +1519,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		workspace:draw()
 	end
 
-	subMenu:addItem(localization.newImage).onTouch = function()
+	subMenu:addItem("📷", localization.newImage).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newImage, localization.fileName)
 
 		local layout = container.layout:addChild(GUI.layout(1, 1, 36, 3, 1, 1))
@@ -1473,7 +1564,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		workspace:draw()
 	end
 
-	subMenu:addItem(localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
+	subMenu:addItem("🌍", localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newFileFromURL, localization.fileName)
 
 		local inputURL = addBackgroundContainerInput(container.layout, "", "URL", false)
@@ -1515,7 +1606,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 
 	subMenu:addSeparator()
 
-	subMenu:addItem(localization.newApplication).onTouch = function()
+	subMenu:addItem("💻", localization.newApplication).onTouch = function()
 		local container = addBackgroundContainerWithInput("", localization.newApplication, localization.applicationName)
 		
 		container.panel.eventHandler = function(workspace, panel, e1)
@@ -1543,7 +1634,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 
 	contextMenu:addSeparator()
 				
-	local subMenu = contextMenu:addSubMenuItem(localization.sortBy)
+	local subMenu = contextMenu:addSubMenuItem("⇊", localization.sortBy)
 	
 	local function sortAutomatically()
 		if iconField.iconConfigEnabled then
@@ -1560,27 +1651,27 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		sortAutomatically()
 	end
 
-	subMenu:addItem(localization.sortByName).onTouch = function()
+	subMenu:addItem("Aa", localization.sortByName).onTouch = function()
 		setSortingMethod(filesystem.SORTING_NAME)
 	end
 
-	subMenu:addItem(localization.sortByDate).onTouch = function()
+	subMenu:addItem("🗓", localization.sortByDate).onTouch = function()
 		setSortingMethod(filesystem.SORTING_DATE)
 	end
 
-	subMenu:addItem(localization.sortByType).onTouch = function()
+	subMenu:addItem("🖹", localization.sortByType).onTouch = function()
 		setSortingMethod(filesystem.SORTING_TYPE)
 	end
 
-	contextMenu:addItem(localization.sortAutomatically).onTouch = sortAutomatically
+	contextMenu:addItem("🗓", localization.sortAutomatically).onTouch = sortAutomatically
 
-	contextMenu:addItem(localization.update).onTouch = function()
+	contextMenu:addItem("🗘", localization.update).onTouch = function()
 		iconField:updateFileList()
 	end
 
 	contextMenu:addSeparator()
 
-	contextMenu:addItem(localization.paste, not system.clipboard).onTouch = function()
+	contextMenu:addItem("⇲", localization.paste, not system.clipboard).onTouch = function()
 		local i = 1
 		while i <= #system.clipboard do
 			if filesystem.exists(system.clipboard[i]) then
@@ -1606,18 +1697,64 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 	workspace:draw()
 end
 
-local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" then
-		local iconField = object.parent
+local function iconFieldClearSelection(self)
+	for i = 1, #self.children do
+		self.children[i].selected = nil
+	end
+end
 
-		GUI.focusedObject = iconField
+local function iconFieldSetPath(iconField, path)
+	iconField.path = path
+	iconField.filenameMatcher = nil
+	iconField.fromFile = 1
+
+	return iconField
+end
+
+local function anyIconFieldAddInfo(iconField, path)
+	iconField.path = path
+	iconField.filenameMatcher = nil
+
+	iconField.setPath = iconFieldSetPath
+
+	-- Duplicate icon launchers for overriding possibility
+	iconField.launchers = {}
+
+	for key, value in pairs(defaultIconLaunchers) do
+		iconField.launchers[key] = value
+	end
+end
+
+local function gridIconFieldGetSelectedIcons(iconField)
+	local selectedIcons, icon = {}
+
+	for i = 2, #iconField.children do
+		icon = iconField.children[i]
+
+		if icon.selected then
+			table.insert(selectedIcons, icon)
+		end
+	end
+
+	return selectedIcons
+end
+
+local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundObject, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
+		local iconField = backgroundObject.parent
+
+		workspace.focusedObject = iconField
 
 		if e5 == 0 then
+			workspace.capturedObject = backgroundObject
+
 			iconField:clearSelection()
+			
 			iconField.selection = {
 				x1Raw = e3,
 				y1Raw = e4
 			}
+
 			iconFieldCheckSelection(iconField)
 
 			workspace:draw()
@@ -1625,8 +1762,8 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 			iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		end
 	
-	elseif e1 == "drag" then
-		local iconField = object.parent
+	elseif e1 == "drag" and workspace.capturedObject == backgroundObject then
+		local iconField = backgroundObject.parent
 		local selection = iconField.selection
 
 		if not selection then
@@ -1640,7 +1777,6 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 		selection.y1,
 		selection.x2,
 		selection.y2 =
-		
 		math.ceil(selection.x1Raw),
 		math.ceil(selection.y1Raw),
 		math.ceil(selection.x2Raw),
@@ -1655,23 +1791,29 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 		end
 
 		iconFieldCheckSelection(iconField)
-		object:moveToFront()
 
 		workspace:draw()
 	
-	elseif e1 == "drop" then
-		local iconField = object.parent
+	elseif e1 == "drop" and workspace.capturedObject == backgroundObject then
+		workspace.focusedObject = nil
+		workspace.capturedObject = nil
+
+		local iconField = backgroundObject.parent
+		local selection = iconField.selection
+
+		if not selection or not selection.x2 then
+			return
+		end
 
 		iconField.selection = nil
 		iconFieldCheckSelection(iconField)
-		object:moveToBack()
 
 		workspace:draw()
 	
 	elseif e1 == "key_down" then
-		local iconField = object.parent
+		local iconField = backgroundObject.parent
 
-		if GUI.focusedObject ~= iconField then
+		if workspace.focusedObject ~= iconField then
 			return
 		end
 
@@ -1756,54 +1898,6 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 	end
 end
 
-local function iconFieldBackgroundObjectDraw(object)
-	local selection = object.parent.selection
-	
-	if selection and object.parent.selection.x2 then
-		local y1, y2
-		
-		if selection.y1Raw < selection.y2Raw then
-			y1, y2 = selection.y1 + object.parent.yOffset - object.parent.initialYOffset, selection.y2
-		else
-			y1, y2 = selection.y1, selection.y2 + object.parent.yOffset - object.parent.initialYOffset
-		end
-
-		if userSettings.interfaceTransparencyEnabled then	
-			screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, object.parent.colors.selectionFrame, 0x0, " ", 0.6)
-		else
-			screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, object.parent.colors.selectionFrame)
-		end
-	end
-end
-
-local function iconFieldClearSelection(self)
-	for i = 1, #self.children do
-		self.children[i].selected = nil
-	end
-end
-
-local function iconFieldSetPath(iconField, path)
-	iconField.path = path
-	iconField.filenameMatcher = nil
-	iconField.fromFile = 1
-
-	return iconField
-end
-
-local function anyIconFieldAddInfo(iconField, path)
-	iconField.path = path
-	iconField.filenameMatcher = nil
-
-	iconField.setPath = iconFieldSetPath
-
-	-- Duplicate icon launchers for overriding possibility
-	iconField.launchers = {}
-
-	for key, value in pairs(defaultIconLaunchers) do
-		iconField.launchers[key] = value
-	end
-end
-
 function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, selectionBackgroundColor, selectionTextColor, selectionFrameColor, selectionTransparency)
 	local iconField = GUI.container(x, y, width, height)
 
@@ -1814,6 +1908,7 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 		selectionFrame = selectionFrameColor,
 		selectionTransparency = selectionTransparency,
 	}
+
 	iconField.iconConfigEnabled = false
 	iconField.xOffset = xOffset
 	iconField.initialYOffset = yOffset
@@ -1821,16 +1916,41 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 	iconField.iconCount = {}
 	iconField.iconConfig = {}
 
-	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
-	iconField.backgroundObject.eventHandler = iconFieldBackgroundObjectEventHandler
-	iconField.backgroundObject.draw = iconFieldBackgroundObjectDraw
-
 	iconField.clearSelection = iconFieldClearSelection
 	iconField.loadIconConfig = iconFieldLoadIconConfig
 	iconField.saveIconConfig = iconFieldSaveIconConfig
 	iconField.deleteIconConfig = iconFieldDeleteIconConfig
 	iconField.updateFileList = iconFieldUpdateFileList
 	iconField.getSelectedIcons = gridIconFieldGetSelectedIcons
+
+	local overrideDraw = iconField.draw
+	iconField.draw = function(iconField)
+		overrideDraw(iconField)
+
+		iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
+
+		local selection = iconField.selection
+		
+		if not selection or not selection.x2 then
+			return
+		end
+
+		local y1, y2
+		if selection.y1Raw < selection.y2Raw then
+			y1, y2 = selection.y1 + iconField.yOffset - iconField.initialYOffset, selection.y2
+		else
+			y1, y2 = selection.y1, selection.y2 + iconField.yOffset - iconField.initialYOffset
+		end
+
+		if userSettings.interfaceTransparencyEnabled then	
+			screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame, 0x0, " ", 0.6)
+		else
+			screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame)
+		end
+	end
+
+	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
+	iconField.backgroundObject.eventHandler = gridIconFieldBackgroundObjectEventHandler
 
 	anyIconFieldAddInfo(iconField, path)
 
@@ -1840,7 +1960,7 @@ end
 local function listIconFieldGetSelectedIcons(iconField)
 	local selectedIcons, icon = {}
 
-	for i = 1, #iconField.children do
+	for i = 2, #iconField.children do
 		icon = iconField.children[i]
 
 		if icon.selected and icon.path then
@@ -1950,7 +2070,7 @@ local function windowRemove(window)
 
 	-- Удаляем само окошко
 	table.remove(window.parent.children, window:indexOf())
-	GUI.focusedObject = updateDesktopMenuAndGetTopmostWindow()
+	workspace.focusedObject = updateDesktopMenuAndGetTopmostWindow()
 end
 
 function system.addWindow(window, dontAddToDock, preserveCoordinates)
@@ -1966,7 +2086,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	-- Ебурим окно к окнам
 	desktopWindowsContainer:addChild(window)
 	
-	GUI.focusedObject = window
+	workspace.focusedObject = window
 	
 	if not dontAddToDock then
 		-- Получаем путь залупы
@@ -2000,10 +2120,12 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					window.menu = GUI.menu(1, 1, 1)
 					window.menu.colors = desktopMenu.colors
 
-					local name = filesystem.hideExtension(filesystem.name(dockPath))
-					local contextMenu = window.menu:addContextMenuItem(name, 0x0)
+					addMainDesktopMenuItem(window.menu)
 
-					contextMenu:addItem(localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
+					local name = filesystem.hideExtension(filesystem.name(dockPath))
+					local contextMenu = window.menu:addContextMenuItem(name, 0xD2D2D2)
+
+					contextMenu:addItem("⛌", localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
 						window:remove()
 					end
 
@@ -2060,15 +2182,18 @@ end
 --------------------------------------------------------------------------------
 
 function system.addPropertiesWindow(x, y, width, icon)
-	local workspace, window = system.addWindow(GUI.titledWindow(x, y, width, 1, localization.properties), true, true)
+	local workspace, window = system.addWindow(GUI.filledWindow(x, y, width, 1, 0x1E1E1E), true, true)
 
-	window.backgroundPanel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.2
+	window:addChild(GUI.label(1, 1, width, 1, 0xE1E1E1, localization.properties)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	window.actionButtons.localY = 1
+	window.actionButtons:moveToFront()
+
 	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3
 
 	local function addKeyAndValue(key, value)
-		local object = window:addChild(GUI.keyAndValue(x, y, 0x3C3C3C, 0x5A5A5A, key, ": " .. value))
+		local object = window:addChild(GUI.keyAndValue(x, y, 0x969696, 0x5A5A5A, key, ": " .. value))
 		y = y + 1
 
 		return object
@@ -2184,35 +2309,8 @@ function system.copy(fileList, toPath)
 	workspace:draw()
 end
 
-local function menuWidgetEventHandler(workspace, object, e1, ...)
-	if e1 == "touch" and object.onTouch then
-		object.selected = true
-		workspace:draw()
-
-		object.onTouch(workspace, object, e1, ...)
-
-		object.selected = false
-		workspace:draw()
-	end
-end
-
-local function menuWidgetDraw(object)
-	if object.selected then
-		object.textColor = 0xFFFFFF
-		screen.drawRectangle(object.x - 1, object.y, object.width + 2, 1, 0x3366CC, object.textColor, " ")
-	else
-		object.textColor = 0x0
-	end
-
-	object.drawContent(object)
-end
-
 function system.menuWidget(width)
 	local object = GUI.object(1, 1, width, 1)
-	
-	object.selected = false
-	object.eventHandler = menuWidgetEventHandler
-	object.draw = menuWidgetDraw
 
 	return object
 end
@@ -2317,89 +2415,43 @@ function system.execute(path, ...)
 end
 
 local function desktopBackgroundAmbientDraw()
-	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
+	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, 0x1E1E1E, 0, " ")
 end
 
 function system.updateWallpaper()
 	desktopBackground.draw = desktopBackgroundAmbientDraw
+	interfaceDrawInterval = 1
 
-	if userSettings.interfaceWallpaperEnabled and userSettings.interfaceWallpaperPath then
-		local extension = filesystem.extension(userSettings.interfaceWallpaperPath)
-		
-		if extension == ".pic" then
-			local result, reason = image.load(userSettings.interfaceWallpaperPath)
-			
-			if result then
-				-- Fit to screen size mode
-				if userSettings.interfaceWallpaperMode == 1 then
-					result = image.transform(result, desktopBackground.width, desktopBackground.height)
-					desktopBackgroundWallpaperX, desktopBackgroundWallpaperY = 1, 2
-				
-				-- Centerized mode
-				else
-					desktopBackgroundWallpaperX = math.floor(1 + desktopBackground.width / 2 - image.getWidth(result) / 2)
-					desktopBackgroundWallpaperY = math.floor(2 + desktopBackground.height / 2 - image.getHeight(result) / 2)
-				end
-
-				-- Brightness adjustment
-				local brightness, background, foreground, alpha, symbol, r, g, b = userSettings.interfaceWallpaperBrightness
-				
-				for y = 1, image.getHeight(result) do
-					for x = 1, image.getWidth(result) do
-						background, foreground, alpha, symbol = image.get(result, x, y)
-						
-						r, g, b = color.integerToRGB(background)
-						background = color.RGBToInteger(
-							math.floor(r * brightness),
-							math.floor(g * brightness),
-							math.floor(b * brightness)
-						)
-
-						r, g, b = color.integerToRGB(foreground)
-						foreground = color.RGBToInteger(
-							math.floor(r * brightness),
-							math.floor(g * brightness),
-							math.floor(b * brightness)
-						)
-
-						image.set(result, x, y, background, foreground, alpha, symbol)
-					end
-				end
-
-				desktopBackground.draw = function(...)
-					desktopBackgroundAmbientDraw(...)
-					screen.drawImage(desktopBackgroundWallpaperX, desktopBackgroundWallpaperY, result)
-				end
-			else
-				GUI.alert(reason or "image file is corrupted")
-			end
-		
-			userSettings.interfaceScreenUpdateInterval = 1
-
-		elseif extension == ".lua" then
-			local result, reason = loadfile(userSettings.interfaceWallpaperPath)
-
-			if result then
-				result, functionOrReason = xpcall(result, debug.traceback)
-				
-				if result then
-					if type(functionOrReason) == "function" then
-						desktopBackground.draw = functionOrReason
-					else
-						GUI.alert("Wallpaper script didn't return drawing function")
-					end
-				else
-					GUI.alert(functionOrReason)
-				end
-			else
-				GUI.alert(reason)
-			end
-
-			userSettings.interfaceScreenUpdateInterval = 0.01
-		end
-	else
-		userSettings.interfaceScreenUpdateInterval = 1
+	if not userSettings.interfaceWallpaperPath then
+		return
 	end
+
+	local executable, reason = loadfile(userSettings.interfaceWallpaperPath .. "Main.lua")
+	if not executable then
+		GUI.alert(reason)
+		return
+	end
+
+	local success, wallpaperOrError = xpcall(executable, debug.traceback)
+	if not success then
+		GUI.alert(wallpaperOrError)
+		return
+	end
+
+	if type(wallpaperOrError) ~= "table" then
+		GUI.alert("Wallpaper script didn't return table")
+		return
+	elseif type(wallpaperOrError.draw) ~= "function" then
+		GUI.alert("Wallpaper does not contain proper draw function")
+		return
+	end
+
+	desktopBackground.draw = wallpaperOrError.draw
+	desktopBackground.eventHandler = wallpaperOrError.eventHandler
+	
+	system.wallpaper = wallpaperOrError
+
+	interfaceDrawInterval = 0.01
 end
 
 function system.updateScreen()
@@ -2466,17 +2518,15 @@ local function dockIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, e6, ...
 end
 
 function system.updateDesktop()
-	desktopIconField = workspace:addChild(
-		system.gridIconField(
-			1, 2, 1, 1, 3, 2,
-			paths.user.desktop,
-			0xFFFFFF,
-			0xD2D2D2,
-			0xFFFFFF,
-			0xD2D2D2,
-			0.5
-		)
-	)
+	desktopIconField = workspace:addChild(system.gridIconField(
+		1, 2, 1, 1, 3, 2,
+		paths.user.desktop,
+		0xFFFFFF,
+		0xD2D2D2,
+		0xFFFFFF,
+		0xD2D2D2,
+		0.5
+	))
 	
 	desktopIconField.iconConfigEnabled = true
 	
@@ -2492,7 +2542,7 @@ function system.updateDesktop()
 		system.execute(paths.system.applicationFinder, "-o", icon.path)
 	end
 
-	dockContainer = workspace:addChild(GUI.container(1, 1, workspace.width, 7))
+	dockContainer = workspace:addChild(GUI.container(1, 1, workspace.width, 6))
 
 	dockContainer.saveUserSettings = function()
 		userSettings.dockShortcuts = {}
@@ -2525,18 +2575,18 @@ function system.updateDesktop()
 	local dockColors = {
 		selectionBackground = 0xD2D2D2,
 		selectionText = 0x2D2D2D,
-		defaultText = 0x2D2D2D,
+		defaultText = 0xE1E1E1,
 		selectionTransparency = 0.5
 	}
 
 	dockContainer.addIcon = function(path)
-		-- RU чекаем новое прикрепление к dock, если ярлык, то ищем оригинальный файл и прикрепляем его
-		-- EN check the new attachment to the dock, if it's a shortcut, then look for the original file and attach it
+		-- Check the new attachment to the dock, if it's a shortcut, then look for the original file and attach it
 		while path:sub(-4) == ".lnk" do
 			path = system.readShortcut(path)
 		end
 
-		local icon = dockContainer:addChild(system.icon(1, 2, path, dockColors))
+		local icon = dockContainer:addChild(newIcon(1, 2, path, dockColors))
+		icon.hideName = true
 		icon:analyseExtension(defaultIconLaunchers)
 		icon:moveBackward()
 
@@ -2574,11 +2624,11 @@ function system.updateDesktop()
 			if icon.windows then
 				local eventData = {...}
 				
-				contextMenu:addItem(localization.newWindow).onTouch = function()
+				contextMenu:addItem("➕", localization.newWindow).onTouch = function()
 					iconOnDoubleClick(icon, e1, e2, e3, e4, table.unpack(eventData))
 				end
 				
-				contextMenu:addItem(localization.closeAllWindows).onTouch = function()
+				contextMenu:addItem("⛌",localization.closeAllWindows).onTouch = function()
 					for window in pairs(icon.windows) do
 						window:remove()
 					end
@@ -2587,17 +2637,17 @@ function system.updateDesktop()
 				end
 			end
 			
-			contextMenu:addItem(localization.showContainingFolder).onTouch = function()
+			contextMenu:addItem("📂", localization.showContainingFolder).onTouch = function()
 				system.execute(paths.system.applicationFinder, "-o", filesystem.path(icon.shortcutPath or icon.path))
 			end
 			
 			contextMenu:addSeparator()
 			
-			contextMenu:addItem(localization.moveRight, indexOf >= #dockContainer.children - 1).onTouch = function()
+			contextMenu:addItem("˱", localization.moveRight, indexOf >= #dockContainer.children - 1).onTouch = function()
 				moveDockIcon(indexOf, 1)
 			end
 			
-			contextMenu:addItem(localization.moveLeft, indexOf <= 1).onTouch = function()
+			contextMenu:addItem("˲", localization.moveLeft, indexOf <= 1).onTouch = function()
 				moveDockIcon(indexOf, -1)
 			end
 			
@@ -2605,7 +2655,7 @@ function system.updateDesktop()
 			
 			if icon.keepInDock then
 				if #dockContainer.children > 1 then
-					contextMenu:addItem(localization.removeFromDock).onTouch = function()
+					contextMenu:addItem("📌", localization.removeFromDock).onTouch = function()
 						if icon.windows then
 							icon.keepInDock = nil
 						else
@@ -2619,7 +2669,7 @@ function system.updateDesktop()
 				end
 			else
 				if icon.windows then
-					contextMenu:addItem(localization.keepInDock).onTouch = function()
+					contextMenu:addItem("📌", localization.keepInDock).onTouch = function()
 						icon.keepInDock = true
 						dockContainer.saveUserSettings()
 					end
@@ -2657,7 +2707,7 @@ function system.updateDesktop()
 			workspace:draw()
 		end
 		
-		contextMenu:addItem(localization.emptyTrash).onTouch = emptyTrash
+		contextMenu:addItem("❌", localization.emptyTrash).onTouch = emptyTrash
 
 		workspace:draw()
 	end
@@ -2668,15 +2718,17 @@ function system.updateDesktop()
 
 	-- Draw dock drawDock dockDraw cyka заебался искать, блядь
 	local overrideDockContainerDraw = dockContainer.draw
+	
 	dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos = userSettings.interfaceColorDock, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
+		local color, currentDockTransparency, currentDockWidth, xPos = 0x696969, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
 
-		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 4, -1 do
+		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 3, -1 do
 			screen.drawText(xPos, y, color, "◢", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
 			screen.drawRectangle(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
 			screen.drawText(xPos + currentDockWidth + 1, y, color, "◣", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
 
-			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1
+			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.1, currentDockWidth - 2, xPos + 1
+			
 			if currentDockTransparency > 1 then
 				currentDockTransparency = 1
 			end
@@ -2687,75 +2739,9 @@ function system.updateDesktop()
 
 	desktopWindowsContainer = workspace:addChild(GUI.container(1, 2, 1, 1))
 
-	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x0, 0x696969, 0x3366CC, 0xFFFFFF))
+	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x1E1E1E, 0x787878, 0x3366CC, 0xFFFFFF))
 	
-	desktopMenuMineOSItem = desktopMenu:addContextMenuItem("MineOS", 0x000000)
-	
-	desktopMenuMineOSItem:addItem(localization.aboutSystem).onTouch = function()
-		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
-		container.layout:removeChildren()
-		
-		local lines = {
-			"MineOS",
-			"Copyright © 2014-" .. os.date("%Y", system.getTime()),
-			" ",
-			"Developers:",
-			" ",
-			"Igor Timofeev, vk.com/id7799889",
-			"Gleb Trifonov, vk.com/id88323331",
-			"Yakov Verevkin, vk.com/id60991376",
-			"Alexey Smirnov, vk.com/id23897419",
-			"Timofey Shestakov, vk.com/id113499693",
-			"Fedor Cheremisenov, vk.com/id402150900",
-			"Alexander Fursenko, vk.com/id354154139",
-			" ",
-			"UX-advisers:",
-			" ",
-			"Nikita Yarichev, vk.com/id65873873",
-			"Vyacheslav Sazonov, vk.com/id21321257",
-			"Michail Prosin, vk.com/id75667079",
-			"Dmitrii Tiunov, vk.com/id151541414",
-			"Egor Paliev, vk.com/id83795932",
-			"Maxim Pakin, vk.com/id100687922",
-			"Andrey Kakoito, vk.com/id201043162",
-			"Maxim Omelaenko, vk.com/id54662296",
-			"Konstantin Mayakovskiy, vk.com/id10069748",
-			"Ruslan Isaev, vk.com/id181265169",
-			"Eugene8388608, vk.com/id287247631",
-			" ",
-			"Translators:",
-			" ",
-			"06Games, github.com/06Games",
-			"Xenia Mazneva, vk.com/id5564402",
-			"Yana Dmitrieva, vk.com/id155326634",
-		}
-
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
-		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-		textBox.eventHandler = container.panel.eventHandler
-
-		workspace:draw()
-	end
-
-	desktopMenuMineOSItem:addItem(localization.updates).onTouch = function()
-		system.execute(paths.system.applicationAppMarket, "updates")
-	end
-
-	desktopMenuMineOSItem:addSeparator()
-
-	desktopMenuMineOSItem:addItem(localization.logout).onTouch = function()
-		system.authorize()
-	end
-
-	desktopMenuMineOSItem:addItem(localization.reboot).onTouch = function()
-		require("Network").broadcastComputerState(false)
-		computer.shutdown(true)
-	end
-
-	desktopMenuMineOSItem:addItem(localization.shutdown).onTouch = function()
-		require("Network").broadcastComputerState(false)
-		computer.shutdown()
-	end
+	addMainDesktopMenuItem(desktopMenu)
 		
 	desktopMenuLayout = workspace:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 	desktopMenuLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
@@ -2764,37 +2750,41 @@ function system.updateDesktop()
 	desktopMenuLayout:setSpacing(1, 1, 2)
 
 	local dateWidget, dateWidgetText = system.addMenuWidget(system.menuWidget(1))
-	dateWidget.drawContent = function()
-		screen.drawText(dateWidget.x, 1, dateWidget.textColor, dateWidgetText)
+	
+	dateWidget.draw = function(dateWidget)
+		screen.drawText(dateWidget.x, 1, 0x787878, dateWidgetText)
 	end
 
 	local batteryWidget, batteryWidgetPercent, batteryWidgetText = system.addMenuWidget(system.menuWidget(1))
-	batteryWidget.drawContent = function()
-		screen.drawText(batteryWidget.x, 1, batteryWidget.textColor, batteryWidgetText)
+	batteryWidget.draw = function(batteryWidget)
+		screen.drawText(batteryWidget.x, 1, 0x787878, batteryWidgetText)
 
 		local pixelPercent = math.floor(batteryWidgetPercent * 4 + 0.5)
+		
 		if pixelPercent == 0 then
 			pixelPercent = 1
 		end
 		
 		local index = screen.getIndex(batteryWidget.x + #batteryWidgetText, 1)
+		
 		for i = 1, 4 do
-			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0xD2D2D2, i < 4 and "⠶" or "╸")
+			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0x3C3C3C, i < 4 and "⠶" or "╸")
 			index = index + 1
 		end
 	end
 
-	local RAMWidget, RAMPercent = system.addMenuWidget(system.menuWidget(16))
-	RAMWidget.drawContent = function()
+	local RAMWidget, RAMPercent = system.addMenuWidget(system.menuWidget(15))
+	RAMWidget.draw = function(RAMWidget)
 		local text = "RAM: " .. math.ceil(RAMPercent * 100) .. "% "
 		local barWidth = RAMWidget.width - #text
 		local activeWidth = math.ceil(RAMPercent * barWidth)
 
-		screen.drawText(RAMWidget.x, 1, RAMWidget.textColor, text)
+		screen.drawText(RAMWidget.x, 1, 0x787878, text)
 		
 		local index = screen.getIndex(RAMWidget.x + #text, 1)
+		
 		for i = 1, barWidth do
-			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0xD2D2D2, "━")
+			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0x3C3C3C, "━")
 			index = index + 1
 		end
 	end
@@ -2817,8 +2807,8 @@ function system.updateDesktop()
 	end
 
 	local lastWindowHandled
-	local dateDeadline = bootUptime + 1
-	local screensaverUptime = bootUptime
+	local interfaceUpdateDeadline = bootUptime + interfaceDrawInterval
+	local interfaceDrawDeadline = bootUptime + interfaceDrawInterval
 	
 	workspace.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "key_down" then
@@ -2848,31 +2838,25 @@ function system.updateDesktop()
 		elseif e1 == "network" then
 			if e2 == "accessDenied" then
 				GUI.alert(localization.networkAccessDenied)
+			
 			elseif e2 == "timeout" then
 				GUI.alert(localization.networkTimeout)
 			end
 		end
 
-		if computer.uptime() >= dateDeadline then
-			system.updateMenuWidgets()
-			workspace:draw()
+		uptime = computer.uptime()
 
-			dateDeadline = computer.uptime() + userSettings.interfaceScreenUpdateInterval
+		if uptime >= interfaceUpdateDeadline then
+			system.updateMenuWidgets()
+
+			interfaceUpdateDeadline = uptime + interfaceUpdateInterval
 		end
 
-		if userSettings.interfaceScreensaverEnabled then
-			if e1 then
-				screensaverUptime = computer.uptime()
-			else
-				if computer.uptime() >= screensaverUptime + userSettings.interfaceScreensaverDelay then
-					if filesystem.exists(userSettings.interfaceScreensaverPath) then
-						system.execute(userSettings.interfaceScreensaverPath)
-						workspace:draw()
-					end
+		if uptime >= interfaceDrawDeadline then
+			workspace:draw()
 
-					screensaverUptime = computer.uptime()
-				end
-			end
+			uptime = computer.uptime()
+			interfaceDrawDeadline = uptime + interfaceDrawInterval
 		end
 	end
 
@@ -2887,25 +2871,8 @@ function system.updateDesktop()
 end
 
 function system.updateColorScheme()
-	-- Drop down menus
-	GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.18
-	GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.4
-	GUI.CONTEXT_MENU_SEPARATOR_COLOR = userSettings.interfaceColorDropDownMenuSeparator
-	GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = userSettings.interfaceColorDropDownMenuDefaultBackground
-	GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR = userSettings.interfaceColorDropDownMenuDefaultText
-
-	-- Windows
-	GUI.WINDOW_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.6
-	
-	-- Background containers
-	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or userSettings.interfaceColorDesktopBackground
+	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or 0x1E1E1E
 	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
-	
-	-- Top menu
-	desktopMenu.colors.default.background = userSettings.interfaceColorMenu
-	
-	-- Desktop background
-	desktopBackgroundColor = userSettings.interfaceColorDesktopBackground
 end
 
 --------------------------------------------------------------------------------
@@ -2993,14 +2960,17 @@ end
 function system.updateWorkspace()
 	-- Clearing workspace
 	workspace:removeChildren()
+	workspace.ignoresCapturedObject = true
 
 	-- Creating desktop background object
-	local oldDraw = desktopBackground and desktopBackground.draw
 	desktopBackground = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
+	desktopBackground.ignoresCapturedObject = true
+
+	local oldDraw = desktopBackground and desktopBackground.draw
 	desktopBackground.draw = oldDraw or desktopBackgroundAmbientDraw
 end
 
-function system.createUser(name, language, password, wallpaper, screensaver)
+function system.createUser(name, language, password, wallpaper)
 	-- Generating default user userSettings
 	local defaultSettings = system.getDefaultUserSettings()	
 	
@@ -3008,7 +2978,6 @@ function system.createUser(name, language, password, wallpaper, screensaver)
 	defaultSettings.localizationLanguage = language
 	defaultSettings.securityPassword = password and require("SHA-256").hash(password)
 	defaultSettings.interfaceWallpaperEnabled = wallpaper
-	defaultSettings.interfaceScreensaverEnabled = screensaver
 
 	-- Generating user home directory tree
 	local userPaths = paths.getUser(name)
@@ -3175,7 +3144,7 @@ function system.getDockContainer()
 end
 
 function system.addBlurredOrDefaultPanel(container, x, y, width, height)
-	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x2D2D2D))
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x1E1E1E))
 end
 
 function system.addConsoleWindow()

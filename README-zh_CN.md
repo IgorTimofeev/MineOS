@@ -20,7 +20,11 @@ MineOS是一个拥有GUI的操作系统，运行在Minecraft模组Open Computers
 
 ## 如何安装?
 
-最简单的方式是使用默认的**wget**脚本。插入一个OpenOS的软盘到计算机当中，再插入一个Internet卡，启动电脑并在控制台中输入下列命令以安装MineOS：
+最简单的方式是使用默认的`pastebin`脚本。插入一个OpenOS的软盘到计算机当中，再插入一个Internet卡，启动电脑并在控制台中输入下列命令以安装MineOS：
+
+	pastebin run PDE3eVsL
+
+如果由于某种原因无法使用pastebin网站，请使用替代安装命令：
 
 	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
 

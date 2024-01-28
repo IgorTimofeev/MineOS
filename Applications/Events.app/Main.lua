@@ -6,10 +6,13 @@ local text = require("Text")
 
 ---------------------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000, 0.3))
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x1E1E1E))
 
 local display = window:addChild(GUI.object(2, 4, 1, 1))
-local lines = {}
+
+local lines = {
+	"Ready for interaction"
+}
 
 display.draw = function(display)
 	if #lines == 0 then
@@ -19,7 +22,7 @@ display.draw = function(display)
 	local y = display.y + display.height - 1
 	
 	for i = #lines, math.max(#lines - display.height, 1), -1 do
-		screen.drawText(display.x, y, 0xFFFFFF, lines[i])
+		screen.drawText(display.x, y, 0xE1E1E1, lines[i])
 		y = y - 1
 	end
 end

@@ -11,37 +11,18 @@ local userSettings = system.getUserSettings()
 --------------------------------------------------------------------------------
 
 module.name = localization.appearance
-module.margin = 12
+module.margin = 9
+
 module.onTouch = function()
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceFiles))
 
-	local showExtensionSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceExtensions .. ":", userSettings.filesShowExtension)).switch
-	local showHiddenFilesSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceHidden .. ":", userSettings.filesShowHidden)).switch
-	local showApplicationIconsSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceApplications .. ":", userSettings.filesShowApplicationIcon)).switch
-	local transparencySwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0xFF4940, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceTransparencyEnabled .. ":", userSettings.interfaceTransparencyEnabled)).switch
-	local blurSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0xFF4940, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceBlurEnabled .. ":", userSettings.interfaceBlurEnabled)).switch
+	local showExtensionSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceExtensions .. ":", userSettings.filesShowExtension)).switch
+	local showHiddenFilesSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceHidden .. ":", userSettings.filesShowHidden)).switch
+	local showApplicationIconsSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceApplications .. ":", userSettings.filesShowApplicationIcon)).switch
+	local transparencySwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0xFF4940, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceTransparencyEnabled .. ":", userSettings.interfaceTransparencyEnabled)).switch
+	local blurSwitch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0xFF4940, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.appearanceBlurEnabled .. ":", userSettings.interfaceBlurEnabled)).switch
 	
 	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.appearanceTransparencyInfo}, 1, 0, 0, true, true))
-
-	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceColorScheme))
-
-	local function addColorSelector(key, ...)
-		local c = window.contentLayout:addChild(GUI.colorSelector(1, 1, 36, 1, userSettings[key], ...))
-		c.onColorSelected = function()
-			userSettings[key] = c.color
-
-			system.updateColorScheme()
-			workspace:draw()
-			system.saveUserSettings()
-		end
-	end
-
-	addColorSelector("interfaceColorDesktopBackground", localization.appearanceDesktopBackground)
-	addColorSelector("interfaceColorMenu", localization.appearanceMenu)
-	addColorSelector("interfaceColorDock", localization.appearanceDock)
-	addColorSelector("interfaceColorDropDownMenuDefaultBackground", localization.appearanceDropDownDefaultBackground)
-	addColorSelector("interfaceColorDropDownMenuDefaultText", localization.appearanceDropDownDefaultText)
-	addColorSelector("interfaceColorDropDownMenuSeparator", localization.appearanceDropDownSeparator)
 
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceSize))
 

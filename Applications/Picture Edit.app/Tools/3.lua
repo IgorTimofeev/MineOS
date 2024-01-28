@@ -73,23 +73,18 @@ tool.onSelection = function()
 	window.currentToolLayout:addChild(expandButton)
 	window.currentToolLayout:addChild(cropButton)
 
-	widthInput.onInputFinished = function()
-		expandButton.disabled = not widthInput.text:match("^%d+$") or not heightInput.text:match("^%d+$")
-		cropButton.disabled = expandButton.disabled
-
-		workspace:draw()
-	end
-	heightInput.onInputFinished = widthInput.onInputFinished
-	widthInput.onInputFinished()
-
 	expandButton.onTouch = function()
-		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
-		
+		local width, height = tonumber(widthInput.text) or 0, tonumber(heightInput.text) or 0
+
+		if width == 0 and height == 0 or width < 0 or height < 0 then
+			return
+		end
+
 		window.image.data = image.expand(window.image.data,
-			currentY > 1 and height or 0,
-			currentY < 3 and height or 0,
-			currentX > 1 and width or 0,
-			currentX < 3 and width or 0,
+			currentY > 1 and height,
+			currentY < 3 and height,
+			currentX > 1 and width,
+			currentX < 3 and width,
 		0x0, 0x0, 1, " ")
 
 		window.image.reposition()
@@ -97,7 +92,11 @@ tool.onSelection = function()
 	end
 
 	cropButton.onTouch = function()
-		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
+		local width, height = tonumber(widthInput.text) or 0, tonumber(heightInput.text) or 0
+
+		if width == 0 and height == 0 or width < 0 or height < 0 then
+			return
+		end
 		
 		window.image.data = image.crop(window.image.data,
 			currentX == 1 and 1 or width + 1,

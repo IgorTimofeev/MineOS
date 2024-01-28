@@ -172,18 +172,21 @@ end
 selector.eventHandler = tool.eventHandler
 
 selector.draw = function()
-	local step = true
+	-- Border
+	local temp = true
+
 	for x = selector.x + 1, selector.x + selector.width - 2 do
-		screen.drawText(x, selector.y, step and 0xFFFFFF or 0x0, "━")
-		screen.drawText(x, selector.y + selector.height - 1, step and 0xFFFFFF or 0x0, "━")
-		step = not step
+		screen.drawText(x, selector.y, temp and 0xFFFFFF or 0x0, "━")
+		screen.drawText(x, selector.y + selector.height - 1, temp and 0xFFFFFF or 0x0, "━")
+		temp = not temp
 	end
 
-	step = true
+	temp = true
+
 	for y = selector.y + 1, selector.y + selector.height - 2 do
-		screen.drawText(selector.x, y, step and 0xFFFFFF or 0x0, "┃")
-		screen.drawText(selector.x + selector.width - 1, y, step and 0xFFFFFF or 0x0, "┃")
-		step = not step
+		screen.drawText(selector.x, y, temp and 0xFFFFFF or 0x0, "┃")
+		screen.drawText(selector.x + selector.width - 1, y, temp and 0xFFFFFF or 0x0, "┃")
+		temp = not temp
 	end
 
 	screen.drawText(selector.x, selector.y, 0x0, "┏")
@@ -192,8 +195,15 @@ selector.draw = function()
 	screen.drawText(selector.x + selector.width - 1, selector.y, 0x0, "┓")
 	screen.drawText(selector.x, selector.y + selector.height - 1, 0x0, "┗")
 
-	screen.drawText(selector.x, selector.y, 0x66FF80, "●")
-	screen.drawText(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x66FF80, "●")
+	-- Corners
+	screen.drawText(touchX, touchY, 0x66FF80, "●")
+	screen.drawText(dragX, dragY, 0x66FF80, "●")
+
+	-- Size
+	temp = selector.width .. " px"
+	screen.drawText(math.floor(selector.x + selector.width / 2 - #temp / 2), selector.y + selector.height, 0xFFFFFF, temp)
+
+	screen.drawText(selector.x + selector.width + 1, math.floor(selector.y + selector.height / 2), 0xFFFFFF, selector.height .. " px")
 end
 
 ------------------------------------------------------

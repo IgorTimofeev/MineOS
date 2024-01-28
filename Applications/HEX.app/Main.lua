@@ -15,20 +15,20 @@ local config = filesystem.exists(configPath) and filesystem.readTable(configPath
 
 local colors = {
 	background = 0xF0F0F0,
-	backgroundText = 0x555555,
-	panel = 0x2D2D2D,
-	panelText = 0x999999,
-	panelSeleciton = 0x444444,
-	panelSelecitonText = 0xE1E1E1,
+	backgroundText = 0x5A5A5A,
+	panel = 0x1E1E1E,
+	panelText = 0x5A5A5A,
+	panelSelection = 0x3C3C3C,
+	panelSelectionText = 0xE1E1E1,
 	selectionFrom = 0x990000,
 	selectionTo = 0x990000,
-	selectionText = 0xFFFFFF,
+	selectionText = 0xE1E1E1,
 	selectionBetween = 0xD2D2D2,
 	selectionBetweenText = 0x000000,
-	separator = 0xCCCCCC,
+	separator = 0xE1E1E1,
+	title = 0x2D2D2D,
 	titleBackground = 0x990000,
-	titleText = 0xFFFFFF,
-	titleText2 = 0xE1E1E1,
+	titleText = 0xE1E1E1
 }
 
 local bytes = {}
@@ -38,7 +38,9 @@ local selection = {
 	to = 1,
 }
 
-local scrollBar, titleTextBox
+local titles = {"", "", ""}
+
+local scrollBar
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -61,10 +63,10 @@ local function byteArrayToNumber(b)
 	return n
 end
 
-local function status()
-	titleTextBox.lines[1] = "Selected byte" .. (selection.from == selection.to and "" or "s") .. ": " .. selection.from .. "-" .. selection.to
-	titleTextBox.lines[2].text = "UTF-8: \"" .. string.char(table.unpack(bytes, selection.from, selection.to)) .. "\""
-	titleTextBox.lines[3].text = "INT: " .. byteArrayToNumber({table.unpack(bytes, selection.from, selection.to)})
+local function updateTitles()
+	titles[1] = "Byte" .. (selection.from == selection.to and "" or "s") .. ": " .. selection.from .. "-" .. selection.to
+	titles[2] = "UTF-8: \"" .. string.char(table.unpack(bytes, selection.from, selection.to)) .. "\""
+	titles[3] = "Int: " .. byteArrayToNumber({table.unpack(bytes, selection.from, selection.to)})
 end
 
 local function byteFieldDraw(object)
@@ -112,7 +114,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 		if e5 == 1 then
 			local menu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 			
-			menu:addItem("Select all").onTouch = function()
+			menu:addItem("✓", "Select all").onTouch = function()
 				selection.from = 1
 				selection.to = #bytes
 				
@@ -121,10 +123,11 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 			
 			menu:addSeparator()
 			
-			menu:addItem("Edit").onTouch = function()
-				local container = system.addBackgroundContainer(workspace, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
+			menu:addItem("🖊", "Edit").onTouch = function()
+				local container = GUI.addBackgroundContainer(workspace, true, true, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, string.format("%02X" , bytes[selection.from]), "Type byte value"))
+				
 				input.onInputFinished = function(text)
 					local number = tonumber("0x" .. input.text)
 					if number and number >= 0 and number <= 255 then
@@ -140,8 +143,8 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 				workspace:draw()
 			end
 			
-			menu:addItem("Insert").onTouch = function()
-				local container = system.addBackgroundContainer(workspace, "Insert bytes at position " .. selection.from .. "")
+			menu:addItem("⇲", "Insert").onTouch = function()
+				local container = GUI.addBackgroundContainer(workspace, true, true, "Insert bytes at position " .. selection.from .. "")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", "Type byte values separated by space", true))
 				local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xBBBBBB, "Select inserted bytes:", true)).switch
@@ -170,7 +173,7 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 			
 			menu:addSeparator()
 			
-			menu:addItem("Delete").onTouch = function()
+			menu:addItem("🗑", "Delete").onTouch = function()
 				for i = selection.from, selection.to do
 					table.remove(bytes, selection.from)
 				end
@@ -202,17 +205,20 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 					end
 				end
 
-				status()
+				updateTitles()
 				workspace:draw()
 			end
 		end
+
 	elseif e1 == "scroll" then
 		offset = offset - 16 * e5
+		
 		if offset < 0 then
 			offset = 0
 		elseif offset > math.floor(#bytes / 16) * 16 then
 			offset = math.floor(#bytes / 16) * 16
 		end
+
 		scrollBar.value = offset
 
 		workspace:draw()
@@ -234,7 +240,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-window:addChild(GUI.panel(1, 1, window.width, 3, 0x3C3C3C)):moveToBack()
+window:addChild(GUI.panel(1, 1, window.width, 3, colors.title)):moveToBack()
 
 local byteField = window:addChild(newByteField(13, 6, 64, 4, 2, false))
 local charField = window:addChild(newByteField(byteField.localX + byteField.width + 3, 6, 16, 1, 2, true))
@@ -257,8 +263,8 @@ verticalCounter.draw = function(object)
 		local textColor = colors.panelText
 
 		if index > selection.from and index < selection.to then
-			screen.drawRectangle(object.x, object.y + y - 1, object.width, 2, colors.panelSeleciton, colors.panelSelecitonText, " ")
-			textColor = colors.panelSelecitonText
+			screen.drawRectangle(object.x, object.y + y - 1, object.width, 2, colors.panelSelection, colors.panelSelectionText, " ")
+			textColor = colors.panelSelectionText
 		end
 
 		if selection.from >= index and selection.from <= index + 15 or selection.to >= index and selection.to <= index + 15 then
@@ -279,8 +285,8 @@ window:addChild(GUI.object(13, 4, 62, 1)).draw = function(object)
 	for x = 1, object.width, 4 do
 		local textColor = colors.panelText
 		if counter + 1 > restFrom and counter + 1 < restTo then
-			screen.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.panelSeleciton, colors.selectionText, " ")
-			textColor = colors.panelSelecitonText
+			screen.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.panelSelection, colors.selectionText, " ")
+			textColor = colors.panelSelectionText
 		elseif restFrom == counter + 1 or restTo == counter + 1 then
 			screen.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.selectionFrom, colors.selectionText, " ")
 			textColor = colors.selectionText
@@ -292,27 +298,29 @@ window:addChild(GUI.object(13, 4, 62, 1)).draw = function(object)
 end
 
 scrollBar = window:addChild(GUI.scrollBar(window.width, 5, 1, 1, 0xC3C3C3, 0x393939, 0, 1, 1, 160, 1, true))
-scrollBar.eventHandler = nil
+scrollBar.onTouch = function()
+	offset = math.floor(scrollBar.value / 16) * 16
+	
+	workspace:draw()
+end
 
-titleTextBox = window:addChild(
-	GUI.textBox(1, 1, math.floor(window.width * 0.35), 3,
-		colors.titleBackground,
-		colors.titleText,
-		{
-			"",
-			{text = "", color = colors.titleText2},
-			{text = "", color = colors.titleText2}
-		},
-		1, 1, 0
-	)
-)
+local titleTextBoxWidth = window.width * 0.35
+titleTextBox = window:addChild(GUI.object(math.floor(window.width / 2 - titleTextBoxWidth / 2), 1, math.floor(titleTextBoxWidth), #titles))
+titleTextBox.draw = function(titleTextBox)
+	screen.drawRectangle(titleTextBox.x, titleTextBox.y, titleTextBox.width, titleTextBox.height, colors.titleBackground, colors.titleText, " ")
+	
+	local title
 
-titleTextBox.localX = math.floor(window.width / 2 - titleTextBox.width / 2)
-titleTextBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-titleTextBox.eventHandler = nil
+	for y = 1, #titles do
+		title = titles[y]
+		title = #title < titleTextBox.width - 2 and title or unicode.wtrunc(title, titleTextBox.width - 2)
 
-local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Save"))
-local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Open"))
+		screen.drawText(math.floor(titleTextBox.x + titleTextBox.width / 2 - unicode.wlen(title) / 2), titleTextBox.y + y - 1, colors.titleText, title)
+	end
+end
+
+local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelectionText, colors.panelSelectionText, colors.panel, "Save"))
+local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 10, 2, 2, 0, colors.panel, colors.panelSelectionText, colors.panelSelectionText, colors.panel, "Open"))
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -338,7 +346,7 @@ local function load(path)
 		selection.from, selection.to = 1, 1
 		scrollBar.value, scrollBar.maximumValue = 0, #bytes
 		
-		status()
+		updateTitles()
 	else
 		GUI.alert("Failed to open file for reading: " .. tostring(reason))
 	end
@@ -368,10 +376,12 @@ saveFileButton.onTouch = function()
 	
 	filesystemDialog.onSubmit = function(path)
 		local file = filesystem.open(path, "wb")
+		
 		if file then
 			for i = 1, #bytes do
 				file:write(string.char(bytes[i]))
 			end
+			
 			file:close()
 		else
 			GUI.alert("Failed to open file for writing: " .. tostring(reason))
@@ -382,8 +392,8 @@ end
 window.onResize = function(width, height)
 	byteField.height = height - 6
 	charField.height = byteField.height
-	scrollBar.height = byteField.height
 	window.backgroundPanel.height = height - 4
+	scrollBar.height = window.backgroundPanel.height
 	verticalCounter.height = window.backgroundPanel.height + 1
 	separator.height = byteField.height + 2
 end

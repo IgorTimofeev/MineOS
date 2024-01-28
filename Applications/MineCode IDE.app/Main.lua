@@ -91,7 +91,6 @@ if filesystem.exists(configPath) then
 end
 
 local workspace, window, menu = system.addWindow(GUI.window(1, 1, 120, 30))
-menu:removeChildren()
 
 local codeView = window:addChild(GUI.codeView(1, 1, 1, 1, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, config.syntaxColorScheme, config.syntaxHighlight, lines))
 
@@ -105,7 +104,7 @@ local overrideCodeViewDraw = codeView.draw
 codeView.draw = function(...)
 	overrideCodeViewDraw(...)
 
-	if cursorBlinkState and GUI.focusedObject == window then
+	if cursorBlinkState and workspace.focusedObject == window then
 		local x, y = codeView.codeAreaPosition + cursorPositionSymbol - codeView.fromSymbol + 1, codeView.y + cursorPositionLine - codeView.fromLine
 		if
 			x >= codeView.codeAreaPosition + 1 and
@@ -849,7 +848,7 @@ showTip = function(errorCode, matchCode, beep, force)
 	local container = zalupa()
 	local tip, tipLines = container:addChild(GUI.object(1, 1, 40))
 
-	tip.passScreenEvents = true
+	tip.blockScreenEvents = false
 	tip.draw = function()
 		screen.drawText(math.floor(tip.x + tip.width / 2 - 1), tip.y, 0xE1E1E1, "◢◣")
 		screen.drawRectangle(tip.x, tip.y + 1, tip.width, tip.height - 1, 0xE1E1E1, 0x2D2D2D, " ")
@@ -1313,79 +1312,81 @@ local function toggleTopToolBar()
 end
 
 local function createEditOrRightClickMenu(menu)
-	menu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
+	menu:addItem("✂", localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
 
-	menu:addItem(localization.copy, not codeView.selections[1], "^C").onTouch = function()
+	menu:addItem("⧉", localization.copy, not codeView.selections[1], "^C").onTouch = function()
 		copy()
 	end
 
-	menu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
+	menu:addItem("⇲", localization.paste, not clipboard, "^V").onTouch = function()
 		paste(clipboard)
 	end
 
 	menu:addSeparator()
 
-	menu:addItem(localization.selectWord).onTouch = function()
+	menu:addItem("💬", localization.selectWord).onTouch = function()
 		selectWord()
 	end
 
-	menu:addItem(localization.selectAll, false, "^A").onTouch = function()
+	menu:addItem("📜", localization.selectAll, false, "^A").onTouch = function()
 		selectAll()
 	end
 
 	menu:addSeparator()
 
-	menu:addItem(localization.comment, false, "^/").onTouch = function()
+	menu:addItem("//", localization.comment, false, "^/").onTouch = function()
 		toggleComment()
 	end
 
-	menu:addItem(localization.indent, false, "Tab").onTouch = function()
+	menu:addItem("⤷", localization.indent, false, "Tab").onTouch = function()
 		indentOrUnindent(true)
 	end
 
-	menu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
+	menu:addItem("⤶", localization.unindent, false, "⇧Tab").onTouch = function()
 		indentOrUnindent(false)
 	end
 
-	menu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
+	menu:addItem("❌", localization.deleteLine, false, "^Del").onTouch = function()
 		deleteLine(cursorPositionLine)
 	end
 
-	menu:addItem(localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
+	menu:addItem("🎨", localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
 		selectAndPasteColor()
 	end
 	
-	local subMenu = menu:addSubMenuItem(localization.convertCase)
+	local subMenu = menu:addSubMenuItem("Aa", localization.convertCase)
 	
-	subMenu:addItem(localization.toUpperCase, false, "^▲").onTouch = function()
+	subMenu:addItem("AA", localization.toUpperCase, false, "^▲").onTouch = function()
 		convertCase("upper")
 	end
 
-	subMenu:addItem(localization.toLowerCase, false, "^▼").onTouch = function()
+	subMenu:addItem("aa", localization.toLowerCase, false, "^▼").onTouch = function()
 		convertCase("lower")
 	end
 
 	menu:addSeparator()
 
-	menu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
+	menu:addItem("•", localization.addBreakpoint, false, "F9").onTouch = function()
 		addBreakpoint()
 		workspace:draw()
 	end
 
-	menu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
+	menu:addItem("⚬", localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
 		clearBreakpoints()
 	end
 end
 
 local function checkScrollbar(y)
-	return not codeView.horizontalScrollBar.hidden or y >= codeView.y + codeView.height - 1
+	return not codeView.horizontalScrollBar.hidden and y == codeView.y + codeView.height - 1
 end
 
 local uptime = computer.uptime()
 codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
+		workspace.focusedObject = window
+
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
 		if checkScrollbar(e4) then
@@ -1427,7 +1428,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 
 		tick(true)
 
-	elseif e1 == "key_down" and GUI.focusedObject == window then
+	elseif e1 == "key_down" and workspace.focusedObject == window then
 		-- Ctrl or CMD
 		if keyboard.isControlDown() or keyboard.isCommandDown() then
 			-- Slash
@@ -1638,63 +1639,33 @@ leftTreeView.onItemSelected = function(path)
 	workspace:draw()
 end
 
-local MineCodeContextMenu = menu:addContextMenuItem("MineCode", 0x0)
-MineCodeContextMenu:addItem(localization.about).onTouch = function()
-	local container = addBackgroundContainer(localization.about)
-	
-	local about = {
-		"MineCode IDE",
-		"Copyright © 2014-2018 ECS Inc.",
-		" ",
-		"Developers:",
-		" ",
-		"Timofeev Igor, vk.com/id7799889",
-		"Trifonov Gleb, vk.com/id88323331",
-		" ",
-		"Testers:",
-		" ",
-		"Semyonov Semyon, vk.com/id92656626",
-		"Prosin Mihail, vk.com/id75667079",
-		"Shestakov Timofey, vk.com/id113499693",
-		"Bogushevich Victoria, vk.com/id171497518",
-		"Vitvitskaya Yana, vk.com/id183425349",
-		"Golovanova Polina, vk.com/id226251826",
-	}
-
-	local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
-	textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	textBox.eventHandler = nil
-
-	workspace:draw()
-end
-
 local fileContextMenu = menu:addContextMenuItem(localization.file)
-fileContextMenu:addItem(localization.new, false, "^N").onTouch = function()
+
+fileContextMenu:addItem("➕", localization.new, false, "^N").onTouch = function()
 	newFile()
 	workspace:draw()
 end
 
-fileContextMenu:addItem(localization.open, false, "^O").onTouch = function()
+fileContextMenu:addItem("📂", localization.open, false, "^O").onTouch = function()
 	openFileWindow()
 end
 
-fileContextMenu:addItem(localization.getFromWeb, not component.isAvailable("internet"), "^U").onTouch = function()
+fileContextMenu:addItem("🌍", localization.getFromWeb, not component.isAvailable("internet"), "^U").onTouch = function()
 	downloadFileFromWeb()
 end
 
-
 fileContextMenu:addSeparator()
 
-saveContextMenuItem = fileContextMenu:addItem(localization.save, not leftTreeView.selectedItem, "^S")
+saveContextMenuItem = fileContextMenu:addItem("💾", localization.save, not leftTreeView.selectedItem, "^S")
 saveContextMenuItem.onTouch = function()
 	saveFileWindow()
 end
 
-fileContextMenu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
+fileContextMenu:addItem("🖪", localization.saveAs, false, "^⇧S").onTouch = function()
 	saveFileAsWindow()
 end
 
-fileContextMenu:addItem(localization.flashEEPROM, not component.isAvailable("eeprom")).onTouch = function()
+fileContextMenu:addItem("⚡", localization.flashEEPROM, not component.isAvailable("eeprom")).onTouch = function()
 	local container = addBackgroundContainer(localization.flashEEPROM)
 	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	workspace:draw()
@@ -1707,38 +1678,40 @@ end
 
 fileContextMenu:addSeparator()
 
-fileContextMenu:addItem(localization.launchWithArguments, false, "^F5").onTouch = function()
+fileContextMenu:addItem("˃", localization.launchWithArguments, false, "^F5").onTouch = function()
 	launchWithArgumentsWindow()
 end
 
 local topMenuEdit = menu:addContextMenuItem(localization.edit)
+
 createEditOrRightClickMenu(topMenuEdit)
 
 local gotoContextMenu = menu:addContextMenuItem(localization.gotoCyka)
-gotoContextMenu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
+
+gotoContextMenu:addItem("↑", localization.pageUp, false, "PgUp").onTouch = function()
 	pageUp()
 end
 
-gotoContextMenu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
+gotoContextMenu:addItem("↓", localization.pageDown, false, "PgDn").onTouch = function()
 	pageDown()
 end
 
-gotoContextMenu:addItem(localization.gotoStart, false, "Home").onTouch = function()
+gotoContextMenu:addItem("🏠", localization.gotoStart, false, "Home").onTouch = function()
 	setCursorPositionToHome()
 end
 
-gotoContextMenu:addItem(localization.gotoEnd, false, "End").onTouch = function()
+gotoContextMenu:addItem("💀", localization.gotoEnd, false, "End").onTouch = function()
 	setCursorPositionToEnd()
 end
 
 gotoContextMenu:addSeparator()
 
-gotoContextMenu:addItem(localization.gotoLine, false, "^L").onTouch = function()
+gotoContextMenu:addItem("↩", localization.gotoLine, false, "^L").onTouch = function()
 	gotoLineWindow()
 end
 
 local propertiesContextMenu = menu:addContextMenuItem(localization.properties)
-propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
+propertiesContextMenu:addItem("🎨", localization.colorScheme).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, false, localization.colorScheme)
 				
 	local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
@@ -1772,7 +1745,7 @@ propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
 	workspace:draw()
 end
 
-propertiesContextMenu:addItem(localization.cursorProperties).onTouch = function()
+propertiesContextMenu:addItem("I", localization.cursorProperties).onTouch = function()
 	local container = addBackgroundContainer(localization.cursorProperties)
 
 	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol))
@@ -1798,23 +1771,23 @@ propertiesContextMenu:addItem(localization.cursorProperties).onTouch = function(
 	workspace:draw()
 end
 
-propertiesContextMenu:addItem(localization.toggleTopToolBar).onTouch = function()
+propertiesContextMenu:addItem("☰", localization.toggleTopToolBar).onTouch = function()
 	toggleTopToolBar()
 end
 
 propertiesContextMenu:addSeparator()
 
-propertiesContextMenu:addItem(localization.toggleSyntaxHighlight).onTouch = function()
+propertiesContextMenu:addItem("Aa", localization.toggleSyntaxHighlight).onTouch = function()
 	syntaxHighlightingButton.pressed = not syntaxHighlightingButton.pressed
 	syntaxHighlightingButton.onTouch()
 end
 
-propertiesContextMenu:addItem(localization.toggleAutoBrackets, false, "^]").onTouch = function()
+propertiesContextMenu:addItem("[]", localization.toggleAutoBrackets, false, "^]").onTouch = function()
 	config.enableAutoBrackets = not config.enableAutoBrackets
 	saveConfig()
 end
 
-propertiesContextMenu:addItem(localization.toggleAutocompletion, false, "^I").onTouch = function()
+propertiesContextMenu:addItem("🔎", localization.toggleAutocompletion, false, "^I").onTouch = function()
 	toggleEnableAutocompleteDatabase()
 end
 
