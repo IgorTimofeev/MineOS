@@ -32,6 +32,7 @@ local categories = {
 	{ icon = "🎸", name = localization.categoryApplications },
 	{ icon = "📖", name = localization.categoryLibraries },
 	{ icon = "˃.", name = localization.categoryScripts },
+	{ icon = "⛵", name = localization.categoryWallpapers },
 }
 
 local orderDirections = {
@@ -43,6 +44,7 @@ local downloadPaths = {
 	paths.system.applications,
 	paths.system.libraries,
 	"/",
+	paths.system.wallpapers
 }
 
 local licenses = {
@@ -446,7 +448,8 @@ end
 --------------------------------------------------------------------------------
 
 local function getApplicationPathFromVersions(versionsPath)
-	return versionsPath:gsub("%.app/Main%.lua", ".app")
+	-- return versionsPath:gsub("%.app/Main%.lua", ".app")
+	return versionsPath:match("%.[awlp]+/Main%.lua") and filesystem.path(versionsPath) or versionsPath
 end
 
 local function getDependencyPath(mainFilePath, dependency)
@@ -484,6 +487,8 @@ local function download(publication)
 		if not filesystemChooserPath then
 			if publication.category_id == 1 then
 				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app"
+			elseif publication.category_id == 4 then
+				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".wlp"
 			else
 				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.path
 			end
@@ -500,7 +505,7 @@ local function download(publication)
 			tree.items = {}
 			tree.fromItem = 1
 
-			mainFilePath = filesystemChooser.path .. (publication.category_id == 1 and "/Main.lua" or "")
+			mainFilePath = filesystemChooser.path .. (((publication.category_id == 1 or publication.category_id == 4) and "/Main.lua") or "")
 
 			-- Вот тута будет йоба-древо
 			local dependencyTree = {}
@@ -520,7 +525,7 @@ local function download(publication)
 			for i = 1, #treeData do
 				local idiNahooy = dependencyTree
 				local dependencyPath = getDependencyPath(mainFilePath, treeData[i])
-				
+
 				for blyad in filesystem.path(dependencyPath):gmatch("[^/]+") do
 					if not idiNahooy[blyad] then
 						idiNahooy[blyad] = {}
@@ -552,7 +557,7 @@ local function download(publication)
 		end
 
 		local shortcutSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 44, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true))
-		shortcutSwitchAndLabel.hidden = publication.category_id == 2
+		shortcutSwitchAndLabel.hidden = publication.category_id == 2 or publication.category_id == 4
 
 		container.layout:addChild(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download)).onTouch = function()
 			container.layout:removeChildren(2)
@@ -1742,7 +1747,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	iconUrlInput.onInputFinished, nameInput.onInputFinished, mainUrlInput.onInputFinished, mainPathInput.onInputFinished, descriptionInput.onInputFinished = checkFields, checkFields, checkFields, checkFields, checkFields
 
 	categoryComboBox.onItemSelected = function()
-		iconHint.hidden = categoryComboBox.selectedItem > 1
+		iconHint.hidden = categoryComboBox.selectedItem ~= 1 and categoryComboBox.selectedItem ~= 4
 		iconUrlInput.hidden = iconHint.hidden
 
 		pathHint.hidden = not iconHint.hidden
@@ -1760,7 +1765,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			table.insert(dependencies, dependenciesLayout.comboBox:getItem(i).dependency)
 		end
 
-		if categoryComboBox.selectedItem == 1 then
+		if categoryComboBox.selectedItem == 1 or categoryComboBox.selectedItem == 4 then
 			table.insert(dependencies, {
 				source_url = iconUrlInput.text,
 				path = "Icon.pic"
@@ -1774,7 +1779,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			token = user.token,
 			name = nameInput.text,
 			source_url = mainUrlInput.text,
-			path = categoryComboBox.selectedItem == 1 and "Main.lua" or mainPathInput.text,
+			path = (categoryComboBox.selectedItem == 1 or categoryComboBox.selectedItem == 4) and "Main.lua" or mainPathInput.text,
 			description = descriptionInput.text,
 			license_id = licenseComboBox.selectedItem,
 			dependencies = dependencies,
