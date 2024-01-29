@@ -20,6 +20,7 @@
 	categoryLibraries = "도서관",
 	categoryScripts = "스크립트",
 	categoryUpdates = "업데이트",
+	categoryWallpapers = "Wallpapers",
 	
 	statisticsNewUser = "새로운 사용자",
 	statisticsMostPopularUser = "가장 활동적인",

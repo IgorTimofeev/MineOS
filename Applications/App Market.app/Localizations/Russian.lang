@@ -20,6 +20,7 @@
 	categoryLibraries = "Библиотеки",
 	categoryScripts = "Скрипты",
 	categoryUpdates = "Обновления",
+	categoryWallpapers = "Обои",
 
 	statisticsNewUser = "Новый пользователь",
 	statisticsMostPopularUser = "Наиболее активный",

@@ -20,6 +20,7 @@
 	categoryLibraries = "Kirjastot",
 	categoryScripts = "Käsikirjoitukset",
 	categoryUpdates = "Päivitykset",
+	categoryWallpapers = "Wallpapers",
 	
 	statisticsNewUser = "Uusi käyttäjä",
 	statisticsMostPopularUser = "Aktiivisin",

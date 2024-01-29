@@ -20,6 +20,7 @@
 	categoryLibraries = "API",
 	categoryScripts = "Scénarios",
 	categoryUpdates = "Mises à jour",
+	categoryWallpapers = "Wallpapers",
 	
 	statisticsNewUser = "Nouvel utilisateur",
 	statisticsMostPopularUser = "Plus actif",

@@ -20,6 +20,7 @@
 	categoryLibraries = "Librerias",
 	categoryScripts = "Guiones",
 	categoryUpdates = "Actualizaciones",
+	categoryWallpapers = "Wallpapers",
 	
 	statisticsNewUser = "Nuevo usuario",
 	statisticsMostPopularUser = "Mas Activo",
