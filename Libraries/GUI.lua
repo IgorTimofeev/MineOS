@@ -395,7 +395,8 @@ local function workspaceStart(workspace, eventPullTimeout)
 		if isScreenEvent then
 			if workspace.capturedObject then
 				if workspace.capturedObject == object then
-					
+					govno = object.blockScreenEvents
+
 				elseif object.ignoresCapturedObject then
 					if not boundsX1 or not (
 						roundedX >= boundsX1
@@ -2926,7 +2927,7 @@ local function inputCursorBlink(workspace, input, state)
 	workspace:draw()
 end
 
-local function inputStopInput(workspace, input)
+local function inputStopInput(input)
 	input.workspace.capturedObject = nil
 	input.workspace.focusedObject = nil
 
@@ -2938,12 +2939,12 @@ local function inputStopInput(workspace, input)
 			input:setCursorPosition(unicode.len(input.text) + 1)
 		end
 	end
-	
+
+	inputCursorBlink(input.workspace, input, false)
+
 	if input.onInputFinished then
 		input.onInputFinished(workspace, input)
 	end
-
-	inputCursorBlink(workspace, input, false)
 end
 
 local function inputStartInput(input)
@@ -2976,7 +2977,9 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 				input:startInput()
 			end
 		else
-			inputStopInput(workspace, input)
+			if focused then
+				inputStopInput(input)
+			end
 		end
 
 	elseif e1 == "key_down" and focused then
@@ -2992,10 +2995,11 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 				if input.history[#input.history] ~= input.text and unicode.len(input.text) > 0 then
 					table.insert(input.history, input.text)
 				end
+
 				input.historyIndex = #input.history
 			end
 
-			inputStopInput(workspace, input)
+			inputStopInput(input)
 
 			if input.onKeyDown then
 				input.onKeyDown(workspace, input, e1, e2, e3, e4, e5, e6, ...)
