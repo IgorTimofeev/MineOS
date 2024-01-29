@@ -32,7 +32,7 @@ local categories = {
 	{ icon = "🎸", name = localization.categoryApplications },
 	{ icon = "📖", name = localization.categoryLibraries },
 	{ icon = "˃.", name = localization.categoryScripts },
-	{ icon = "⛵", name = localization.categoryWallpapers },
+	{ icon = "📷", name = localization.categoryWallpapers },
 }
 
 local orderDirections = {
