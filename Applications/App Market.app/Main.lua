@@ -2012,7 +2012,7 @@ local function leftListItemDraw(pressable)
 
 	-- Рисуем синюю писечку, просящую прочитать сообщения
 	if pressable.showIndicator then
-		screen.drawText(pressable.x + 1, pressable.y + 2, 0x005EFF, "●")
+		screen.drawText(pressable.x + pressable.width - 3, pressable.y + 1, 0xFFDB80, "●")
 	end
 
 	local y = math.floor(pressable.y + pressable.height / 2)
