@@ -20,6 +20,7 @@
 	categoryLibraries = "ライブラリ",
 	categoryScripts = "スクリプト",
 	categoryUpdates = "更新",
+	categoryWallpapers = "Wallpapers",
 	
 	statisticsNewUser = "新しいユーザー",
 	statisticsMostPopularUser = "最もアクティブ",

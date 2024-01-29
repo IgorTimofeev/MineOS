@@ -20,6 +20,7 @@
 	categoryLibraries = "库",
 	categoryScripts = "脚本",
 	categoryUpdates = "更新",
+	categoryWallpapers = "Wallpapers",
 	
 	statisticsNewUser = "新用户",
 	statisticsMostPopularUser = "最积极",
