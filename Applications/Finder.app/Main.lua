@@ -528,7 +528,11 @@ local function updateIconField()
 				saveConfig()
 				updateSidebar()
 				workspace:draw()
-			end	
+			end
+		else
+			if not config.gridMode then
+				GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
+			end
 		end
 	end
 

@@ -5078,6 +5078,7 @@ function GUI.table(
 		itemSelectionForeground = itemSelectionForeground
 	}
 
+	table.blockScreenEvents = true
 	table.itemHeight = itemHeight
 	table.selectedRows = {}
 
