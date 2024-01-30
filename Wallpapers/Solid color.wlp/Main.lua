@@ -5,6 +5,8 @@ local GUI = require("GUI")
 
 --------------------------------------------------------------------------------
 
+local workspace, wallpaper = select(1, ...), select(2, ...)
+
 local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
 
 local config = {
@@ -23,15 +25,13 @@ end
 
 --------------------------------------------------------------------------------
 
-return {
-    draw = function(object)
-        screen.drawRectangle(object.x, object.y, object.width, object.height, config.color, 0, ' ')
-    end,
+wallpaper.draw = function(object)
+    screen.drawRectangle(object.x, object.y, object.width, object.height, config.color, 0, ' ')
+end
 
-    configure = function(layout)
-        layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.color, "Color")).onColorSelected = function(_, object)
-            config.color = object.color
-            saveConfig()
-        end
+wallpaper.configure = function(layout)
+    layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.color, "Color")).onColorSelected = function(_, object)
+        config.color = object.color
+        saveConfig()
     end
-}
+end

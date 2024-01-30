@@ -5,6 +5,8 @@ local GUI = require("GUI")
 
 --------------------------------------------------------------------------------
 
+local workspace, wallpaper = select(1, ...), select(2, ...)
+
 local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
 
 local config = {
@@ -46,75 +48,71 @@ end
 
 reset(object)
 
---------------------------------------------------------------------------------
+wallpaper.draw = function(object)
+	screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
 
-return {
-	draw = function(object)
-		screen.drawRectangle(object.x, object.y, object.width, object.height, config.backgroundColor, 0, " ")
+	local point1, point2
 
-		local point1, point2
+	for i = 1, config.lineCount - 1 do
+		point1, point2 = points[i], points[i + 1]
 
-		for i = 1, config.lineCount - 1 do
-			point1, point2 = points[i], points[i + 1]
+		screen.drawSemiPixelLine(
+			math.floor(object.x + point1.x),
+			math.floor(object.y * 2 - 1 + point1.y),
 
-			screen.drawSemiPixelLine(
-				math.floor(object.x + point1.x),
-				math.floor(object.y * 2 - 1 + point1.y),
-
-				math.floor(object.x + point2.x),
-				math.floor(object.y * 2 - 1 + point2.y),
-				
-				config.lineColor
-			)
-		end
-
-		local uptime = computer.uptime()
-		local deltaTime = uptime - lastUptime
-		lastUptime = uptime
-
-		for i = 1, config.lineCount do
-			point1 = points[i]
-
-			point1.x = point1.x + point1.vx * deltaTime
-			point1.y = point1.y + point1.vy * deltaTime
-
-			if point1.x < 0 or point1.x >= object.width then point1.vx = -point1.vx end
-			if point1.y < 0 or point1.y >= object.height * 2 then point1.vy = -point1.vy end
-		end
-	end,
-
-	configure = function(layout)
-		layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
-			config.backgroundColor = object.color
-			saveConfig()
-		end
-
-		layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.lineColor, "Line color")).onColorSelected = function(_, object)
-			config.lineColor = object.color
-			saveConfig()
-		end
-
-		local slider = layout:addChild(
-			GUI.slider(
-				1, 1, 
-				36,
-				0x66DB80, 
-				0xE1E1E1, 
-				0xFFFFFF, 
-				0xA5A5A5, 
-				1, 10, 
-				config.lineCount, 
-				false, 
-				"Line count: "
-			)
+			math.floor(object.x + point2.x),
+			math.floor(object.y * 2 - 1 + point2.y),
+			
+			config.lineColor
 		)
-		
-		slider.roundValues = true
-
-		slider.onValueChanged = function(workspace, object)
-			config.lineCount = math.floor(object.value)
-			saveConfig()
-			reset()
-		end
 	end
-}
+
+	local uptime = computer.uptime()
+	local deltaTime = uptime - lastUptime
+	lastUptime = uptime
+
+	for i = 1, config.lineCount do
+		point1 = points[i]
+
+		point1.x = point1.x + point1.vx * deltaTime
+		point1.y = point1.y + point1.vy * deltaTime
+
+		if point1.x < 0 or point1.x >= object.width then point1.vx = -point1.vx end
+		if point1.y < 0 or point1.y >= object.height * 2 then point1.vy = -point1.vy end
+	end
+end
+
+wallpaper.configure = function(layout)
+	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+		config.backgroundColor = object.color
+		saveConfig()
+	end
+
+	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.lineColor, "Line color")).onColorSelected = function(_, object)
+		config.lineColor = object.color
+		saveConfig()
+	end
+
+	local slider = layout:addChild(
+		GUI.slider(
+			1, 1, 
+			36,
+			0x66DB80, 
+			0xE1E1E1, 
+			0xFFFFFF, 
+			0xA5A5A5, 
+			1, 10, 
+			config.lineCount, 
+			false, 
+			"Line count: "
+		)
+	)
+	
+	slider.roundValues = true
+
+	slider.onValueChanged = function(workspace, object)
+		config.lineCount = math.floor(object.value)
+		saveConfig()
+		reset()
+	end
+end

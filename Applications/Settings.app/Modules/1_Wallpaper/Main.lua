@@ -17,9 +17,10 @@ local function configure()
 	end
 
 	-- Add new controls if needed
-	if system.wallpaper and system.wallpaper.configure then
+	local wallpaper = system.getWallpaper()
+	if wallpaper.configure then
 		configureFrom = #window.contentLayout.children + 1
-		system.wallpaper.configure(window.contentLayout)
+		wallpaper.configure(window.contentLayout)
 		configureTo = #window.contentLayout.children
 	end
 end

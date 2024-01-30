@@ -35,9 +35,7 @@ local dockContainer
 local desktopMenu
 local desktopMenuLayout
 local desktopIconField
-local desktopBackground
-local desktopBackgroundWallpaperX
-local desktopBackgroundWallpaperY
+local wallpaper
 
 -- Caching commonly used icons
 local iconCache = {
@@ -485,7 +483,7 @@ function system.addSetAsWallpaperMenuItem(menu, path)
 			system.updateWallpaper()
 		end
 		
-		system.wallpaper.setPicture(path)
+		wallpaper.setPicture(path)
 
 		workspace:draw()
 		system.saveUserSettings()
@@ -2414,42 +2412,44 @@ function system.execute(path, ...)
 	return success, errorPath, line, traceback
 end
 
-local function desktopBackgroundAmbientDraw()
-	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, 0x1E1E1E, 0, " ")
+local function wallpaperDraw()
+	screen.drawRectangle(1, wallpaper.y, wallpaper.width, wallpaper.height, 0x1E1E1E, 0, " ")
+end
+
+function system.getWallpaper()
+	return wallpaper
 end
 
 function system.updateWallpaper()
-	desktopBackground.draw = desktopBackgroundAmbientDraw
+	local function reset()
+		wallpaper.draw = wallpaperDraw
+		wallpaper.eventHandler = nil
+		wallpaper.configure = nil
+	end
+
+	local function alert(...)
+		GUI.alert(...)
+		reset()
+	end
+
 	interfaceDrawInterval = 1
+	reset()
 
 	if not userSettings.interfaceWallpaperPath then
 		return
 	end
 
-	local executable, reason = loadfile(userSettings.interfaceWallpaperPath .. "Main.lua")
-	if not executable then
-		GUI.alert(reason)
+	local result, reason = loadfile(userSettings.interfaceWallpaperPath .. "Main.lua")
+	if not result then
+		alert(reason)
 		return
 	end
 
-	local success, wallpaperOrError = xpcall(executable, debug.traceback)
-	if not success then
-		GUI.alert(wallpaperOrError)
+	result, reason = xpcall(result, debug.traceback, workspace, wallpaper)
+	if not result then
+		alert()
 		return
 	end
-
-	if type(wallpaperOrError) ~= "table" then
-		GUI.alert("Wallpaper script didn't return table")
-		return
-	elseif type(wallpaperOrError.draw) ~= "function" then
-		GUI.alert("Wallpaper does not contain proper draw function")
-		return
-	end
-
-	desktopBackground.draw = wallpaperOrError.draw
-	desktopBackground.eventHandler = wallpaperOrError.eventHandler
-	
-	system.wallpaper = wallpaperOrError
 
 	interfaceDrawInterval = 0.01
 end
@@ -2475,7 +2475,7 @@ function system.updateResolution()
 
 	desktopMenu.width = workspace.width
 	desktopMenuLayout.width = workspace.width
-	desktopBackground.localY, desktopBackground.width, desktopBackground.height = 2, workspace.width, workspace.height - 1
+	wallpaper.localY, wallpaper.width, wallpaper.height = 2, workspace.width, workspace.height - 1
 
 	desktopWindowsContainer.width, desktopWindowsContainer.height = workspace.width, workspace.height - 1
 
@@ -2963,11 +2963,12 @@ function system.updateWorkspace()
 	workspace.ignoresCapturedObject = true
 
 	-- Creating desktop background object
-	desktopBackground = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
-	desktopBackground.ignoresCapturedObject = true
+	wallpaper = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
+	-- wallpaper.ignoresCapturedObject = true
+	wallpaper.blockScreenEvents = false
 
-	local oldDraw = desktopBackground and desktopBackground.draw
-	desktopBackground.draw = oldDraw or desktopBackgroundAmbientDraw
+	local oldDraw = wallpaper and wallpaper.draw
+	wallpaper.draw = oldDraw or wallpaperDraw
 end
 
 function system.createUser(name, language, password, wallpaper)
@@ -3038,7 +3039,7 @@ function system.authorize()
 		local container = workspace:addChild(GUI.container(1, 1, workspace.width, workspace.height))
 
 		-- If we've loaded wallpaper(from user logout or above) then add a panel to make it darker
-		if desktopBackground.draw ~= desktopBackgroundAmbientDraw then
+		if wallpaper.draw ~= wallpaperDraw then
 			container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, 0.5))
 		end
 
