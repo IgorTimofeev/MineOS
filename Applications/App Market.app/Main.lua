@@ -449,7 +449,7 @@ end
 
 local function getApplicationPathFromVersions(versionsPath)
 	-- return versionsPath:gsub("%.app/Main%.lua", ".app")
-	return versionsPath:match("%.[awlp]+/Main%.lua") and filesystem.path(versionsPath) or versionsPath
+	return versionsPath:match("%.[awlp]+/+Main%.lua") and filesystem.path(versionsPath) or versionsPath
 end
 
 local function getDependencyPath(mainFilePath, dependency)
@@ -505,7 +505,7 @@ local function download(publication)
 			tree.items = {}
 			tree.fromItem = 1
 
-			mainFilePath = filesystemChooser.path .. (((publication.category_id == 1 or publication.category_id == 4) and "/Main.lua") or "")
+			mainFilePath = filesystemChooser.path .. (((publication.category_id == 1 or publication.category_id == 4) and "Main.lua") or "")
 
 			-- Вот тута будет йоба-древо
 			local dependencyTree = {}
