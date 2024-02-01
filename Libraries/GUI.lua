@@ -2531,7 +2531,7 @@ local function treeEventHandler(workspace, tree, e1, e2, e3, e4, e5, ...)
 				end
 
 				if tree.onItemExpanded then
-					tree.onItemExpanded(tree.selectedItem, e1, e2, e3, e4, e5, ...)
+					tree.onItemExpanded(tree.items[i], e1, e2, e3, e4, e5, ...)
 				end
 			else
 				if

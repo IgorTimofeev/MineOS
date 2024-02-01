@@ -483,12 +483,13 @@ local function download(publication)
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.choosePath)
 
 		local versionsTable = getVersionsTable(publication.file_id)
+		
 		local filesystemChooserPath = versionsTable[publication.file_id] and getApplicationPathFromVersions(versionsTable[publication.file_id].path)
 		if not filesystemChooserPath then
 			if publication.category_id == 1 then
-				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app"
+				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app/"
 			elseif publication.category_id == 4 then
-				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".wlp"
+				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".wlp/"
 			else
 				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.path
 			end
@@ -530,6 +531,7 @@ local function download(publication)
 					if not idiNahooy[blyad] then
 						idiNahooy[blyad] = {}
 					end
+
 					idiNahooy = idiNahooy[blyad]
 				end
 				
@@ -542,6 +544,7 @@ local function download(publication)
 			-- Пизда для формирования той ебалы, как ее там
 			local function pizda(t, offset, initPath)
 				for chlen, devka in pairs(t) do
+
 					if devka.path then
 						tree:addItem(filesystem.name(devka.path), devka.path, offset, false)
 					else
