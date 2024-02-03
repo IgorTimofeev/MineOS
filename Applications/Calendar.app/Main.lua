@@ -124,7 +124,7 @@ local function renderMonth(xCoord, yCoord, width, monthPos)
 	local weekText = config.isWeekAlt and localization.weekLineAlt or localization.weekLine
 	local xStart = math.floor(xCoord + width / 2 - unicode.len(weekText) / 2)
 	
-	screen.drawText(math.floor(xCoord + width / 2 - unicode.len(text) / 2), yCoord, 0xFF0000, text)
+	screen.drawText(math.floor(xCoord + width / 2 - unicode.len(text) / 2), yCoord, 0x4E00FF, text)
 	screen.drawText(xStart, yCoord + 2, 0x888888, weekText)
 	
 	if not curYearList or selectedYear ~= lastCountedYear then
@@ -138,7 +138,7 @@ local function renderMonth(xCoord, yCoord, width, monthPos)
 	end
 	
 	for i=1, curYearList[monthPos].countOfDays do
-		local numColor = (config.isWeekAlt and (counter == 0 or counter == 6) and 0xFF0000) or (not config.isWeekAlt and counter > 4 and 0xFF0000) or 0x262626 
+		local numColor = (config.isWeekAlt and (counter == 0 or counter == 6) and 0x4E00FF) or (not config.isWeekAlt and counter > 4 and 0x4E00FF) or 0x262626 
 		
 		if selectedYear == currentYear and monthPos == currentMonth and i == currentDay then
 			screen.drawText(xStart + (counter * 4) - 1, yCoord + line - 1, 0xD2D2D2, '⢀▄▄⡀')

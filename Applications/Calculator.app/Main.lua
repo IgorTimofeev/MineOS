@@ -136,9 +136,9 @@ displayWidget.draw = function()
 	end
 
 	-- Char
-	screen.drawText(displayWidget.x, y, 0x696969, "\"")
-	screen.drawText(displayWidget.x + 1, y, 0xFFFFFF, charList.selectedItem == 1 and unicode.char(absValue) or (absValue < 256 and string.char(absValue) or "?"))
-	screen.drawText(displayWidget.x + 2, y, 0x696969, "\"")
+	screen.drawText(displayWidget.x, y, 0x696969, ((absValue >= 0 and absValue <= 65535) and "\'" or "")) -- fixed that stupid bug I posted on the main github
+	screen.drawText(displayWidget.x + 1, y, 0xFFFFFF, ((absValue >= 0 and absValue <= 65535) and (charList.selectedItem == 1 and unicode.char(absValue) or (absValue < 256 and string.char(absValue) or "?")) or ""))
+	screen.drawText(displayWidget.x + 2, y, 0x696969, ((absValue >= 0 and absValue <= 65535) and "\'" or ""))
 end
 
 local function setValueRaw(v)
@@ -291,7 +291,7 @@ local function addRegularButton(x, y, ...)
 end
 
 local function addMathButton(x, y, ...)
-	return addButton(x, y, 0xFF9240, 0xFFFFFF, 0xCC6D00, 0xFFFFFF, ...)
+	return addButton(x, y, 0x4E00FF, 0xFFFFFF, 0x330080, 0xFFFFFF, ...)
 end
 
 local function onDigitPressed(digit)

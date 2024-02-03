@@ -67,11 +67,103 @@ local languages = {
 	[71] = "Russian",
 }
 
+
+--------------------------------------------------------------------------------
+
+--[[ 
+
+local GUI = require("GUI")
+local screen = require("Screen")
+local filesystem = require("Filesystem")
+local color = require("Color")
+local image = require("Image")
+local internet = require("Internet")
+local json = require("JSON")
+local color = require("Color")
+local paths = require("Paths")
+local system = require("System")
+local text = require("Text")
+local number = require("Number")
+local event = require("Event")
+
+ ]]
+
+local function createPopup(dispTitle, dispTxt, funcTouch, darkMode, enableAppIcon)
+	local txtTbl = text.wrap(dispTxt, 55)
+	local sysWorkspace, popupWindow, popupMenu = system.addWindow(GUI.titledWindow(50, 22, 60, 20, text.limit(tostring(dispTitle), 45) or "", true), (enableAppIcon and false or true))
+	popupWindow.backgroundPanel.colors.background = darkMode and 0x1E1E1E or GUI.WINDOW_TITLE_BACKGROUND_COLOR
+	popupWindow.titlePanel.colors.background = darkMode and 0x3C3C3C or GUI.WINDOW_TITLE_BACKGROUND_COLOR
+	popupWindow.titleLabel.colors.text = darkMode and 0xE1E1E1 or GUI.WINDOW_TITLE_TEXT_COLOR
+	popupWindow.actionButtons.maximize.colors.disabled.background = popupWindow.titlePanel.colors.background
+	popupWindow.actionButtons.maximize.disabled = true
+	popupWindow.actionButtons.minimize.colors.disabled.background = popupWindow.titlePanel.colors.background
+	popupWindow.actionButtons.minimize.disabled = true
+	local popupLayout = popupWindow:addChild(GUI.layout(1, 2, popupWindow.width, popupWindow.height - 1, 1, 1))
+	popupLayout:setSpacing(1, 1, 0)
+	for k, v in pairs(txtTbl) do
+	  	popupLayout:addChild(GUI.label(1, 1, 36, 1, darkMode and 0xFFFFFF or 0x0, v)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+	end
+	popupLayout:addChild(GUI.label(1, 1, 36, 2, 0x0, "")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+	popupLayout:addChild(GUI.button(1, 1, 36, 3, darkmode and 0x4B4B4B or 0xB4B4B4, 0x0, 0x969696, 0x0, "Ok")).onTouch = function()
+	  	popupWindow.actionButtons.close.onTouch()
+        if type(funcTouch) == "function" then
+			funcTouch()
+	  	end
+	end
+	sysWorkspace:draw()
+end
+  
+local function checkConnection(url, funcLoad)
+	local data = ""
+	local success, reason = internet.rawRequest(
+		url or "http://httpbin.org/post/",
+		nil,
+		{
+			["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36",
+			["Content-Type"] = "application/x-www-form-urlencoded"
+		},
+		function(chunk)
+			data = data .. chunk
+			if type(funcLoad) == "function" then
+				funcLoad(chunk, data)
+			end
+		end,
+		math.huge,
+		"POST"
+	)
+	
+	local r1, r2 = "", ""
+	if success then
+		r1, r2 = true, tostring(data)
+	else
+	  	r1, r2 = false, "Web request failed: " .. tostring(reason)
+	end
+	if r1 then
+	  	return true, "Connection is established"
+	else
+	  	if r2:lower():find("405") then
+			return true, "Connection is established"
+	  	elseif r2:lower():find("connection reset") or r2:lower():find("connection_reset") or r2:lower():find("connection-reset") then
+			return false, "DNS URL may be blocked by server host device's network, or connection problems are occurring on the device's network.\n\nCheck your connection to the host device's network. If problems continue occurring, try restarting the host's devices router connection."
+	  	else
+			return false, "Network error:\n"..tostring(reason).."\n\nCheck your connection to the host device's network. If problems continue occurring, try restarting the host's devices router connection."
+	  	end
+	end
+end
+
 --------------------------------------------------------------------------------
 
 if not component.isAvailable("internet") then
-	GUI.alert("AppMarket requires internet card to work")
+	createPopup("Connection error", "You'll need an internet card for this. Go find one in storage chests/containers or craft some for to open the app market.", nil, true)
 	return
+end
+
+local connected, connErr = checkConnection("http://mineos.buttex.ru/")
+if not connected then
+	if connErr:find("403") then else
+		createPopup("Connection error", "Failed to connect to MineOS App Market services.\n\n"..connErr, nil, true)
+		return
+	end
 end
 
 filesystem.makeDirectory(iconCachePath)
@@ -112,7 +204,7 @@ local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, ni
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x996D00, 0xFFDB40))
+local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x332480, 0x5100FF))
 
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
@@ -2001,7 +2093,7 @@ local function leftListItemDraw(pressable)
 	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.colors.default.text
 
 	if pressable.pressed then
-		screen.drawRectangle(pressable.x, pressable.y, 1, pressable.height, backgroundColor, 0xFFDB80, "▎")
+		screen.drawRectangle(pressable.x, pressable.y, 1, pressable.height, backgroundColor, 0x5100FF, "▎")
 		screen.drawRectangle(pressable.x + 1, pressable.y, pressable.width - 1, pressable.height, backgroundColor, textColor, " ")
 	end
 
