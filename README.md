@@ -16,7 +16,7 @@ MineOS is a GUI based operating system for the OpenComputers Minecraft mod. It h
 -   An internal IDE with syntax highlighting and debugger 
 -   Integrated application and library App Market with the ability to publish your own scripts and programs for every MineOS user
 -   Error reporting system with the possibility to send information to developers
--   Animations, wallpapers, screensavers, color schemes and huge customization possibilities
+-   Animations, live wallpapers, color schemes and huge customization possibilities
 -   Open source system API and detailed documentation
 
 ## How to install?
