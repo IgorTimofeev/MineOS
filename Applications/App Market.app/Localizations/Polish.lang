@@ -20,7 +20,7 @@
 	categoryLibraries = "Biblioteki",
 	categoryScripts = "Skrypty",
 	categoryUpdates = "Aktualizacje",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Tapety",
 	
 	statisticsNewUser = "Nowy użytkownik",
 	statisticsMostPopularUser = "Najbardziej aktywny",
@@ -109,5 +109,5 @@
 	no = "Nie",
 	of = "z",
 	usersLoveReview = "użytkownicy uznali tę opinię za pomocną",
-	thanksForVote = "Dziękuję za Twoją opinię.",
+	thanksForVote = "Dziękuję za Twoją opinię."
 }

@@ -20,7 +20,7 @@
 	categoryLibraries = "도서관",
 	categoryScripts = "스크립트",
 	categoryUpdates = "업데이트",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "배경화면",
 	
 	statisticsNewUser = "새로운 사용자",
 	statisticsMostPopularUser = "가장 활동적인",
@@ -109,5 +109,5 @@
 	no = "아니요",
 	of = "~의",
 	usersLoveReview = "사용자가 이 리뷰가 도움이 되었다고 생각함",
-	thanksForVote = "의견 감사합니다.",
+	thanksForVote = "의견 감사합니다."
 }

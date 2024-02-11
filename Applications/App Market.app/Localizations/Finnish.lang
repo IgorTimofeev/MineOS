@@ -20,7 +20,7 @@
 	categoryLibraries = "Kirjastot",
 	categoryScripts = "Käsikirjoitukset",
 	categoryUpdates = "Päivitykset",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Taustakuvat",
 	
 	statisticsNewUser = "Uusi käyttäjä",
 	statisticsMostPopularUser = "Aktiivisin",
@@ -109,5 +109,5 @@
 	no = "Ei",
 	of = "/",
 	usersLoveReview = "käyttäjät pitivät tätä arvostelua hyödyllisenä",
-	thanksForVote = "Kiitos mielipiteestäsi.",
+	thanksForVote = "Kiitos mielipiteestäsi."
 }
