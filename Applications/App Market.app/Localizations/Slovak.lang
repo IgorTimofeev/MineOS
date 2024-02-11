@@ -20,7 +20,7 @@
 	categoryLibraries = "Knižnice",
 	categoryScripts = "Skriptá",
 	categoryUpdates = "Aktualizácie",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Tapety",
 	
 	statisticsNewUser = "Nový užívateľ",
 	statisticsMostPopularUser = "Najaktívnejší",
@@ -109,5 +109,5 @@
 	no = "nie",
 	of = "z",
 	usersLoveReview = "používatelia považovali túto recenziu za užitočnú",
-	thanksForVote = "dakujem za nazor.",
+	thanksForVote = "dakujem za nazor."
 }

@@ -20,7 +20,7 @@
 	categoryLibraries = "مكتبات",
 	categoryScripts = "نصوص",
 	categoryUpdates = "التحديثات",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "خلفيات",
 	
 	statisticsNewUser = "مستخدم جديد",
 	statisticsMostPopularUser = "أكثر نشاطا",
@@ -109,5 +109,5 @@
 	no = "لا",
 	of = "من",
 	usersLoveReview = "وجد المستخدمون هذه المراجعة مفيدة",
-	thanksForVote = "شكرا لرأيك.",
+	thanksForVote = "شكرا لرأيك."
 }

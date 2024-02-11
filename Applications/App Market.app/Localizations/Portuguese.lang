@@ -18,9 +18,9 @@
 	categoryOverview = "Visão geral",
 	categoryApplications = "Formulários",
 	categoryLibraries = "Bibliotecas",
-	categoryScripts = "Scripts",
+	categoryScripts = "Roteiros",
 	categoryUpdates = "Atualizações",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Papeis de parede",
 	
 	statisticsNewUser = "Novo usuário",
 	statisticsMostPopularUser = "Mais ativo",
@@ -109,5 +109,5 @@
 	no = "Não",
 	of = "de",
 	usersLoveReview = "os usuários acharam esta análise útil",
-	thanksForVote = "Obrigado pela sua opinião.",
+	thanksForVote = "Obrigado pela sua opinião."
 }
