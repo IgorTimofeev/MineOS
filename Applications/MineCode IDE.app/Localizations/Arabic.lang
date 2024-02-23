@@ -62,7 +62,7 @@
 	edit = "تعديل",
 	comment = "تبديل التعليق",
 	indent = "مسافة بادئة",
-	unindent = "Unindent",
+	unindent = "إزالة المسافة البادئة",
 	flashEEPROM = "فلاش إلى EEPROM",
-	flashingEEPROM = "الوميض قيد التقدم. ",
+	flashingEEPROM = "الوميض قيد التقدم. "
 }

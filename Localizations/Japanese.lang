@@ -19,7 +19,7 @@
 	networkComputers = "ネットワークPCの設定",
 	networkName = "PC名",
 	networkSearchRadius = "検索する半径",
-	openWith = "openWith",
+	openWith = "で開く",
 	select = "アプリを選択…",
 	keepInDock = "Dockに保存",
 	closeAllWindows = "全てのウィンドウを閉じる",

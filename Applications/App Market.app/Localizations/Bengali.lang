@@ -20,7 +20,7 @@
 	categoryLibraries = "লাইব্রেরি",
 	categoryScripts = "স্ক্রিপ্ট",
 	categoryUpdates = "আপডেট",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "ওয়ালপেপার",
 	
 	statisticsNewUser = "নতুন ব্যবহারকারী",
 	statisticsMostPopularUser = "সবচেয়ে সক্রিয়",
@@ -109,5 +109,5 @@
 	no = "না",
 	of = "এর",
 	usersLoveReview = "ব্যবহারকারীরা এই পর্যালোচনা সহায়ক বলে মনে করেছেন",
-	thanksForVote = "আপনার মতামতের জন্য ধন্যবাদ.",
+	thanksForVote = "আপনার মতামতের জন্য ধন্যবাদ."
 }

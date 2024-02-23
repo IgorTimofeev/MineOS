@@ -20,7 +20,7 @@
 	categoryLibraries = "библиотеки",
 	categoryScripts = "Скриптове",
 	categoryUpdates = "Актуализации",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Тапети",
 	
 	statisticsNewUser = "Нов потребител",
 	statisticsMostPopularUser = "Най-активен",
@@ -109,5 +109,5 @@
 	no = "Не",
 	of = "на",
 	usersLoveReview = "потребителите намират този преглед за полезен",
-	thanksForVote = "Благодаря за вашето мнение.",
+	thanksForVote = "Благодаря за вашето мнение."
 }

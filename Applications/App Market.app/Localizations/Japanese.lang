@@ -20,7 +20,7 @@
 	categoryLibraries = "ライブラリ",
 	categoryScripts = "スクリプト",
 	categoryUpdates = "更新",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "壁紙",
 	
 	statisticsNewUser = "新しいユーザー",
 	statisticsMostPopularUser = "最もアクティブ",
@@ -109,5 +109,5 @@
 	no = "いいえ",
 	of = "の",
 	usersLoveReview = "ユーザーはこのレビューが役に立ったと感じました",
-	thanksForVote = "ご意見ありがとうございます。",
+	thanksForVote = "ご意見ありがとうございます。"
 }

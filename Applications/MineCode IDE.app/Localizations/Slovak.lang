@@ -40,7 +40,7 @@
 	about = "O",
 	quit = "Ukončite MineCode",
 	line = "linka,",
-	symbol = "symbol",
+	symbol = " symbol",
 	lines = "linky,",
 	symbols = "symbolov",
 	file = "Súbor",
@@ -64,5 +64,5 @@
 	indent = "Zarážka",
 	unindent = "Zrušiť odsadenie",
 	flashEEPROM = "Flash do EEPROM",
-	flashingEEPROM = "Prebieha blikanie. ",
+	flashingEEPROM = "Prebieha blikanie. "
 }

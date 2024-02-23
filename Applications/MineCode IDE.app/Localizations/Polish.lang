@@ -40,7 +40,7 @@
 	about = "O",
 	quit = "Wyjdź z MineCode",
 	line = "linia,",
-	symbol = "symbol",
+	symbol = " symbol",
 	lines = "linie,",
 	symbols = "symbolika",
 	file = "Plik",
@@ -64,5 +64,5 @@
 	indent = "Akapit",
 	unindent = "Niewcięcie",
 	flashEEPROM = "Flash do EEPROM",
-	flashingEEPROM = "Miga w toku. ",
+	flashingEEPROM = "Miga w toku. "
 }

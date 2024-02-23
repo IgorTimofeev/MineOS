@@ -1,7 +1,7 @@
 {
 	statistics = "Statistieken",
 	messages = "Berichten",
-	account = "Account",
+	account = "Rekening",
 	settings = "Instellingen",
 	newMessage = "Nieuw bericht",
 	newMessagePersonal = "Persoonlijk bericht",
@@ -20,7 +20,7 @@
 	categoryLibraries = "Bibliotheken",
 	categoryScripts = "Scripts",
 	categoryUpdates = "Updates",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Achtergronden",
 	
 	statisticsNewUser = "Nieuwe gebruiker",
 	statisticsMostPopularUser = "Meest actief",

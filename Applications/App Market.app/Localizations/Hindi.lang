@@ -20,7 +20,7 @@
 	categoryLibraries = "पुस्तकालयों",
 	categoryScripts = "स्क्रिप्ट",
 	categoryUpdates = "अपडेट",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "वॉलपेपर",
 	
 	statisticsNewUser = "नए उपयोगकर्ता",
 	statisticsMostPopularUser = "सर्वाधिक क्रियाशील",
@@ -109,5 +109,5 @@
 	no = "नहीं",
 	of = "का",
 	usersLoveReview = "उपयोगकर्ताओं को यह समीक्षा मददगार लगी",
-	thanksForVote = "आपकी राय के लिए धन्यवाद।",
+	thanksForVote = "आपकी राय के लिए धन्यवाद।"
 }

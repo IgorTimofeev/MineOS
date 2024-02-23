@@ -20,7 +20,7 @@
 	categoryLibraries = "Бібліятэкі",
 	categoryScripts = "Сцэнарыі",
 	categoryUpdates = "Абнаўленні",
-	categoryWallpapers = "Wallpapers",
+	categoryWallpapers = "Шпалеры",
 	
 	statisticsNewUser = "Новы карыстальнік",
 	statisticsMostPopularUser = "Найбольш актыўныя",
@@ -109,5 +109,5 @@
 	no = "не",
 	of = "з",
 	usersLoveReview = "карыстальнікі палічылі гэты агляд карысным",
-	thanksForVote = "Дзякуй за ваша меркаванне.",
+	thanksForVote = "Дзякуй за ваша меркаванне."
 }
