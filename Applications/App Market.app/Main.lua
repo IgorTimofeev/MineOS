@@ -606,7 +606,7 @@ local function download(publication)
 			callLastMethod()
 
 			if not shortcutSwitchAndLabel.hidden and shortcutSwitchAndLabel.switch.state then
-				system.createShortcut(paths.user.desktop .. filesystem.hideExtension(filesystem.name(filesystemChooser.path)), filesystemChooser.path .. "/")
+				system.createShortcut(paths.user.desktop .. filesystem.hideExtension(filesystem.name(filesystemChooser.path)), filesystemChooser.path)
 			end
 			
 			computer.pushSignal("system", "updateFileList")
