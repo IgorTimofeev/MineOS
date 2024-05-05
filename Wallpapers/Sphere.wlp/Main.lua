@@ -16,6 +16,8 @@ local config = {
     sphereRadius = 20,
     sphereColor = 0xFFFFFF,
     spherePos = {20, 0, 0},
+
+    lightDistance = 5,
     
     lightColor = 0xFFFF40,
     diffuseIntensity = 12,
@@ -84,32 +86,31 @@ local function vecIntegerToRGB(integer)
     }
 end
 
-local function vecRGBToInteger(vec)
-    return color.RGBToInteger(
-        math.floor(vec[1] * 0xFF), 
-        math.floor(vec[2] * 0xFF), 
-        math.floor(vec[3] * 0xFF)
-    )
-end
-
 local function clamp(value, min, max)
     if value < min then return min end
     if value > max then return max end
     return value
 end
 
+local function vecRGBToInteger(vec)
+    return color.RGBToInteger(
+        math.floor(clamp(vec[1], 0, 1) * 0xFF), 
+        math.floor(clamp(vec[2], 0, 1) * 0xFF), 
+        math.floor(clamp(vec[3], 0, 1) * 0xFF)
+    )
+end
+
 --------------------------------------------------------------------------------
 
-local lightSpinRadius, sphereRadiusSqr, lightColorVec, sphereColorVec, colorProduct, viewPos, startTime
+local startTime, lightSpinRadius, sphereRadiusSqr, lightColorVec, sphereColorVec, colorProduct, viewPos = computer.uptime()
 
 local function precalculateValues()
-    lightSpinRadius = config.sphereRadius + 5
+    lightSpinRadius = config.sphereRadius + config.lightDistance
     sphereRadiusSqr = config.sphereRadius^2
     lightColorVec = vecIntegerToRGB(config.lightColor)
     sphereColorVec = vecIntegerToRGB(config.sphereColor)
     colorProduct = vecHadamardProduct(lightColorVec, sphereColorVec)
     viewPos = {0, 0, 500}
-    startTime = computer.uptime()
 end
 
 precalculateValues()
@@ -197,9 +198,10 @@ wallpaper.configure = function(layout)
     addColorSelector("lightColor",      "Light color"     )
 
     addSlider("sphereRadius",      "Sphere radius: ",      5, 50, true )
+    addSlider("lightDistance",     "Light distance: ",     0, 50, true )
     addSlider("diffuseIntensity",  "Diffuse intensity: ",  0, 50, false)
-    addSlider("ambientIntensity",  "Ambient intensity: ",  0, 1,  false)
-    addSlider("specularIntensity", "Specular intensity: ", 0, 5,  false)
+    addSlider("ambientIntensity",  "Ambient intensity: ",  0,  1, false)
+    addSlider("specularIntensity", "Specular intensity: ", 0,  5, false)
     addSlider("specularPower",     "Specular power: ",     1, 50, true )
     addSlider("speed",             "Speed: ",              1, 10, false)
 end
