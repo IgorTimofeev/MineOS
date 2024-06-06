@@ -27,7 +27,7 @@ The easiest way is to use default `pastebin` script. Insert an OpenOS floppy dis
 
 If for some reason pastebin website is not available to you, use alternative installation command:
 
-	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
+	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/OpenOS.lua /tmp/installer.lua && /tmp/installer.lua
 
 You can paste it to console using middle mouse button or Insert key (by default). After a moment, a nice system installer will be shown. You will be prompted to select your preferred language, boot volume (can be formatted if needed), create a user profile and customize some settings
 

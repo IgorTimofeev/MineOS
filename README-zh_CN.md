@@ -26,7 +26,7 @@ MineOS是一个拥有GUI的操作系统，运行在Minecraft模组Open Computers
 
 如果由于某种原因无法使用pastebin网站，请使用替代安装命令：
 
-	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
+	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/OpenOS.lua /tmp/installer.lua && /tmp/installer.lua
 
 过一会儿，一个制作优良的系统安装程序将会被启动。
 安装程序将提示你选择你的首选语言、选择并格式化引导卷、创建用户配置文件并修改一些设置。
