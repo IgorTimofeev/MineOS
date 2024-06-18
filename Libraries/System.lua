@@ -367,7 +367,7 @@ function system.takeScreenshot()
 	local function drawBorder(x0, y0, width, height, char)
 		for x = x0, x0 + width - 1 do
 			for y = y0, y0 + height - 1 do
-				if x >= 1 and y >= 1 and x < screenBufferWidth and y < screenBufferHeight then
+				if x >= 1 and y >= 1 and x <= screenBufferWidth and y <= screenBufferHeight then
 					i = screen.getIndex(x, y)
 					screenFrameForegrounds[i], screenFrameChars[i] = 0xFFFFFF, char
 				end
@@ -397,10 +397,10 @@ function system.takeScreenshot()
 		fill(x,         y + height, width,                          workspaceHeight - height - y + 2)
 
 		-- Border
-		drawBorder(x,         y - 1,      width, 1,      '⣀')
-		drawBorder(x,         y + height, width, 1,      '⠉')
-		drawBorder(x - 1,     y,          1,     height, '⢸')
-		drawBorder(x + width, y,          1,     height, '⡇')
+		screen.drawText(x - 1, y - 1,      0xFFFFFF, '⢀' .. ('⣀'):rep(width) .. '⡀')
+		screen.drawText(x - 1, y + height, 0xFFFFFF, '⠈' .. ('⠉'):rep(width) .. '⠁')
+		drawBorder(x - 1,     y, 1, height, '⢸')
+		drawBorder(x + width, y, 1, height, '⡇')
 		
 		drawTextCentered(x + width / 2, y + height + 1, ("%dx%d"):format(width, height))
 	end
@@ -416,7 +416,7 @@ function system.takeScreenshot()
 			math.floor(workspace.height * 0.8), 
 			localization.save, 
 			localization.cancel, 
-			localization.fileName, 
+			localization.fileName,
 			"/"
 		)
 
@@ -424,6 +424,7 @@ function system.takeScreenshot()
 		filesystemDialog:addExtensionFilter(".pic")
 		filesystemDialog:expandPath(paths.user.desktop)
 		filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
+		filesystemDialog.input.text = "screenshot"
 		
 		filesystemDialog.onSubmit = function(path)
 			image.save(path, img)
