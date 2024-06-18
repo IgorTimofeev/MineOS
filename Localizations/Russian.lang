@@ -41,6 +41,7 @@
 	no = "Нет",
 	cancel = "Отмена",
 	open = "Открыть",
+	save = "Сохранить",
 	applyToAll = "Применить ко всем",
 	toDirectory = "в директории",
 	copying = "Копирование",
@@ -102,6 +103,7 @@
 	shutdown = "Выключить",
 	logout = "Выйти",
 	reboot = "Перезагрузить",
+	takeScreenshot = "Сделать скриншот",
 
 	shortcutIsCorrupted = "Ярлык ссылается на несуществующий файл",
 	sortAutomatically = "Привязать к сетке",

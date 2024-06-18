@@ -41,6 +41,7 @@
 	no = "No",
 	cancel = "Cancel",
 	open = "Open",
+	save = "Save",
 	applyToAll = "Apply to all",
 	toDirectory = "to folder",
 	copying = "Copying",
@@ -102,6 +103,7 @@
 	shutdown = "Shutdown",
 	logout = "Logout",
 	reboot = "Reboot",
+	takeScreenshot = "Take screenshot",
 
 	shortcutIsCorrupted = "Shortcut is linked to non-existent file",
 	sortAutomatically = "Align to grid",
