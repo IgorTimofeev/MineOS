@@ -325,6 +325,133 @@ end
 
 --------------------------------------------------------------------------------
 
+local function copyScreenToImage(x0, y0, width, height)
+	local screenWidth, screenHeight = screen.getResolution()
+	local img = {width, height}
+
+	local backgrounds, foregrounds, chars, i = screen.getCurrentFrameTables()
+	for y = y0, y0 + height - 1 do
+		for x = x0, x0 + width - 1 do
+			i = screen.getIndex(x, y)
+			
+			table.insert(img, backgrounds[i])
+			table.insert(img, foregrounds[i])
+			table.insert(img, 0x0)
+			table.insert(img, chars[i])
+		end
+	end
+
+	return img
+end
+
+function system.takeScreenshot()
+	local selection = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
+
+	selection.updateSelection = function(selection, x1, y1)
+		local x0, y0 = selection.startX, selection.startY
+
+		if x0 > x1 then x0, x1 = x1, x0 end
+		if y0 > y1 then y0, y1 = y1, y0 end
+
+		selection.selX, selection.selY = x0, y0
+		selection.selWidth, selection.selHeight = x1 - x0 + 1, y1 - y0 + 1
+	end
+
+	selection.startX = math.floor(selection.width  / 4)
+	selection.startY = math.floor(selection.height / 4)
+	selection:updateSelection(3 * selection.startX, 3 * selection.startY)
+
+	local screenFrameBackgrounds, screenFrameForegrounds, screenFrameChars = screen.getNewFrameTables()
+	local screenBufferWidth, screenBufferHeight = screen.getResolution()
+
+	local function drawBorder(x0, y0, width, height, char)
+		for x = x0, x0 + width - 1 do
+			for y = y0, y0 + height - 1 do
+				if x >= 1 and y >= 1 and x < screenBufferWidth and y < screenBufferHeight then
+					i = screen.getIndex(x, y)
+					screenFrameForegrounds[i], screenFrameChars[i] = 0xFFFFFF, char
+				end
+			end
+		end
+	end
+
+	local function drawTextCentered(x, y, text)
+		screen.drawText(math.floor(x - #text / 2), y, 0xFFFFFF, text)
+	end
+
+	local selectionOutsideTransparency = userSettings.interfaceTransparencyEnabled and 0.2 or nil
+
+	local function fill(x, y, width, height)
+		screen.drawRectangle(x, y, width, height, 0, 0, " ", selectionOutsideTransparency)
+	end
+
+	selection.draw = function(selection)
+		local 
+			x, y, width, height, workspaceWidth, workspaceHeight = 
+			selection.selX, selection.selY, selection.selWidth, selection.selHeight, selection.width, selection.height
+
+		-- Fill area outside selection
+		fill(1,         1,          x - 1,                          workspaceHeight                 )
+		fill(x + width, 1,          workspaceWidth - width - x + 1, workspaceHeight                 )
+		fill(x,         1,          width,                          y - 1                           )
+		fill(x,         y + height, width,                          workspaceHeight - height - y + 2)
+
+		-- Border
+		drawBorder(x,         y - 1,      width, 1,      '⣀')
+		drawBorder(x,         y + height, width, 1,      '⠉')
+		drawBorder(x - 1,     y,          1,     height, '⢸')
+		drawBorder(x + width, y,          1,     height, '⡇')
+		
+		drawTextCentered(x + width / 2, y + height + 1, ("%dx%d"):format(width, height))
+	end
+
+	selection.submit = function(selection)
+		selection:remove()
+		local img = copyScreenToImage(selection.selX, selection.selY, selection.selWidth, selection.selHeight)
+
+		local filesystemDialog = GUI.addFilesystemDialog(
+			workspace, 
+			false, 
+			50, 
+			math.floor(workspace.height * 0.8), 
+			localization.save, 
+			localization.cancel, 
+			localization.fileName, 
+			"/"
+		)
+
+		filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
+		filesystemDialog:addExtensionFilter(".pic")
+		filesystemDialog:expandPath(paths.user.desktop)
+		filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
+		
+		filesystemDialog.onSubmit = function(path)
+			image.save(path, img)
+			computer.pushSignal("system", "updateFileList")
+		end
+	
+		filesystemDialog:show()
+	end
+
+	selection.eventHandler = function(workspace, selection, eventType, _, e1, e2)
+		if eventType == "touch" then
+			selection.startX, selection.startY = e1, e2
+			selection:updateSelection(e1, e2)
+
+		elseif eventType == "drag" then
+			selection:updateSelection(e1, e2)
+
+		elseif eventType == "key_down" then
+			if e2 == 28 then -- Enter
+				selection:submit()
+			elseif e2 == 15 then -- Tab
+				selection:remove()
+			end
+		end
+	end
+end
+
+--------------------------------------------------------------------------------
 
 local function addMainDesktopMenuItem(menu)
 	local item = menu:addContextMenuItem("💻", 0xF0F0F0)
@@ -378,6 +505,10 @@ local function addMainDesktopMenuItem(menu)
 
 	item:addItem("🛒", localization.updates).onTouch = function()
 		system.execute(paths.system.applicationAppMarket, "updates")
+	end
+
+	item:addItem("📸", localization.takeScreenshot).onTouch = function()
+		system.takeScreenshot()
 	end
 
 	item:addSeparator()
