@@ -29,8 +29,15 @@ end
 
 --------------------------------------------------------------------------------
 
+local chars = {
+	[-1] = "/",
+	[ 0] = "|",
+	[ 1] = "\\"
+}
+
 local drops = {}
-local lastUpdateTime = computer.uptime()
+local lastUpdateTime, dropsDirection = computer.uptime(), math.random(-1, 1)
+local lastDirectionChangeTime = lastUpdateTime
 
 wallpaper.draw = function(wallpaper)
 	-- Spawning drops
@@ -51,7 +58,7 @@ wallpaper.draw = function(wallpaper)
 	screen.drawRectangle(wallpaper.x, wallpaper.y, wallpaper.width, wallpaper.height, config.backgroundColor, 0, " ")
 
 	-- Rendering drops
-	local drop, x, y
+	local char, drop, x, y = chars[dropsDirection]
 
 	for i = 1, #drops do
 		drop = drops[i]
@@ -63,19 +70,24 @@ wallpaper.draw = function(wallpaper)
 			wallpaper.y + y,
 			config.backgroundColor, 
 			drop.color,
-			(x == wallpaper.width - 1 or y == wallpaper.height - 1) and '*' or '\\'
+			(x == wallpaper.width - 1 or x == 1 or y == wallpaper.height - 1 or y == 1) and '*' or char
 		)
 	end
 
 	-- Updating drops
 	local updateTime = computer.uptime()
 	local deltaTime = updateTime - lastUpdateTime
+
+	if updateTime - lastDirectionChangeTime > 20 then
+		dropsDirection = math.random(-1, 1)
+		lastDirectionChangeTime = updateTime
+	end
 	
 	local i = 1
 	while i <= #drops do
 		drop = drops[i]
 
-		drop.x = drop.x + drop.speed * config.speed * deltaTime
+		drop.x = drop.x + drop.speed * config.speed * deltaTime * dropsDirection
 		drop.y = drop.y + drop.speed * config.speed * deltaTime
 
 		if drop.x < 0 then
