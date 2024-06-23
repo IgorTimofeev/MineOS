@@ -121,7 +121,7 @@ wallpaper.draw = function(wallpaper)
     local t = config.speed * (computer.uptime() - startTime) / 10
     
     local lightPos = {lightSpinRadius * math.cos(t), lightSpinRadius * 0.5 * math.cos(t), lightSpinRadius * math.sin(t)}
-    local cx, cy = math.floor(wallpaper.width / 2), wallpaper.height
+    local cx, cy = wallpaper.x + math.floor(wallpaper.width / 2), 2 * wallpaper.y + wallpaper.height
 
     screen.drawRectangle(wallpaper.x, wallpaper.y, wallpaper.width, wallpaper.height, config.backgroundColor, 0, " ")
 

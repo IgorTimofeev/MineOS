@@ -36,8 +36,8 @@ local function reset()
 	local resX, resY = screen.getResolution()
 	for i = 1, config.lineCount do
 		table.insert(points, {
-			x = math.random(0, resX - 1),
-			y = math.random(0, (resY - 1) * 2),
+			x = math.random(0,  wallpaper.width  - 1),
+			y = math.random(0, (wallpaper.height - 1) * 2),
 			vx = (2 * math.random() - 1) * 25,
 			vy = (2 * math.random() - 1) * 25
 		})

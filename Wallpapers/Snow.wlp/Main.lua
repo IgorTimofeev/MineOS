@@ -15,7 +15,8 @@ local config = {
 	snowflakeColor = 0xFFFFFF,
 	snowflakeAmount = 20,
 	maxStackHeight = 10,
-	maxWind = 2
+	maxWind = 2,
+	speed = 1
 }
 
 if filesystem.exists(configPath) then
@@ -81,8 +82,8 @@ wallpaper.draw = function(wallpaper)
 		snowflake = snowflakes[i]
 
 		screenSemiPixelSet(
-			mathFloor(wallpaper.x + snowflake.x),
-			mathFloor(wallpaper.y + snowflake.y),
+			mathFloor(    wallpaper.x + snowflake.x),
+			mathFloor(2 * wallpaper.y + snowflake.y),
 			snowflake.color
 		)
 	end
@@ -91,7 +92,7 @@ wallpaper.draw = function(wallpaper)
 	local stackHeight
 
 	for x, stackHeight in pairs(stacks) do
-		screenDrawSemiPixelRectangle(wallpaper.x + x, wallpaper.y + wallpaper.height * 2 - stackHeight + 1, 1, stackHeight, config.snowflakeColor)
+		screenDrawSemiPixelRectangle(wallpaper.x + x, 2 * (wallpaper.y + wallpaper.height) - stackHeight - 1, 1, stackHeight, config.snowflakeColor)
 
 		if stackHeight > config.maxStackHeight then
 			stacks[x] = stackHeight - 2
@@ -102,7 +103,7 @@ wallpaper.draw = function(wallpaper)
 	local currentTime = computer.uptime()
 	local deltaTime = (currentTime - lastUpdateTime) * 20
 	
-	wind = wind + .1 * (2 * mathRandom() - 1) * deltaTime
+	wind = wind + .1 * (2 * mathRandom() - 1) * deltaTime * config.speed
 	if wind >  config.maxWind then wind =  config.maxWind end
 	if wind < -config.maxWind then wind = -config.maxWind end
 
@@ -113,8 +114,8 @@ wallpaper.draw = function(wallpaper)
 	while i <= #snowflakes do
 		snowflake = snowflakes[i]
 
-		snowflake.y = snowflake.y + deltaTime *         snowflake.speed 
-		snowflake.x = snowflake.x + deltaTime * (wind * snowflake.speed + snowflake.vx)
+		snowflake.y = snowflake.y + deltaTime * config.speed *         snowflake.speed 
+		snowflake.x = snowflake.x + deltaTime * config.speed * (wind * snowflake.speed + snowflake.vx)
 		
 		snowflake.vx = snowflake.vx + (mathRandom() * 2 - 1) * 0.1 * deltaTime
 		
@@ -215,4 +216,26 @@ wallpaper.configure = function(layout)
 		config.maxStackHeight = math.floor(maxStackHeightSlider.value)
 		saveConfig()
 	end
+
+	local speedSlider = layout:addChild(
+		GUI.slider(
+			1, 1, 
+			36,
+			0x66DB80, 
+			0xE1E1E1, 
+			0xFFFFFF, 
+			0xA5A5A5, 
+			20, 1000, 
+			config.speed * 100,
+			false, 
+			"Speed: ",
+			"%"
+		)
+	)
+
+	speedSlider.roundValues = true
+	speedSlider.onValueChanged = function()
+		config.speed = speedSlider.value / 100
+		saveConfig()
+	end	
 end
