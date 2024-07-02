@@ -9,6 +9,7 @@ local color = require("Color")
 local number = require("Number")
 local text = require("Text")
 local event = require("Event")
+local SHA = require("SHA-256")
 
 --------------------------------------------------------------------------------
 
@@ -23,7 +24,7 @@ local overviewMaximumTouchAcceleration = 5
 local appMarketPath = paths.user.applicationData .. "App Market/"
 local configPath = appMarketPath .. "Config.cfg"
 local userPath = appMarketPath .. "User.cfg"
-local iconCachePath = appMarketPath .. "Cache/"
+local cachePath = appMarketPath .. "Cache/"
 
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/") 
@@ -33,6 +34,14 @@ local categories = {
 	{ icon = "📖", name = localization.categoryLibraries },
 	{ icon = "˃.", name = localization.categoryScripts },
 	{ icon = "📷", name = localization.categoryWallpapers },
+}
+
+local filesTypes = {
+	main = 1,
+	resource = 2,
+	icon = 3,
+	localization = 4,
+	preview = 5
 }
 
 local orderDirections = {
@@ -76,7 +85,7 @@ if not component.isAvailable("internet") then
 	return
 end
 
-filesystem.makeDirectory(iconCachePath)
+filesystem.makeDirectory(cachePath)
 
 local iconsCache = {}
 
@@ -261,62 +270,61 @@ local function checkContentLength(url)
 	end
 end
 
-local function checkImage(url, mneTolkoSprosit)
+local function checkImage(url, mneTolkoSprosit, sizeFilter)
 	local handle, reason = checkContentLength(url)
 	
-	if handle then
-		local needCheck, data, chunk, reason = true, ""
-		
-		while true do
-			chunk, reason = handle.read(math.huge)
-			
-			if chunk then
-				data = data .. chunk
-				progressIndicator:roll()
-				workspace:draw()
-
-				if needCheck and #data > 8 then
-					if data:sub(1, 4) == "OCIF" then
-						local encodingMethod = string.byte(data:sub(5, 5))
-
-						if encodingMethod >= 6 or encodingMethod <= 8 then
-							if string.byte(data:sub(6, 6)) <= 8 and string.byte(data:sub(7, 7)) <= 4 then
-								if mneTolkoSprosit then
-									handle:close()
-
-									return true					
-								end
-
-								needCheck = false
-							else
-								handle:close()
-
-								return false, "Image size is larger than 8x4"
-							end
-						else
-							handle:close()
-
-							return false, "Image encoding method is not supported"
-						end
-					else
-						handle:close()
-
-						return false, "Wrong image file signature"
-					end		
-				end
-			else
-				handle:close()
-
-				if reason then
-					return false, reason
-				else
-					return data
-				end
-			end
-		end	
-	else
+	if not handle then
 		return false, reason
 	end
+
+	local needCheck, data, chunk, reason = true, ""
+	
+	while true do
+		chunk, reason = handle.read(math.huge)
+		
+		if not chunk then
+			handle:close()
+
+			if reason then
+				return false, reason
+			end
+
+			return data
+		end
+
+		data = data .. chunk
+		progressIndicator:roll()
+		workspace:draw()
+
+		if needCheck and #data > 8 then
+			if data:sub(1, 4) ~= "OCIF" then
+				handle:close()
+				return false, "Wrong image file signature"
+			end
+			
+			local encodingMethod = string.byte(data:sub(5, 5))
+			if not (6 <= encodingMethod and encodingMethod <= 8) then
+				handle:close()
+				return false, "Image method is not supported"
+			end
+
+			local is8 = encodingMethod == 8 and 1 or 0
+			if sizeFilter then
+				local result, reason = sizeFilter(string.byte(data:sub(6, 6)) + is8, string.byte(data:sub(7, 7)) + is8)
+				if not result then
+					handle:close()
+					return false, reason
+				end
+			end
+
+			if mneTolkoSprosit then
+				handle:close()
+				return true
+			end
+
+			needCheck = false
+		end
+	end	
 end
 
 local function tryToDownload(...)
@@ -519,7 +527,11 @@ local function download(publication)
 
 			if publication.dependencies then
 				for i = 1, #publication.all_dependencies do
-					table.insert(treeData, publication.dependencies_data[publication.all_dependencies[i]])
+					local dependency = publication.dependencies_data[publication.all_dependencies[i]]
+
+					if dependency.type_id ~= filesTypes.preview then
+						table.insert(treeData, dependency)
+					end
 				end
 			end
 
@@ -586,18 +598,20 @@ local function download(publication)
 			if publication.dependencies then
 				for i = 1, #publication.all_dependencies do
 					local dependency = publication.dependencies_data[publication.all_dependencies[i]]
-					local dependencyPath = getDependencyPath(mainFilePath, dependency)
+					if dependency.type_id ~= filesTypes.preview then
+						local dependencyPath = getDependencyPath(mainFilePath, dependency)
 
-					govnoed(dependency, i + 1)
+						govnoed(dependency, i + 1)
 
-					if getUpdateState(publication.all_dependencies[i], dependency.version) < 4 then
-						versionsTable[publication.all_dependencies[i]] = {
-							path = dependencyPath,
-							version = dependency.version,
-						}
-						tryToDownload(dependency.source_url, dependencyPath)
-					else
-						event.sleep(0.05)
+						if getUpdateState(publication.all_dependencies[i], dependency.version) < 4 then
+							versionsTable[publication.all_dependencies[i]] = {
+								path = dependencyPath,
+								version = dependency.version,
+							}
+							tryToDownload(dependency.source_url, dependencyPath)
+						else
+							event.sleep(0.05)
+						end
 					end
 				end
 			end
@@ -631,32 +645,52 @@ local function loadImage(path)
 	end
 end
 
+local function getImage(publication, url, sizeFilter)
+	local path = cachePath .. publication.file_id .. "@" .. publication.version .. "_" .. SHA.hash(url) .. ".pic"
+
+	if filesystem.exists(path) then
+		return loadImage(path)
+	else
+		progressIndicator.active = true
+		workspace:draw()
+
+		local data, reason = checkImage(url, false, sizeFilter)
+
+		progressIndicator.active = false
+		workspace:draw()
+
+		if data then
+			filesystem.write(path, data)
+
+			return loadImage(path)
+		else
+			return nil, reason
+		end
+	end
+end
+
 local function getPublicationIcon(publication)
 	if publication.icon_url then
 		if config.hideApplicationIcons then
 			return loadIcon("Application")
 		else
-			local path = iconCachePath .. publication.file_id .. "@" .. publication.version .. ".pic"
+			local image, reason = getImage(
+				publication, 
+				publication.icon_url,
+				function(width, height)
+					if width > 8 or height > 4 then
+						return false, "Image size is larger than 8x4"
+					end
 
-			if filesystem.exists(path) then
-				return loadImage(path)
-			else
-				progressIndicator.active = true
-				workspace:draw()
-
-				local data, reason = checkImage(publication.icon_url)
-
-				progressIndicator.active = false
-				workspace:draw()
-
-				if data then
-					filesystem.write(path, data)
-
-					return loadImage(path)
-				else
-					return loadIcon("Application")
+					return true
 				end
+			)
+
+			if not image then
+				return loadIcon("Application")
 			end
+
+			return image
 		end
 	elseif publication.category_id == 2 then
 		return loadIcon("Lua")
@@ -671,7 +705,7 @@ local function addApplicationInfo(container, publication, limit)
 	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, text.limit(publication.publication_name, limit, "right")))
 	container.developerLabel = container:addChild(GUI.text(13, 3, 0x878787, text.limit("©" .. publication.user_name, limit, "right")))
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and number.round(publication.average_rating) or 0))
-
+	
 	local updateState = getUpdateState(publication.file_id, publication.version)
 	
 	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
@@ -1026,9 +1060,9 @@ local function settings()
 			end
 
 			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache)).onTouch = function()
-				local list = filesystem.list(iconCachePath)
+				local list = filesystem.list(cachePath)
 				for i = 1, #list do
-					filesystem.remove(iconCachePath .. list[i])
+					filesystem.remove(cachePath .. list[i])
 				end
 			end
 
@@ -1243,6 +1277,73 @@ local function dialogs()
 	end
 end
 
+--------------------------------------------------------------------------------
+
+local function previewContainerUpdate(container)
+	container.height = 0
+	container.contentWidth = 0
+
+	local child
+	for i = 1, #container.children do
+		child = container.children[i]
+
+		child.localX = container.contentWidth + 1 + container.contentOffset
+		container.contentWidth = container.contentWidth + child.width + container.horizontalSpacing 
+
+		if child.height > container.height then
+			container.height = child.height
+		end
+	end
+end
+
+local function previewContainerFocusItem(container, index)
+	if index < 1 or index > #container.children then
+		return
+	end
+
+	container.focusedItem = index
+	
+	local newContentOffset = 0
+	for i = 1, index - 1 do
+		newContentOffset = newContentOffset - container.children[i].width - container.horizontalSpacing
+	end
+
+	local startContentOffset = container.contentOffset
+	container:addAnimation(
+		function(animation)
+			container.contentOffset = math.floor(startContentOffset + (newContentOffset - startContentOffset) * animation.position^(1/2))
+			container:update()
+		end,
+
+		function(animation)
+			animation:remove()
+
+			if container.onItemFocused then
+				container.onItemFocused()
+			end
+		end
+	):start(container.animationDuration)
+end
+
+-- Хитрый контейнер, который будет демонстрировать элементы в виде горизонтальной прокручиваемой ленты
+local function previewContainerNew(x, y, width, height)
+	local container = GUI.container(x, y, width, height)
+
+	container.contentOffset = 0
+
+	container.focusedItem = 1
+	container.contentWidth = 0
+	container.horizontalSpacing = 1
+	container.animationDuration = .2
+
+	container.update = previewContainerUpdate
+	container.focusItem = previewContainerFocusItem
+
+	return container
+end
+
+--------------------------------------------------------------------------------
+
 newPublicationInfo = function(file_id)
 	lastMethod, lastArguments = newPublicationInfo, {file_id}
 
@@ -1453,6 +1554,19 @@ newPublicationInfo = function(file_id)
 				end
 			end
 
+			-- Превьюхи
+			local previewContainer = textDetailsContainer:addChild(previewContainerNew(3, y, textDetailsContainer.width - 4, 1))
+
+			if publication.dependencies_data then
+				for file_id, dependency in pairs(publication.dependencies_data) do
+					if dependency.type_id == filesTypes.preview then
+						previewContainer:addChild(GUI.image(1, 1, getImage(publication, dependency.source_url)))
+					end
+				end
+			end
+
+			previewContainer:update()
+
 			-- Подсчитываем результирующие размеры
 			textDetailsContainer.height = math.max(
 				textDetailsContainer.children[#textDetailsContainer.children].localY + textDetailsContainer.children[#textDetailsContainer.children].height,
@@ -1462,6 +1576,33 @@ newPublicationInfo = function(file_id)
 			ratingsContainer.height = textDetailsContainer.height
 			ratingsContainer.panel.height = textDetailsContainer.height
 			detailsContainer.height = textDetailsContainer.height
+
+			local function addButton(text, width, height, alignRight)
+				return textDetailsContainer:addChild(GUI.roundedButton(
+					previewContainer.x + (alignRight and (previewContainer.width - width - 1) or 1),
+					previewContainer.y + math.floor(previewContainer.height / 2 - height / 2),
+					width, height,
+					0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF,
+					text
+				))
+			end
+
+			local leftButton = addButton("<", 3, 3, false)
+			leftButton.onTouch = function()
+				previewContainer:focusItem(previewContainer.focusedItem - 1)
+			end
+
+			local rightButton = addButton(">", 3, 3, true)
+			rightButton.onTouch = function()
+				previewContainer:focusItem(previewContainer.focusedItem + 1)
+			end
+
+			previewContainer.onItemFocused = function()
+				leftButton.hidden = previewContainer.contentOffset == 0
+				rightButton.hidden = previewContainer.contentOffset + previewContainer.contentWidth < previewContainer.width
+			end
+
+			previewContainer:onItemFocused()
 
 			if #reviews > 0 then
 				-- Отображаем все оценки
@@ -1674,6 +1815,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		dependencyTypeComboBox:addItem(localization.fileByURL)
 		dependencyTypeComboBox:addItem(localization.localizationDependency)
 		dependencyTypeComboBox:addItem(localization.existingPublication)
+		dependencyTypeComboBox:addItem(localization.previewDepencency)
 		dependencyTypeComboBox.selectedItem = lastDependencyType
 
 		local publicationNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "MineOS"))
@@ -1683,6 +1825,28 @@ editPublication = function(initialPublication, initialCategoryID)
 
 		local button = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.add))
 		button.onTouch = function()
+			if lastDependencyType == 4 then
+				local result, reason = checkImage(
+					urlInput.text,
+					true,
+					function(width, height)
+						if width > 64 or height ~= 16 then
+							return false, "Preview image width shold be <= 64 and height should be equal to 16"
+						end
+
+						return true
+					end
+				)
+
+				if not result then
+					GUI.alert(reason)
+					container:remove()
+					workspace:draw()					
+
+					return
+				end
+			end
+
 			addDependency({
 				publication_name = lastDependencyType == 3 and publicationNameInput.text or nil,
 				path =
@@ -1694,8 +1858,13 @@ editPublication = function(initialPublication, initialCategoryID)
 					(
 						"Localizations/" .. filesystem.name(urlInput.text)
 					) or
+					lastDependencyType == 4 and
+					(
+						filesystem.name(urlInput.text)
+					) or
 					nil,
 				source_url = lastDependencyType ~= 3 and urlInput.text or nil,
+				preview = lastDependencyType == 4
 			})
 
 			container:remove()
@@ -1707,6 +1876,8 @@ editPublication = function(initialPublication, initialCategoryID)
 				button.disabled = #pathInput.text == 0 or #urlInput.text == 0
 			elseif lastDependencyType == 2 then
 				button.disabled = #urlInput.text == 0 or filesystem.extension(urlInput.text) ~= ".lang"
+			elseif lastDependencyType == 4 then
+				button.disabled = #urlInput.text == 0
 			else
 				button.disabled = #publicationNameInput.text == 0
 			end
@@ -1714,7 +1885,11 @@ editPublication = function(initialPublication, initialCategoryID)
 		pathInput.onInputFinished, urlInput.onInputFinished = publicationNameInput.onInputFinished, publicationNameInput.onInputFinished
 		
 		local function updatePlaceholder()
-			urlInput.placeholderText = lastDependencyType == 1 and "http://example.com/Main.lua" or "http://example.com/English.lang"
+			urlInput.placeholderText = 
+				lastDependencyType == 1 and "http://example.com/Main.lua" 
+				or lastDependencyType == 2 and "http://example.com/English.lang"
+				or "http://example.com/Preview.pic"
+				
 			pathInput.placeholderText = pathType.switch.state and "Resources/Main.lua" or "Users/Scripts/Main.lua"
 		end
 
@@ -1835,165 +2010,168 @@ updateFileList = function(category_id, updates)
 		file_ids = file_ids,
 	})
 
-	if result then
-		contentContainer:removeChildren()
-		
-		if updates then
-			local i = 1
-			while i <= #result do
-				if getUpdateState(result[i].file_id, result[i].version) ~= 3 then
-					table.remove(result, i)
-				else
-					i = i + 1
-				end
+	if not result then
+		return
+	end
+
+	contentContainer:removeChildren()
+	
+	if updates then
+		local i = 1
+		while i <= #result do
+			if getUpdateState(result[i].file_id, result[i].version) ~= 3 then
+				table.remove(result, i)
+			else
+				i = i + 1
 			end
 		end
+	end
 
-		local y = 2
-		local layout = contentContainer:addChild(GUI.layout(1, y, contentContainer.width, 1, 1, 1))
-		layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-		layout:setSpacing(1, 1, 2)
+	local y = 2
+	local layout = contentContainer:addChild(GUI.layout(1, y, contentContainer.width, 1, 1, 1))
+	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	layout:setSpacing(1, 1, 2)
 
-		if not updates or updates and #result > 0 then
-			if updates then
-				if #result > 0 then
-					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
-						local container = GUI.addBackgroundContainer(workspace, true, true, "")
+	if not updates or updates and #result > 0 then
+		if updates then
+			if #result > 0 then
+				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
+					local container = GUI.addBackgroundContainer(workspace, true, true, "")
 
-						local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
+					local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 
-						for i = 1, #result do
-							container.label.text = localization.downloading .. " " .. result[i].publication_name
-							progressBar.value = number.round(i / #result * 100)
-							workspace:draw()
+					for i = 1, #result do
+						container.label.text = localization.downloading .. " " .. result[i].publication_name
+						progressBar.value = number.round(i / #result * 100)
+						workspace:draw()
 
-							local publication = fieldAPIRequest("result", "publication", {
-								file_id = result[i].file_id,
-								language_id = config.language_id,
-							})
-							
-							local versionsTable = getVersionsTable(publication.file_id)
-							versionsTable[publication.file_id].version = publication.version
-							tryToDownload(publication.source_url, versionsTable[publication.file_id].path)
+						local publication = fieldAPIRequest("result", "publication", {
+							file_id = result[i].file_id,
+							language_id = config.language_id,
+						})
+						
+						local versionsTable = getVersionsTable(publication.file_id)
+						versionsTable[publication.file_id].version = publication.version
+						tryToDownload(publication.source_url, versionsTable[publication.file_id].path)
 
-							if publication then
-								if publication.dependencies then
-									for j = 1, #publication.all_dependencies do
-										local dependency = publication.dependencies_data[publication.all_dependencies[j]]
-										if not dependency.publication_name then
-											container.label.text = localization.downloading .. " " .. dependency.path
-											workspace:draw()
+						if publication then
+							if publication.dependencies then
+								for j = 1, #publication.all_dependencies do
+									local dependency = publication.dependencies_data[publication.all_dependencies[j]]
+									if not dependency.publication_name then
+										container.label.text = localization.downloading .. " " .. dependency.path
+										workspace:draw()
+										
+										if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
+											local dependencyPath = getDependencyPath(versionsTable[publication.file_id].path, dependency)
 											
-											if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
-												local dependencyPath = getDependencyPath(versionsTable[publication.file_id].path, dependency)
-												
-												versionsTable[publication.all_dependencies[j]] = {
-													path = dependencyPath,
-													version = dependency.version,
-												}
+											versionsTable[publication.all_dependencies[j]] = {
+												path = dependencyPath,
+												version = dependency.version,
+											}
 
-												tryToDownload(dependency.source_url, dependencyPath)
-											else
-												event.sleep(0.05)
-											end
+											tryToDownload(dependency.source_url, dependencyPath)
+										else
+											event.sleep(0.05)
 										end
 									end
 								end
 							end
 						end
-
-						container:remove()
-						saveVersions()
-						computer.shutdown(true)
-					end
-				end
-			else
-				local input = layout:addChild(GUI.input(1, 1, 20, layout.height, 0xFFFFFF, 0x2D2D2D, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, search or "", localization.search, true))
-				input.onInputFinished = function()
-					if #input.text == 0 then
-						search = nil
-					else
-						search = input.text
 					end
 
-					currentPage = 0
-					updateFileList(category_id, updates)
-				end
-
-				local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 20, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
-				orderByComboBox:addItem(localization.byPopularity)
-				orderByComboBox:addItem(localization.byRating)
-				orderByComboBox:addItem(localization.byName)
-				orderByComboBox:addItem(localization.byDate)
-				
-				orderByComboBox.selectedItem = config.orderBy
-
-				local orderDirectionComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
-				orderDirectionComboBox:addItem(localization.desc)
-				orderDirectionComboBox:addItem(localization.asc)
-				orderDirectionComboBox.selectedItem = config.orderDirection
-
-				orderByComboBox.onItemSelected = function()
-					config.orderBy = orderByComboBox.selectedItem
-					config.orderDirection = orderDirectionComboBox.selectedItem
-					updateFileList(category_id, updates)
-					saveConfig()
-				end
-				orderDirectionComboBox.onItemSelected = orderByComboBox.onItemSelected
-
-				if user.token then
-					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
-						editPublication(nil, category_id)
-					end
+					container:remove()
+					saveVersions()
+					computer.shutdown(true)
 				end
 			end
+		else
+			local input = layout:addChild(GUI.input(1, 1, 20, layout.height, 0xFFFFFF, 0x2D2D2D, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, search or "", localization.search, true))
+			input.onInputFinished = function()
+				if #input.text == 0 then
+					search = nil
+				else
+					search = input.text
+				end
 
-			y = y + layout.height + 1
-
-			local navigationLayout = contentContainer:addChild(GUI.layout(1, contentContainer.height - 1, contentContainer.width, 1, 1, 1))
-			navigationLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-			navigationLayout:setSpacing(1, 1, 2)
-
-			local function switchPage(forward)
-				currentPage = currentPage + (forward and 1 or -1)
+				currentPage = 0
 				updateFileList(category_id, updates)
 			end
 
-			local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
-			backButton.colors.disabled.background = 0xE1E1E1
-			backButton.colors.disabled.text = 0xC3C3C3
-			backButton.disabled = currentPage == 0
-			backButton.onTouch = function()
-				switchPage(false)
-			end
+			local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 20, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+			orderByComboBox:addItem(localization.byPopularity)
+			orderByComboBox:addItem(localization.byRating)
+			orderByComboBox:addItem(localization.byName)
+			orderByComboBox:addItem(localization.byDate)
+			
+			orderByComboBox.selectedItem = config.orderBy
 
-			navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
-			local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
-			nextButton.colors.disabled = backButton.colors.disabled
-			nextButton.disabled = #result <= appsPerPage
-			nextButton.onTouch = function()
-				switchPage(true)
-			end
+			local orderDirectionComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+			orderDirectionComboBox:addItem(localization.desc)
+			orderDirectionComboBox:addItem(localization.asc)
+			orderDirectionComboBox.selectedItem = config.orderDirection
 
-			local xStart = math.floor(1 + contentContainer.width / 2 - (appsPerWidth * (appWidth + appHSpacing) - appHSpacing) / 2)
-			local x, counter = xStart, 1
-			for i = 1, #result do
-				contentContainer:addChild(newApplicationPreview(x, y, result[i]))
-				
-				if counter >= appsPerPage then
-					break
-				elseif counter % appsPerWidth == 0 then
-					x, y = xStart, y + appHeight + appVSpacing
-				else
-					x = x + appWidth + appHSpacing
+			orderByComboBox.onItemSelected = function()
+				config.orderBy = orderByComboBox.selectedItem
+				config.orderDirection = orderDirectionComboBox.selectedItem
+				updateFileList(category_id, updates)
+				saveConfig()
+			end
+			orderDirectionComboBox.onItemSelected = orderByComboBox.onItemSelected
+
+			if user.token then
+				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
+					editPublication(nil, category_id)
 				end
-				counter = counter + 1
-
-				workspace:draw()
 			end
-		else
-			showLabelAsContent(contentContainer, localization.noUpdates)
 		end
+
+		y = y + layout.height + 1
+
+		local navigationLayout = contentContainer:addChild(GUI.layout(1, contentContainer.height - 1, contentContainer.width, 1, 1, 1))
+		navigationLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+		navigationLayout:setSpacing(1, 1, 2)
+
+		local function switchPage(forward)
+			currentPage = currentPage + (forward and 1 or -1)
+			updateFileList(category_id, updates)
+		end
+
+		local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
+		backButton.colors.disabled.background = 0xE1E1E1
+		backButton.colors.disabled.text = 0xC3C3C3
+		backButton.disabled = currentPage == 0
+		backButton.onTouch = function()
+			switchPage(false)
+		end
+
+		navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
+		local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
+		nextButton.colors.disabled = backButton.colors.disabled
+		nextButton.disabled = #result <= appsPerPage
+		nextButton.onTouch = function()
+			switchPage(true)
+		end
+
+		local xStart = math.floor(1 + contentContainer.width / 2 - (appsPerWidth * (appWidth + appHSpacing) - appHSpacing) / 2)
+		local x, counter = xStart, 1
+
+		for i = 1, #result do
+			contentContainer:addChild(newApplicationPreview(x, y, result[i]))
+			
+			if counter >= appsPerPage then
+				break
+			elseif counter % appsPerWidth == 0 then
+				x, y = xStart, y + appHeight + appVSpacing
+			else
+				x = x + appWidth + appHSpacing
+			end
+			counter = counter + 1
+
+			workspace:draw()
+		end
+	else
+		showLabelAsContent(contentContainer, localization.noUpdates)
 	end
 end
 
