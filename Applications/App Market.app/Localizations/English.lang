@@ -53,6 +53,7 @@
 	add = "Add",
 	relativePath = "Relative path",
 	localizationDependency = "Localization file",
+	previewDepencency = "Preview image",
 	
 	login = "Log in",
 	profile = "Profile",
@@ -96,6 +97,7 @@
 	license = "License",
 	category = "Category",
 	updated = "Updated",
+	uniqueDownloads = "Unique downloads",
 	reviews = "Reviews",
 	yourRating = "Your rating",
 	writeReviewHere = "Type review text here",

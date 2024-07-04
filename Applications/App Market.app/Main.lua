@@ -575,6 +575,13 @@ local function download(publication)
 		shortcutSwitchAndLabel.hidden = publication.category_id == 2 or publication.category_id == 4
 
 		container.layout:addChild(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download)).onTouch = function()
+			if user.token then
+				RawAPIRequest("download", {
+					token = user.token,
+					file_id = publication.file_id
+				})
+			end
+
 			container.layout:removeChildren(2)
 			local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 				
@@ -1379,12 +1386,18 @@ newPublicationInfo = function(file_id)
 			
 			local y = 2
 
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.developer, ": " .. publication.user_name)); y = y + 1
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.license, ": " .. licenses[publication.license_id])); y = y + 1
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.category, ": " .. categories[publication.category_id].name)); y = y + 1
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.version, ": " .. publication.version)); y = y + 1
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.updated, ": " .. os.date("%d.%m.%Y", publication.timestamp + system.getUserSettings().timeTimezone))); y = y + 1
-			
+			local function addKeyAndValue(key, value)
+				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, key .. ": ", value)); 
+				y = y + 1
+			end
+
+			addKeyAndValue(localization.developer, publication.user_name)
+			addKeyAndValue(localization.license, licenses[publication.license_id])
+			addKeyAndValue(localization.category, categories[publication.category_id].name)
+			addKeyAndValue(localization.version, publication.version)
+			addKeyAndValue(localization.updated, os.date("%d.%m.%Y", publication.timestamp + system.getUserSettings().timeTimezone))
+			addKeyAndValue(localization.uniqueDownloads, publication.downloads)
+
 			-- Добавляем инфу с общими рейтингами
 			if #reviews > 0 then
 				local ratings = {0, 0, 0, 0, 0}
@@ -1393,8 +1406,8 @@ newPublicationInfo = function(file_id)
 				end
 
 				y = y + 1
-				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.reviews, ": " .. #reviews)); y = y + 1
-				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.averageRating, ": " .. string.format("%.1f", publication.average_rating or 0))); y = y + 1
+				addKeyAndValue(localization.reviews, #reviews)
+				addKeyAndValue(localization.averageRating, string.format("%.1f", publication.average_rating or 0))
 
 				for i = #ratings, 1, -1 do
 					local text = tostring(ratings[i])

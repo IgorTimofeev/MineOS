@@ -96,6 +96,7 @@
 	license = "Лицензия",
 	category = "Категория",
 	updated = "Обновлено",
+	uniqueDownloads = "Уникальных скачиваний",
 	reviews = "Отзывы",
 	yourRating = "Оцените приложение",
 	writeReviewHere = "Пишите отзыв здесь",
