@@ -8,11 +8,11 @@
 		[5] = "SW",
 		[6] = "W",
 		[7] = "NW",
-		[8] = "N",
+		[8] = "N"
 	},
-	mmHg = "mmHg",
+	mmHg = " mm Hg",
 	speed = "Frau,",
 	population = "Bevölkerung:",
 	city = "Geben Sie hier den Namen der Stadt ein",
-	cityError = "Falsches Ergebnis. ",
+	cityError = "Falsches Ergebnis. "
 }
