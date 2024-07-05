@@ -53,8 +53,8 @@
 	add = "Lisätä",
 	relativePath = "Suhteellinen polku",
 	localizationDependency = "Lokalisointitiedosto",
-	
 	login = "Kirjaudu sisään",
+	
 	profile = "Profiili",
 	nickname = "Nimimerkki",
 	password = "Salasana",
@@ -74,8 +74,8 @@
 	notRegistered = "Etkö ole vielä rekisteröitynyt?",
 	createAccount = "Luo tili",
 	registrationSuccessfull = "Tarkista sähköpostisi ja roskapostikansiosi vahvistaaksesi tilisi",
-	
 	search = "Hae",
+	
 	byPopularity = "Suosion mukaan",
 	byRating = "Luokituksen mukaan",
 	byDate = "Päivämäärän mukaan",
@@ -89,8 +89,8 @@
 	page = "Sivu",
 	updateAll = "Päivitä kaikki",
 	noUpdates = "Sinulla ei ole päivityksiä",
-	
 	changeReview = "Muuta arvostelua",
+	
 	developer = "Kehittäjä",
 	version = "Versio",
 	license = "Lisenssi",
@@ -109,5 +109,7 @@
 	no = "Ei",
 	of = "/",
 	usersLoveReview = "käyttäjät pitivät tätä arvostelua hyödyllisenä",
-	thanksForVote = "Kiitos mielipiteestäsi."
+	thanksForVote = "Kiitos mielipiteestäsi.",
+	previewDepencency = "Esikatselukuva",
+	uniqueDownloads = "Ainutlaatuiset lataukset"
 }

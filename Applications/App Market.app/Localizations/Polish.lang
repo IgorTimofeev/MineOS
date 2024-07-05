@@ -53,8 +53,8 @@
 	add = "Dodać",
 	relativePath = "Względna ścieżka dostępu",
 	localizationDependency = "Plik lokalizacyjny",
-	
 	login = "Zaloguj sie",
+	
 	profile = "Profil",
 	nickname = "Przezwisko",
 	password = "Hasło",
@@ -74,8 +74,8 @@
 	notRegistered = "Jeszcze nie zarejestrowany?",
 	createAccount = "Utwórz konto",
 	registrationSuccessfull = "Sprawdź swoją pocztę e-mail i folder ze spamem, aby zweryfikować swoje konto",
-	
 	search = "Szukaj",
+	
 	byPopularity = "Według popularności",
 	byRating = "Według oceny",
 	byDate = "Według daty",
@@ -89,8 +89,8 @@
 	page = "Strona",
 	updateAll = "Zaktualizuj wszystko",
 	noUpdates = "Nie masz żadnych aktualizacji",
-	
 	changeReview = "Zmień recenzję",
+	
 	developer = "Deweloper",
 	version = "Wersja",
 	license = "Licencja",
@@ -109,5 +109,7 @@
 	no = "Nie",
 	of = "z",
 	usersLoveReview = "użytkownicy uznali tę opinię za pomocną",
-	thanksForVote = "Dziękuję za Twoją opinię."
+	thanksForVote = "Dziękuję za Twoją opinię.",
+	uniqueDownloads = "Unikalne pliki do pobrania",
+	previewDepencency = "Podgląd obrazu"
 }

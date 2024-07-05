@@ -53,8 +53,8 @@
 	add = "Ajouter",
 	relativePath = "Chemin relatif",
 	localizationDependency = "Fichier de localisation",
-	
 	login = "S'identifier",
+	
 	profile = "Profil",
 	nickname = "Pseudo",
 	password = "Mot de passe",
@@ -74,8 +74,8 @@
 	notRegistered = "Pas encore inscrit ?",
 	createAccount = "Créer un compte",
 	registrationSuccessfull = "Vérifiez votre boite mail et le dossier de courrier indésirable pour valider votre compte",
-	
 	search = "Rechercher",
+	
 	byPopularity = "Par popularité",
 	byRating = "Par notation",
 	byDate = "Par date",
@@ -89,8 +89,8 @@
 	page = "Page",
 	updateAll = "Tout mettre à jour",
 	noUpdates = "Aucune mises à jour n'est disponible",
-	
 	changeReview = "Changer de critique",
+	
 	developer = "Développeur",
 	version = "Version",
 	license = "Licence",
@@ -109,5 +109,7 @@
 	no = "Non",
 	of = "sur",
 	usersLoveReview = "utilisateurs ont trouvé cet avis utile",
-	thanksForVote = "Merci pour votre avis."
+	thanksForVote = "Merci pour votre avis.",
+	previewDepencency = "Aperçu de l'image",
+	uniqueDownloads = "Téléchargements uniques"
 }

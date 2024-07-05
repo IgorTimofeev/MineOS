@@ -21,7 +21,7 @@
 	categoryScripts = "Скрипты",
 	categoryUpdates = "Обновления",
 	categoryWallpapers = "Обои",
-
+	
 	statisticsNewUser = "Новый пользователь",
 	statisticsMostPopularUser = "Наиболее активный",
 	statisticsUsersCount = "Число пользователей",
@@ -29,7 +29,7 @@
 	statisticsReviewsCount = "Число отзывов",
 	statisticsPopularPublication = "(популярная публикация)",
 	statisticsMessagesCount = "Число сообщений",
-
+	
 	whatsNew = "Что нового",
 	whatsNewInVersion = "Что нового в версии",
 	areYouSure = "Вы уверены, что хотите удалить публикацию?",
@@ -53,8 +53,8 @@
 	add = "Добавить",
 	relativePath = "Относительный путь",
 	localizationDependency = "Файл локализации",
-
 	login = "Авторизация",
+	
 	profile = "Профиль",
 	nickname = "Никнейм",
 	password = "Пароль",
@@ -74,8 +74,8 @@
 	notRegistered = "Еще не зарегистрированы?",
 	createAccount = "Создать аккаунт",
 	registrationSuccessfull = "Проверьте свою почту и папку спама, чтобы подтвердить аккаунт",
-
 	search = "Поиск",
+	
 	byPopularity = "По популярности",
 	byRating = "По рейтингу",
 	byDate = "По дате",
@@ -89,13 +89,14 @@
 	page = "Страница",
 	updateAll = "Обновить все",
 	noUpdates = "У вас самое новое ПО",
-
 	changeReview = "Изменить отзыв",
+	
 	developer = "Разработчик",
 	version = "Версия",
 	license = "Лицензия",
 	category = "Категория",
 	updated = "Обновлено",
+	uniqueDownloads = "Уникальных скачиваний",
 	reviews = "Отзывы",
 	yourRating = "Оцените приложение",
 	writeReviewHere = "Пишите отзыв здесь",
@@ -110,4 +111,5 @@
 	of = "из",
 	usersLoveReview = "пользователей считают этот отзыв полезным",
 	thanksForVote = "Спасибо за ваше мнение.",
+	previewDepencency = "Предварительный просмотр изображения"
 }

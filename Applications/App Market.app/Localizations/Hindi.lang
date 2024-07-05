@@ -53,8 +53,8 @@
 	add = "जोड़ें",
 	relativePath = "तुलनात्मक पथ",
 	localizationDependency = "स्थानीयकरण फ़ाइल",
-	
 	login = "लॉग इन करें",
+	
 	profile = "प्रोफ़ाइल",
 	nickname = "उपनाम",
 	password = "पासवर्ड",
@@ -74,8 +74,8 @@
 	notRegistered = "पंजीकरण नहीं किया?",
 	createAccount = "खाता बनाएं",
 	registrationSuccessfull = "अपना खाता सत्यापित करने के लिए अपना ई-मेल और स्पैम फ़ोल्डर जांचें",
-	
 	search = "खोज",
+	
 	byPopularity = "लोकप्रियता से",
 	byRating = "रेटिंग के अनुसार",
 	byDate = "तिथि के अनुसार",
@@ -89,8 +89,8 @@
 	page = "पृष्ठ",
 	updateAll = "सब अद्यतित",
 	noUpdates = "आपके पास कोई अपडेट नहीं है",
-	
 	changeReview = "समीक्षा बदलें",
+	
 	developer = "डेवलपर",
 	version = "संस्करण",
 	license = "लाइसेंस",
@@ -109,5 +109,7 @@
 	no = "नहीं",
 	of = "का",
 	usersLoveReview = "उपयोगकर्ताओं को यह समीक्षा मददगार लगी",
-	thanksForVote = "आपकी राय के लिए धन्यवाद।"
+	thanksForVote = "आपकी राय के लिए धन्यवाद।",
+	uniqueDownloads = "अद्वितीय डाउनलोड",
+	previewDepencency = "छवि का पूर्वावलोकन करें"
 }

@@ -53,8 +53,8 @@
 	add = "Дадаць",
 	relativePath = "Адносны шлях",
 	localizationDependency = "Файл лакалізацыі",
-	
 	login = "Увайсці",
+	
 	profile = "Профіль",
 	nickname = "Мянушка",
 	password = "Пароль",
@@ -74,8 +74,8 @@
 	notRegistered = "Яшчэ не зарэгістраваны?",
 	createAccount = "Стварыць уліковы запіс",
 	registrationSuccessfull = "Праверце электронную пошту і папку са спамам, каб пацвердзіць свой уліковы запіс",
-	
 	search = "Пошук",
+	
 	byPopularity = "Па папулярнасці",
 	byRating = "Па рэйтынгу",
 	byDate = "Па даце",
@@ -89,8 +89,8 @@
 	page = "Старонка",
 	updateAll = "Абнавіць усе",
 	noUpdates = "У вас няма абнаўленняў",
-	
 	changeReview = "Змяніць агляд",
+	
 	developer = "Распрацоўшчык",
 	version = "Версія",
 	license = "Ліцэнзія",
@@ -109,5 +109,7 @@
 	no = "не",
 	of = "з",
 	usersLoveReview = "карыстальнікі палічылі гэты агляд карысным",
-	thanksForVote = "Дзякуй за ваша меркаванне."
+	thanksForVote = "Дзякуй за ваша меркаванне.",
+	previewDepencency = "Папярэдні прагляд выявы",
+	uniqueDownloads = "Унікальныя загрузкі"
 }

@@ -53,8 +53,8 @@
 	add = "Pridať",
 	relativePath = "Relatívna cesta",
 	localizationDependency = "Lokalizačný súbor",
-	
 	login = "Prihlásiť sa",
+	
 	profile = "Profil",
 	nickname = "prezývka",
 	password = "heslo",
@@ -74,8 +74,8 @@
 	notRegistered = "Ešte nie ste zaregistrovaný?",
 	createAccount = "Vytvoriť účet",
 	registrationSuccessfull = "Skontrolujte svoj e-mail a priečinok so spamom a overte svoj účet",
-	
 	search = "Vyhľadávanie",
+	
 	byPopularity = "Podľa popularity",
 	byRating = "Podľa hodnotenia",
 	byDate = "Podľa dátumu",
@@ -89,8 +89,8 @@
 	page = "Stránka",
 	updateAll = "Aktualizovať všetko",
 	noUpdates = "Nemáte žiadne aktualizácie",
-	
 	changeReview = "Zmeniť recenziu",
+	
 	developer = "Vývojár",
 	version = "Verzia",
 	license = "Licencia",
@@ -109,5 +109,7 @@
 	no = "nie",
 	of = "z",
 	usersLoveReview = "používatelia považovali túto recenziu za užitočnú",
-	thanksForVote = "dakujem za nazor."
+	thanksForVote = "dakujem za nazor.",
+	previewDepencency = "Ukážkový obrázok",
+	uniqueDownloads = "Jedinečné sťahovanie"
 }
