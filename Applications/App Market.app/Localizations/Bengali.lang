@@ -53,8 +53,8 @@
 	add = "যোগ করুন",
 	relativePath = "আপেক্ষিক পাথ",
 	localizationDependency = "স্থানীয়করণ ফাইল",
-	
 	login = "প্রবেশ করুন",
+	
 	profile = "প্রোফাইল",
 	nickname = "ডাকনাম",
 	password = "পাসওয়ার্ড",
@@ -74,8 +74,8 @@
 	notRegistered = "এখনও নিবন্ধন করেননি?",
 	createAccount = "হিসাব তৈরি কর",
 	registrationSuccessfull = "আপনার অ্যাকাউন্ট যাচাই করতে আপনার ই-মেইল এবং স্প্যাম ফোল্ডার চেক করুন",
-	
 	search = "অনুসন্ধান করুন",
+	
 	byPopularity = "জনপ্রিয়তা দ্বারা",
 	byRating = "রেটিং দ্বারা",
 	byDate = "তারিখ অনুসারে",
@@ -89,8 +89,8 @@
 	page = "পাতা",
 	updateAll = "সব আপডেট",
 	noUpdates = "আপনার কোন আপডেট নেই",
-	
 	changeReview = "পর্যালোচনা পরিবর্তন করুন",
+	
 	developer = "বিকাশকারী",
 	version = "সংস্করণ",
 	license = "লাইসেন্স",
@@ -109,5 +109,7 @@
 	no = "না",
 	of = "এর",
 	usersLoveReview = "ব্যবহারকারীরা এই পর্যালোচনা সহায়ক বলে মনে করেছেন",
-	thanksForVote = "আপনার মতামতের জন্য ধন্যবাদ."
+	thanksForVote = "আপনার মতামতের জন্য ধন্যবাদ.",
+	previewDepencency = "পূর্বরূপ চিত্র",
+	uniqueDownloads = "অনন্য ডাউনলোড"
 }

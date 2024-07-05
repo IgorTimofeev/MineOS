@@ -53,8 +53,8 @@
 	add = "Hinzufügen",
 	relativePath = "Relativer Pfad",
 	localizationDependency = "Lokalisierungsdatei",
-	
 	login = "Anmelden",
+	
 	profile = "Profil",
 	nickname = "Spitzname",
 	password = "Passwort",
@@ -74,8 +74,8 @@
 	notRegistered = "Noch nicht registriert?",
 	createAccount = "Konto erstellen",
 	registrationSuccessfull = "Überprüfen Sie Ihren E-mail-und spam-Ordner, um Ihr Konto zu überprüfen",
-	
 	search = "Suche",
+	
 	byPopularity = "Nach Beliebtheit",
 	byRating = "Nach Bewertung",
 	byDate = "Nach Datum",
@@ -89,8 +89,8 @@
 	page = "Seite",
 	updateAll = "Alle aktualisieren",
 	noUpdates = "Sie haben keine updates",
-	
 	changeReview = "Überprüfung ändern",
+	
 	developer = "Entwickler",
 	version = "Ausführung",
 	license = "Lizenz",
@@ -109,5 +109,7 @@
 	no = "Kein",
 	of = "von",
 	usersLoveReview = "Benutzer fanden diese Bewertung hilfreich",
-	thanksForVote = "Vielen Dank für Ihre Meinung."
+	thanksForVote = "Vielen Dank für Ihre Meinung.",
+	previewDepencency = "Vorschaubild",
+	uniqueDownloads = "Einzigartige Downloads"
 }

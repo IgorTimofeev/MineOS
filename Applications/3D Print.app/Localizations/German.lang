@@ -1,11 +1,11 @@
-{	
+{
 	help = "Hilfe",
 	helpInfo = {
 		"• Jedes Modell besteht aus Formen. Ihre Anzahl hängt von den Servereigenschaften ab, aber standardmäßig sind es 24 pro Modell",
 		"• Das Modell kann auch zwei Zustände haben: passiv und aktiv. Wenn Sie ein gedrucktes Modell in Minecraft World platzieren und einen Klick darauf ausführen, ändert das Modell seinen Zustand in das Gegenteil. Die Formzählung ist auf beide Zustände beschränkt",
 		"• Halten Sie die linke Maustaste gedrückt, um den ersten Punkt der Form mit X und Y zu platzieren. Ziehen Sie die Maus, um die Größe der Form zu ändern. Verwenden Sie das Mausrad, um die Z-Koordinate zu ändern. Lassen Sie die Taste los, um die Formbearbeitung abzuschließen",
 		"• Drücken Sie die rechte Maustaste, um die Form unter dem Cursor auszuwählen",
-		"• Bildlaufleiste, um andere Optionen anzuzeigen",
+		"• Bildlaufleiste, um andere Optionen anzuzeigen"
 	},
 	file = "Datei",
 	new = "Neu",
@@ -17,7 +17,7 @@
 	add = "Hinzufügen",
 	remove = "Löschen",
 	rotate = "Drehen",
-	flip = "Flip",
+	flip = "Umdrehen",
 	color = "C",
 	offset = "Versatz",
 	scale = "Rahmen",
@@ -38,5 +38,5 @@
 	blockSettings = "Modelleigenschaften",
 	projectorSettings = "Eigenschaften des Projektors",
 	elementSettings = "Formeigenschaften",
-	failedToPrint = "Fehler beim Drucken",
+	failedToPrint = "Fehler beim Drucken"
 }

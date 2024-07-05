@@ -53,8 +53,8 @@
 	add = "추가하다",
 	relativePath = "상대 경로",
 	localizationDependency = "현지화 파일",
-	
 	login = "로그인",
+	
 	profile = "프로필",
 	nickname = "별명",
 	password = "비밀번호",
@@ -74,8 +74,8 @@
 	notRegistered = "아직 등록되지 않았습니까?",
 	createAccount = "계정 만들기",
 	registrationSuccessfull = "이메일 및 스팸 폴더를 확인하여 계정 확인",
-	
 	search = "검색",
+	
 	byPopularity = "인기순으로",
 	byRating = "등급별",
 	byDate = "날짜별",
@@ -89,8 +89,8 @@
 	page = "페이지",
 	updateAll = "모두 업데이트",
 	noUpdates = "업데이트가 없습니다.",
-	
 	changeReview = "리뷰 변경",
+	
 	developer = "개발자",
 	version = "버전",
 	license = "특허",
@@ -109,5 +109,7 @@
 	no = "아니요",
 	of = "~의",
 	usersLoveReview = "사용자가 이 리뷰가 도움이 되었다고 생각함",
-	thanksForVote = "의견 감사합니다."
+	thanksForVote = "의견 감사합니다.",
+	uniqueDownloads = "고유 다운로드",
+	previewDepencency = "미리보기 이미지"
 }

@@ -53,8 +53,8 @@
 	add = "Añadir",
 	relativePath = "Ruta Relativa",
 	localizationDependency = "Archivo de localizacion",
-	
 	login = "Iniciar sesion",
+	
 	profile = "Perfil",
 	nickname = "Apodo",
 	password = "Contraseña",
@@ -74,8 +74,8 @@
 	notRegistered = "No registrado todavia?",
 	createAccount = "Crear Cuenta",
 	registrationSuccessfull = "Checkea tu email y carpeta de spam para verificar tu cuenta",
-	
 	search = "Buscar",
+	
 	byPopularity = "Por Popularidad",
 	byRating = "Por Clasificacion",
 	byDate = "Por Fecha",
@@ -89,8 +89,8 @@
 	page = "Pagina",
 	updateAll = "Actualizar Todo",
 	noUpdates = "No tienes actualizaciones",
-	
 	changeReview = "Cambiar valoracion",
+	
 	developer = "Desarrollador",
 	version = "Versión",
 	license = "Licencia",
@@ -109,5 +109,7 @@
 	no = "No",
 	of = "de",
 	usersLoveReview = "Usuarios encontraron esta valoracion util",
-	thanksForVote = "Gracias por tu opinion."
+	thanksForVote = "Gracias por tu opinion.",
+	uniqueDownloads = "Descargas únicas",
+	previewDepencency = "Imagen previa"
 }

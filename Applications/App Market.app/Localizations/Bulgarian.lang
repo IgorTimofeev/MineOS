@@ -53,8 +53,8 @@
 	add = "Добавете",
 	relativePath = "Относителен път",
 	localizationDependency = "Файл за локализация",
-	
 	login = "Влизане",
+	
 	profile = "Профил",
 	nickname = "Псевдоним",
 	password = "парола",
@@ -74,8 +74,8 @@
 	notRegistered = "Все още не сте регистрирани?",
 	createAccount = "Създай акаунт",
 	registrationSuccessfull = "Проверете електронната си поща и папката за спам, за да потвърдите акаунта си",
-	
 	search = "Търсене",
+	
 	byPopularity = "По популярност",
 	byRating = "По рейтинг",
 	byDate = "По дата",
@@ -89,8 +89,8 @@
 	page = "Страница",
 	updateAll = "Актуализирай всички",
 	noUpdates = "Нямате актуализации",
-	
 	changeReview = "Промяна на прегледа",
+	
 	developer = "Разработчик",
 	version = "Версия",
 	license = "Разрешително",
@@ -109,5 +109,7 @@
 	no = "Не",
 	of = "на",
 	usersLoveReview = "потребителите намират този преглед за полезен",
-	thanksForVote = "Благодаря за вашето мнение."
+	thanksForVote = "Благодаря за вашето мнение.",
+	previewDepencency = "Визуализация на изображението",
+	uniqueDownloads = "Уникални изтегляния"
 }

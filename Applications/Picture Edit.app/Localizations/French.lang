@@ -36,7 +36,7 @@
 		"F - outil braille",
 		null,
 		"X - changer de couleur",
-		"D - réinitialiser les couleurs du dessin",
+		"D - réinitialiser les couleurs du dessin"
 	},
 	tool1 = "L'outil de sélection vous permet de sélectionner la zone préférée sur l'image et d'effectuer certaines opérations dessus. ",
 	fill = "Remplir",
@@ -85,7 +85,7 @@
 	brightness = "Luminosité:",
 	filterColor = "Couleur du filtre",
 	transparency = "Transparence:",
-	force = "Force",
+	force = "Forcer",
 	rasterizePolygon = "Pixelliser le polygone",
-	polygonEdges = "Nombre d'arêtes du polygone :",
+	polygonEdges = "Nombre d'arêtes du polygone :"
 }

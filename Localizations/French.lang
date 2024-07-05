@@ -45,8 +45,8 @@
 	toDirectory = "au répertoire",
 	copying = "Copie",
 	faylaBlyad = "fichier",
-	
 	areYouSure = "Êtes-vous sûr ?",
+	
 	emptyTrash = "Corbeille vide",
 	type = "Taper",
 	size = "Taille",
@@ -58,8 +58,8 @@
 	calculatingSize = "calcule en cours ...",
 	filesWillBeRemovedPermanently = "le fichier(s) seront définitivement supprimés",
 	fileDeletingFailure = "Impossible de supprimer le fichier",
-	
 	properties = "Propriétés",
+	
 	newFolderFromChosen = "Nouveau dossier choisi",
 	create = "Nouveau",
 	newFolder = "Dossier",
@@ -90,36 +90,38 @@
 	flashEEPROM = "Flasher vers l'EEPROM",
 	flashingEEPROM = "Flash en cours. Ne pas éteindre l'ordinateur...",
 	print3D = "Imprimer le modèle",
-	
 	sortBy = "Trier",
+	
 	sortByType = "Par type",
 	sortByName = "Par nom",
 	sortByDate = "Par date",
-	
 	aboutSystem = "À propos du système",
+	
 	updates = "Mises à jour",
 	update = "Rafraîchir",
 	shutdown = "Éteindre",
 	logout = "Se déconnecter",
 	reboot = "Redémarrer",
-	
 	shortcutIsCorrupted = "Le raccourci est lié à un fichier inexistant",
 	sortAutomatically = "Aligner sur la grille",
+	
 	onDesktop = "Sur le bureau",
 	inCurrentDirectory = "Dans le répertoire actuel",
-	
 	errorWhileRunningProgram = "Erreur lors de l'exécution ",
 	yourContacts = "Vos contacts",
+	
 	additionalInfo = "Informations additionnelles",
 	stackTraceback = "Trace d'appels",
-	
 	favourite = "Favori",
 	search = "Rechercher",
-	mounts = "Monter",
 	
+	mounts = "Monter",
 	uploadToPastebin = "Envoyer à Pastebin",
 	pasteName = "Coller un nom",
+	
 	uploading = "Téléchargement en cours...",
 	uploadingSuccess = "Téléchargé à ",
-	uploadingFailure = "Échec du téléchargement: "
+	uploadingFailure = "Échec du téléchargement: ",
+	save = "Sauvegarder",
+	takeScreenshot = "Prendre une capture d'écran"
 }

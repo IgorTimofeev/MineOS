@@ -53,8 +53,8 @@
 	add = "添加",
 	relativePath = "相對路徑",
 	localizationDependency = "本地化文件",
-	
 	login = "登录",
+	
 	profile = "账户",
 	nickname = "昵称",
 	password = "密码",
@@ -74,8 +74,8 @@
 	notRegistered = "还没注册？",
 	createAccount = "注册",
 	registrationSuccessfull = "请去检查邮箱，并点击发来的链接",
-	
 	search = "搜索",
+	
 	byPopularity = "最受欢迎",
 	byRating = "最高评分",
 	byDate = "创建日期",
@@ -89,8 +89,8 @@
 	page = "页",
 	updateAll = "更新所有",
 	noUpdates = "已经是最新版",
-	
 	changeReview = "修改评论",
+	
 	developer = "开发者",
 	version = "版本",
 	license = "协议",
@@ -109,5 +109,7 @@
 	no = "没有",
 	of = "/",
 	usersLoveReview = "人认为这条评论有用",
-	thanksForVote = "感谢你的观点。"
+	thanksForVote = "感谢你的观点。",
+	previewDepencency = "預覽影像",
+	uniqueDownloads = "獨特的下載量"
 }

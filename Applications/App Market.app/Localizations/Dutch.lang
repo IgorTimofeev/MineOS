@@ -53,8 +53,8 @@
 	add = "Voeg toe",
 	relativePath = "Relatief pad",
 	localizationDependency = "Lokalisatiebestand",
-	
 	login = "Log in",
+	
 	profile = "Profiel",
 	nickname = "naam",
 	password = "Wachtwoord",
@@ -74,8 +74,8 @@
 	notRegistered = "Nog niet geregistreerd?",
 	createAccount = "Maak account",
 	registrationSuccessfull = "Bevestig uw account via de link in de e-mail (controleer uw spam map)",
-	
 	search = "Zoeken",
+	
 	byPopularity = "Op populariteit",
 	byRating = "Op beoordeling",
 	byDate = "Op datum",
@@ -89,8 +89,8 @@
 	page = "Pagina",
 	updateAll = "Update alles",
 	noUpdates = "Je hebt momenteel geen updates",
-	
 	changeReview = "Verander beoordeling",
+	
 	developer = "Ontwikkelaar",
 	version = "Versie",
 	license = "Licentie",
@@ -109,5 +109,7 @@
 	no = "Nee",
 	of = "van",
 	usersLoveReview = "Gebruikers vonden deze beoordeling behulpzaam",
-	thanksForVote = "Bedankt voor uw mening."
+	thanksForVote = "Bedankt voor uw mening.",
+	previewDepencency = "Voorbeeldafbeelding",
+	uniqueDownloads = "Unieke downloads"
 }

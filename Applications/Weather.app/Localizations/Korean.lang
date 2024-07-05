@@ -8,11 +8,11 @@
 		[5] = "SW",
 		[6] = "여",
 		[7] = "북서",
-		[8] = "N",
+		[8] = "N"
 	},
-	mmHg = "mmHg",
+	mmHg = " mm Hg",
 	speed = "m/s,",
 	population = "인구:",
 	city = "여기에 도시 이름을 입력하세요.",
-	cityError = "잘못된 결과입니다. ",
+	cityError = "잘못된 결과입니다. "
 }

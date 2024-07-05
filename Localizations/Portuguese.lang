@@ -45,8 +45,8 @@
 	toDirectory = "para a pasta",
 	copying = "Copiar",
 	faylaBlyad = "arquivo",
-	
 	areYouSure = "Tem certeza?",
+	
 	emptyTrash = "Esvaziar lixeira",
 	type = "Tipo",
 	size = "Tamanho",
@@ -58,8 +58,8 @@
 	calculatingSize = "calculando…",
 	filesWillBeRemovedPermanently = "arquivo(s) será(ão) removido(s) permanentemente",
 	fileDeletingFailure = "Falha ao excluir arquivo",
-	
 	properties = "Propriedades",
+	
 	newFolderFromChosen = "Nova pasta escolhida",
 	create = "Novo",
 	newFolder = "Pasta",
@@ -89,29 +89,28 @@
 	flashEEPROM = "Flash para EEPROM",
 	flashingEEPROM = "Piscando em andamento. Não desligue o computador ...",
 	print3D = "Imprimir modelo",
-	
 	sortBy = "Classificar",
 	sortByType = "Por tipo",
+	
 	sortByName = "Por nome",
 	sortByDate = "Por data",
-	
 	aboutSystem = "Sobre o sistema",
 	updates = "Atualizações",
+	
 	update = "Atualizar",
 	shutdown = "Desligar",
 	logout = "Sair",
 	reboot = "Reiniciar",
-	
 	shortcutIsCorrupted = "O atalho está vinculado a um arquivo inexistente",
 	sortAutomatically = "Alinhar à grade",
 	onDesktop = "Na área de trabalho",
-	inCurrentDirectory = "Na pasta atua",
 	
+	inCurrentDirectory = "Na pasta atua",
 	errorWhileRunningProgram = "Erro ao executar ",
 	yourContacts = "Seus contatos",
 	additionalInfo = "Informações adicionais",
-	stackTraceback = "Rastreamento de pilha",
 	
+	stackTraceback = "Rastreamento de pilha",
 	favourite = "Favorito",
 	search = "Pesquisar",
 	mounts = "Montagens",
@@ -119,6 +118,10 @@
 	uploadToPastebin = "Carregar para Pastebin",
 	pasteName = "Colar nome",
 	uploading = "Envio em andamento ...",
+	
 	uploadingSuccess = "Envio para ",
-	uploadingFailure = "Falha no envio: "
+	uploadingFailure = "Falha no envio: ",
+	save = "Salvar",
+	takeScreenshot = "Tirar captura de tela",
+	deleteWithSource = "Excluir com fonte"
 }

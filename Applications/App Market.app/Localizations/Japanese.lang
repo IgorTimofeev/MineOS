@@ -53,8 +53,8 @@
 	add = "追加",
 	relativePath = "相対パス",
 	localizationDependency = "ローカリゼーションファイル",
-	
 	login = "ログイン",
+	
 	profile = "プロフィール",
 	nickname = "ニックネーム",
 	password = "パスワード",
@@ -74,8 +74,8 @@
 	notRegistered = "まだ登録されていませんか？",
 	createAccount = "アカウントを作成する",
 	registrationSuccessfull = "あなたのアカウントを確認するためにあなたの電子メールとスパムフォルダをチェックしてください",
-	
 	search = "探す",
+	
 	byPopularity = "人気で",
 	byRating = "評価による",
 	byDate = "日付別",
@@ -89,8 +89,8 @@
 	page = "ページ",
 	updateAll = "すべて更新",
 	noUpdates = "更新はありません",
-	
 	changeReview = "レビューを変更",
+	
 	developer = "デベロッパー",
 	version = "バージョン",
 	license = "ライセンス",
@@ -109,5 +109,7 @@
 	no = "いいえ",
 	of = "の",
 	usersLoveReview = "ユーザーはこのレビューが役に立ったと感じました",
-	thanksForVote = "ご意見ありがとうございます。"
+	thanksForVote = "ご意見ありがとうございます。",
+	previewDepencency = "プレビュー画像",
+	uniqueDownloads = "ユニークなダウンロード"
 }

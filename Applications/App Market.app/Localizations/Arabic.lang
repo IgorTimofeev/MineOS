@@ -53,8 +53,8 @@
 	add = "يضيف",
 	relativePath = "مسار نسبي",
 	localizationDependency = "ملف الترجمة",
-	
 	login = "يسجل دخول",
+	
 	profile = "حساب تعريفي",
 	nickname = "اسم الشهرة",
 	password = "كلمه السر",
@@ -74,8 +74,8 @@
 	notRegistered = "لم يتم تسجيلة بعد؟",
 	createAccount = "إنشاء حساب",
 	registrationSuccessfull = "تحقق من البريد الإلكتروني ومجلد البريد العشوائي للتحقق من حسابك",
-	
 	search = "بحث",
+	
 	byPopularity = "حسب الشعبية",
 	byRating = "حسب التصنيف",
 	byDate = "حسب التاريخ",
@@ -89,8 +89,8 @@
 	page = "صفحة",
 	updateAll = "تحديث الجميع",
 	noUpdates = "ليس لديك تحديثات",
-	
 	changeReview = "تغيير الاستعراض",
+	
 	developer = "مطور",
 	version = "الإصدار",
 	license = "رخصة",
@@ -109,5 +109,7 @@
 	no = "لا",
 	of = "من",
 	usersLoveReview = "وجد المستخدمون هذه المراجعة مفيدة",
-	thanksForVote = "شكرا لرأيك."
+	thanksForVote = "شكرا لرأيك.",
+	previewDepencency = "صورة المعاينة",
+	uniqueDownloads = "تنزيلات فريدة"
 }
