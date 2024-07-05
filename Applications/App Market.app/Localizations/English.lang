@@ -14,6 +14,7 @@
 	yourText = "You:",
 	hereBeYourDialogs = "Here will be your conversations",
 	hideApplicationIcons = "Hide application icons",
+	hideApplicationPreviews = "Hide application previews",
 
 	categoryOverview = "Overview",
 	categoryApplications = "Applications",

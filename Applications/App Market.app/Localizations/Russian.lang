@@ -14,6 +14,7 @@
 	yourText = "Вы:",
 	hereBeYourDialogs = "Здесь будут отображены ваши диалоги",
 	hideApplicationIcons = "Скрыть иконки приложений",
+	hideApplicationPreviews = "Скрыть картинки приложений",
 	
 	categoryOverview = "Главная",
 	categoryApplications = "Приложения",

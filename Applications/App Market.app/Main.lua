@@ -169,7 +169,8 @@ local function loadConfig()
 			orderBy = 4,
 			orderDirection = 1,
 			singleSession = false,
-			hideApplicationIcons = false
+			hideApplicationIcons = false,
+			hideApplicationPreviews = false
 		}
 	end
 
@@ -1049,10 +1050,17 @@ local function settings()
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp + system.getUserSettings().timeTimezone)))
 			textLayout.height = #textLayout.children * 2 - 1
 
-			local hideApplicationIconsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons))
+			local hideApplicationIconsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons)).switch
 
-			hideApplicationIconsSwitch.switch.onStateChanged = function()
-				config.hideApplicationIcons = hideApplicationIconsSwitch.switch.state
+			hideApplicationIconsSwitch.onStateChanged = function()
+				config.hideApplicationIcons = hideApplicationIconsSwitch.state
+				saveConfig()
+			end
+
+			local hideApplicationPewviewsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationPreviews .. ":", config.hideApplicationPreviews)).switch
+
+			hideApplicationPewviewsSwitch.onStateChanged = function()
+				config.hideApplicationPreviews = hideApplicationPewviewsSwitch.state
 				saveConfig()
 			end
 
@@ -1570,10 +1578,12 @@ newPublicationInfo = function(file_id)
 			-- Превьюхи
 			local previewContainer = textDetailsContainer:addChild(previewContainerNew(3, y, textDetailsContainer.width - 4, 1))
 
-			if publication.dependencies_data then
-				for file_id, dependency in pairs(publication.dependencies_data) do
-					if dependency.type_id == filesTypes.preview then
-						previewContainer:addChild(GUI.image(1, 1, getImage(publication, dependency.source_url)))
+			if not config.hideApplicationPreviews then
+				if publication.dependencies_data then
+					for file_id, dependency in pairs(publication.dependencies_data) do
+						if dependency.type_id == filesTypes.preview then
+							previewContainer:addChild(GUI.image(1, 1, getImage(publication, dependency.source_url)))
+						end
 					end
 				end
 			end
