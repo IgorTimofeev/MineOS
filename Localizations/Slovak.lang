@@ -45,8 +45,8 @@
 	toDirectory = "do priečinka",
 	copying = "Kopírovanie",
 	faylaBlyad = "súbor",
-	
 	areYouSure = "Ste si istý?",
+	
 	emptyTrash = "Vyprázdniť kôš",
 	type = "Typ",
 	size = "Veľkosť",
@@ -58,8 +58,8 @@
 	calculatingSize = "počítanie…",
 	filesWillBeRemovedPermanently = "súbory budú natrvalo odstránené",
 	fileDeletingFailure = "Súbor sa nepodarilo odstrániť",
-	
 	properties = "Vlastnosti",
+	
 	newFolderFromChosen = "Nový priečinok z vybraného",
 	create = "Nový",
 	newFolder = "Priečinok",
@@ -90,36 +90,38 @@
 	flashEEPROM = "Flashnúť na EEPROM",
 	flashingEEPROM = "Flashovanie prebieha. Nevypínajte počítač...",
 	print3D = "Vytlačiť model",
-	
 	sortBy = "Zoradiť",
+	
 	sortByType = "Podľa typu",
 	sortByName = "Podľa názvu",
 	sortByDate = "Podľa dátumu",
-	
 	aboutSystem = "O systéme",
+	
 	updates = "Aktualizácie",
 	update = "Obnoviť",
 	shutdown = "Vypnúť",
 	logout = "Odhlásiť",
 	reboot = "Reštartovať",
-	
 	shortcutIsCorrupted = "Odkaz je priradený na neexistujúci súbor",
 	sortAutomatically = "Zarovnať na mriežku",
+	
 	onDesktop = "Na ploche",
 	inCurrentDirectory = "V tomto priečinku",
-	
 	errorWhileRunningProgram = "Chyba pri behu programu ",
 	yourContacts = "Vaše kontakty",
+	
 	additionalInfo = "Ďaľšie informácie",
 	stackTraceback = "Spätné sledovanie zásobníka",
-	
 	favourite = "Obľúbené",
 	search = "Vyhľadávať",
-	mounts = "Disky",
 	
+	mounts = "Disky",
 	uploadToPastebin = "Nahrať na Pastebin",
 	pasteName = "Meno pastu",
+	
 	uploading = "Nahrávanie prebieha..",
 	uploadingSuccess = "Nahrané na ",
-	uploadingFailure = "Nahrávanie zlyhalo: "
+	uploadingFailure = "Nahrávanie zlyhalo: ",
+	save = "Uložiť",
+	takeScreenshot = "Urobiť fotku obrazovky"
 }

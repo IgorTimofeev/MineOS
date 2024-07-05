@@ -45,8 +45,8 @@
 	toDirectory = "フォルダに",
 	copying = "コピー中",
 	faylaBlyad = "ファイル",
-	
 	areYouSure = "本当に実行しますか?",
+	
 	emptyTrash = "ゴミ箱を空にする",
 	type = "種類",
 	size = "サイズ",
@@ -58,8 +58,8 @@
 	calculatingSize = "計算中…",
 	filesWillBeRemovedPermanently = "ファイルは完全に削除されます",
 	fileDeletingFailure = "ファイルの削除に失敗しました",
-	
 	properties = "プロパティ",
+	
 	newFolderFromChosen = "選択したフォルダから新しいフォルダを作成",
 	create = "新規",
 	newFolder = "フォルダー",
@@ -90,36 +90,38 @@
 	flashEEPROM = "EEPROMに焼く",
 	flashingEEPROM = "EEPROMにコピー中です。電源を切らないでください...",
 	print3D = "プリントモデル",
-	
 	sortBy = "順序",
+	
 	sortByType = "ファイルタイプ",
 	sortByName = "名前",
 	sortByDate = "日付",
-	
 	aboutSystem = "システムについて",
+	
 	updates = "更新",
 	update = "リフレッシュ",
 	shutdown = "シャットダウン",
 	logout = "ログアウト",
 	reboot = "再起動",
-	
 	shortcutIsCorrupted = "ショートカットが存在しないファイルにリンクされています",
 	sortAutomatically = "グリッドに合わせて調整",
+	
 	onDesktop = "デスクトップ上",
 	inCurrentDirectory = "現在のフォルダ内",
-	
 	errorWhileRunningProgram = "実行中のエラー ",
 	yourContacts = "あなたの問い合わせ先",
+	
 	additionalInfo = "追加情報",
 	stackTraceback = "スタックトレースバック",
-	
 	favourite = "お気に入り",
 	search = "検索",
-	mounts = "マウント",
 	
+	mounts = "マウント",
 	uploadToPastebin = "Pastebinにアップロード",
 	pasteName = "名前を貼り付け",
+	
 	uploading = "アップロード中です...",
 	uploadingSuccess = "にアップロード ",
-	uploadingFailure = "アップロード失敗: "
+	uploadingFailure = "アップロード失敗: ",
+	save = "保存",
+	takeScreenshot = "スクリーンショットを撮ります"
 }

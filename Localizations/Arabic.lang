@@ -45,8 +45,8 @@
 	toDirectory = "على المجلد",
 	copying = "نسخ",
 	faylaBlyad = "ملف ",
-	
 	areYouSure = "هل أنت متأكد؟",
+	
 	emptyTrash = "إفراغ سلة المهملات",
 	type = "النوع",
 	size = "الحجم",
@@ -58,8 +58,8 @@
 	calculatingSize = "الحساب ... ",
 	filesWillBeRemovedPermanently = "ستتم إزالة الملف (الملفات) بشكل دائم",
 	fileDeletingFailure = "فشل حذف الملف",
-	
 	properties = "الخصائص",
+	
 	newFolderFromChosen = "مجلد جديد من اختيار",
 	create = "جديد",
 	newFolder = "المجلد",
@@ -89,29 +89,28 @@
 	flashEEPROM = "فلاش إلى EEPROM",
 	flashingEEPROM = "الوميض قيد التقدم. لا تقم بإيقاف تشغيل الكمبيوتر ...",
 	print3D = "نموذج الطباعة ",
-	
 	sortBy = "الفرز",
 	sortByType = "حسب النوع",
+	
 	sortByName = "بالاسم",
 	sortByDate = "حسب التاريخ",
-	
 	aboutSystem = "حول النظام",
 	updates = "التحديثات",
+	
 	update = "التحديث",
 	shutdown = "إيقاف التشغيل",
 	logout = "تسجيل الخروج",
 	reboot = "إعادة التشغيل ",
-	
 	shortcutIsCorrupted = "الاختصار مرتبط بملف غير موجود",
 	sortAutomatically = "محاذاة للشبكة",
 	onDesktop = "على سطح المكتب",
-	inCurrentDirectory = "في المجلد الحالي",
 	
+	inCurrentDirectory = "في المجلد الحالي",
 	errorWhileRunningProgram = "خطأ أثناء تشغيل ",
 	yourContacts = "جهات الاتصال الخاصة بك",
 	additionalInfo = "معلومات إضافية",
-	stackTraceback = "Stack traceback ",
 	
+	stackTraceback = "Stack traceback ",
 	favourite = "المفضلة",
 	search = "بحث",
 	mounts = "يتصاعد",
@@ -119,6 +118,10 @@
 	uploadToPastebin = "تحميل إلى Pastebin",
 	pasteName = "لصق الاسم",
 	uploading = "جاري التحميل...",
+	
 	uploadingSuccess = "تم الرفع إلى ",
-	uploadingFailure = "فشل التحميل: "
+	uploadingFailure = "فشل التحميل: ",
+	save = "يحفظ",
+	deleteWithSource = "الحذف مع المصدر",
+	takeScreenshot = "خد لقطة للشاشة"
 }

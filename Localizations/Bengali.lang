@@ -45,8 +45,8 @@
 	copying = "কপি করা হচ্ছে",
 	faylaBlyad = "ফাইলটি অনুলিপি করা হচ্ছে",
 	areYouSure = "আপনি কি নিশ্চিত?",
-	
 	emptyTrash = "খালি ট্র্যাশ",
+	
 	type = "টাইপ",
 	size = "আকার",
 	date = "তারিখ",
@@ -58,8 +58,8 @@
 	filesWillBeRemovedPermanently = "ফাইল(গুলি) স্থায়ীভাবে মুছে ফেলা হবে",
 	fileDeletingFailure = "ফাইল মুছে ফেলতে ব্যর্থ হয়েছে৷",
 	properties = "বৈশিষ্ট্য",
-	
 	newFolderFromChosen = "নির্বাচিত",
+	
 	create = "নতুন",
 	newFolder = "ফোল্ডার",
 	newFile = "ফাইল",
@@ -89,29 +89,28 @@
 	flashingEEPROM = "ফ্ল্যাশিং চলছে। কম্পিউটার বন্ধ করবেন না ...",
 	print3D = "মুদ্রিত মডেল",
 	sortBy = "বাছাই করুন",
-	
 	sortByType = "টাইপ করুন",
 	sortByName = "নাম দিয়ে",
+	
 	sortByDate = "তারিখ অনুসারে",
 	aboutSystem = "সিস্টেম সম্পর্কে",
-	
 	updates = "আপডেট",
 	update = "রিফ্রেশ",
+	
 	shutdown = "শাটডাউন",
 	logout = "লগআউট",
 	reboot = "রিবুট",
 	shortcutIsCorrupted = "শর্টকাটটি অস্তিত্বযুক্ত ফাইলের সাথে যুক্ত হয়েছে",
-	
 	sortAutomatically = "গ্রিডে প্রান্তিককরণ করুন",
 	onDesktop = "ডেস্কটপে",
 	inCurrentDirectory = "বর্তমান ফোল্ডারে",
-	errorWhileRunningProgram = "চলার সময় ত্রুটি ",
 	
+	errorWhileRunningProgram = "চলার সময় ত্রুটি ",
 	yourContacts = "আপনার পরিচিতিগুলি",
 	additionalInfo = "অতিরিক্ত তথ্য",
 	stackTraceback = "স্ট্যাক ট্রেসব্যাক",
-	favourite = "প্রিয়",
 	
+	favourite = "প্রিয়",
 	search = "অনুসন্ধান",
 	mounts = "মাউন্টস",
 	uploadToPastebin = "পাস্তবিনে আপলোড করুন",
@@ -119,5 +118,10 @@
 	pasteName = "আটকানো নাম",
 	uploading = "আপলোড চলছে ...",
 	uploadingSuccess = "আপলোড করা হয়েছে ",
-	uploadingFailure = "আপলোড ব্যর্থ হয়েছে: "
+	
+	uploadingFailure = "আপলোড ব্যর্থ হয়েছে: ",
+	save = "সংরক্ষণ",
+	deleteWithSource = "উৎস সহ মুছে ফেলুন",
+	takeScreenshot = "স্ক্রিনশট নাও",
+	needReplace = "এটা প্রতিস্থাপন করো?"
 }

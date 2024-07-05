@@ -45,8 +45,8 @@
 	toDirectory = "у дырэкторыі",
 	copying = "Капіяванне",
 	faylaBlyad = "файла",
-	
 	areYouSure = "Вы ўпэўненыя?",
+	
 	emptyTrash = "Ачысціць сметнік",
 	type = "Тып",
 	size = "Памер",
@@ -58,8 +58,8 @@
 	calculatingSize = "ідзе падлік…",
 	filesWillBeRemovedPermanently = "файл(ы) будуць выдалены назаўсёды",
 	fileDeletingFailure = "Не атрымалася выдаліць файл",
-	
 	properties = "Уласцівасці",
+	
 	newFolderFromChosen = "Новая тэчка з вылучанага",
 	create = "Стварыць",
 	newFolder = "Тэчку",
@@ -89,29 +89,28 @@
 	flashEEPROM = "Запісаць на EEPROM",
 	flashingEEPROM = "Ідзе запіс на EEPROM. Ня адключайце кампутар...",
 	print3D = "Раздрукаваць мадэль",
-	
 	sortBy = "Упарадкаваць",
 	sortByType = "Па тыпу",
+	
 	sortByName = "Па імя",
 	sortByDate = "Па даце",
-	
 	aboutSystem = "Аб сістэме",
 	updates = "Абнаўленне",
+	
 	update = "Абнавіць",
 	shutdown = "Выключыць",
 	logout = "Выйсці",
 	reboot = "Перазагрузіць",
-	
 	shortcutIsCorrupted = "Ярлык спасылаецца на неіснуючы файл",
 	sortAutomatically = "Прывязаць да сеткі",
 	onDesktop = "На працоўным стале",
-	inCurrentDirectory = "У дзеючай дырэкторыі",
 	
+	inCurrentDirectory = "У дзеючай дырэкторыі",
 	errorWhileRunningProgram = "Памылка пры выкананні ",
 	yourContacts = "Вашы кантакты",
 	additionalInfo = "Дадатковая інфармацыя",
-	stackTraceback = "Стэк памылкі",
 	
+	stackTraceback = "Стэк памылкі",
 	favourite = "Абранае",
 	search = "Пошук",
 	mounts = "Прылады",
@@ -119,6 +118,10 @@
 	uploadToPastebin = "Загрузіць на Pastebin",
 	pasteName = "Імя файла пасля загрузкі",
 	uploading = "Ідзе загрузка файла...",
+	
 	uploadingSuccess = "Загружана па спасылцы ",
-	uploadingFailure = "Памылка пры загрузцы: "
+	uploadingFailure = "Памылка пры загрузцы: ",
+	deleteWithSource = "Выдаліць з крыніцай",
+	save = "Захаваць",
+	takeScreenshot = "Зрабіць скрыншот"
 }

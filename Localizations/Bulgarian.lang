@@ -45,8 +45,8 @@
 	toDirectory = "към папка",
 	copying = "Копиране",
 	areYouSure = "Сигурен ли сте?",
-	
 	emptyTrash = "Изчистване на кошчето",
+	
 	type = "Вид",
 	size = "Размер",
 	date = "Дата",
@@ -58,8 +58,8 @@
 	filesWillBeRemovedPermanently = "файл(и) ще бъдат премахнати за постоянно",
 	fileDeletingFailure = "Изтриването на файл не бе успешно",
 	properties = "Свойства",
-	
 	newFolderFromChosen = "Нова папка от избраните",
+	
 	create = "Създаване на",
 	newFolder = "Папка",
 	newFile = "Файл",
@@ -90,35 +90,38 @@
 	flashingEEPROM = "В момента се записва. Не изключвайте компютъра...",
 	print3D = "Принтиране на модел",
 	sortBy = "Сортиране",
-	
 	sortByType = "По вид",
+	
 	sortByName = "По име",
 	sortByDate = "По дата",
 	aboutSystem = "Относно системата",
-	
 	updates = "Актуализации",
+	
 	update = "Обновяване",
 	shutdown = "Изключване",
 	logout = "Изход",
 	reboot = "Рестартиране",
 	shortcutIsCorrupted = "Прекият път води до несъществуващ файл",
-	
 	sortAutomatically = "Подреждане в мрежа",
 	onDesktop = "На декстопа",
+	
 	inCurrentDirectory = "В текущата папка",
 	errorWhileRunningProgram = "Възникна грешка при изпълняване на ",
-	
 	yourContacts = "Вашите контакти",
 	additionalInfo = "Допълнителна информация",
+	
 	stackTraceback = "Стак на повикванията",
 	favourite = "Любими",
-	
 	search = "Търсене",
 	mounts = "Монтирани",
-	uploadToPastebin = "Качване в Pastebin",
 	
+	uploadToPastebin = "Качване в Pastebin",
 	pasteName = "Име",
 	uploading = "В процес на качване...",
+	
 	uploadingSuccess = "Качено на ",
-	uploadingFailure = "Качването не бе успешно: "
+	uploadingFailure = "Качването не бе успешно: ",
+	takeScreenshot = "Направи снимка на екрана",
+	faylaBlyad = "файл",
+	save = "Запазване"
 }

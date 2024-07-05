@@ -45,8 +45,8 @@
 	toDirectory = "Zum Verzeichnis",
 	copying = "Kopieren",
 	faylaBlyad = "Datei",
-	
 	areYouSure = "Sind Sie sicher?",
+	
 	emptyTrash = "Papierkorb leeren",
 	type = "Art",
 	size = "Größe",
@@ -58,8 +58,8 @@
 	calculatingSize = "Berechne Größe...",
 	filesWillBeRemovedPermanently = "Datei(en) werden dauerhaft entfernt",
 	fileDeletingFailure = "Datei konnte nicht gelöscht werden",
-	
 	properties = "Eigenschaften",
+	
 	newFolderFromChosen = "Neuen Ordner wählen.",
 	create = "Neu",
 	newFolder = "Ordner",
@@ -90,36 +90,38 @@
 	flashEEPROM = "Flash zum EEPROM",
 	flashingEEPROM = "Flashvorgang. Computer nicht ausschalten...",
 	print3D = "Modell drucken",
-	
 	sortBy = "Sortieren",
+	
 	sortByType = "Nach Typ",
 	sortByName = "Nach Namen",
 	sortByDate = "Nach Datum",
-	
 	aboutSystem = "Über das System",
+	
 	updates = "Sicherheitsaktualisierungen",
 	update = "Aktualisieren",
 	shutdown = "Herunterfahren",
 	logout = "Abmelden",
 	reboot = "Neustarten",
-	
 	shortcutIsCorrupted = "Verknüpfung ist fehlerhaft oder nicht mehr vorhanden.",
 	sortAutomatically = "Am Raster ausrichten",
+	
 	onDesktop = "Auf dem Desktop",
 	inCurrentDirectory = "Im aktuellen Verzeichnis",
-	
 	errorWhileRunningProgram = "Fehler beim Ausführen",
 	yourContacts = "Meine Kontakte",
+	
 	additionalInfo = "Zusätzliche Informationen",
 	stackTraceback = "Stacktrace",
-	
 	favourite = "Favoriten",
 	search = "Suchen",
-	mounts = "Einhängen",
 	
+	mounts = "Einhängen",
 	uploadToPastebin = "Auf Pastebin hochladen",
 	pasteName = "Name einfügen",
+	
 	uploading = "Hochladen läuft...",
 	uploadingSuccess = "Hochgeladen",
-	uploadingFailure = "Hochladen fehlgeschlagen!"
+	uploadingFailure = "Hochladen fehlgeschlagen!",
+	takeScreenshot = "Einen Screenshot machen",
+	save = "Speichern"
 }
