@@ -14,23 +14,23 @@
 	yourText = "Vous :",
 	hereBeYourDialogs = "Voici vos conversations",
 	hideApplicationIcons = "Masquer les icônes des applications",
-	
 	categoryOverview = "Aperçu",
+	
 	categoryApplications = "Applications",
 	categoryLibraries = "API",
 	categoryScripts = "Scénarios",
 	categoryUpdates = "Mises à jour",
 	categoryWallpapers = "Fonds d'écran",
-	
 	statisticsNewUser = "Nouvel utilisateur",
+	
 	statisticsMostPopularUser = "Plus actif",
 	statisticsUsersCount = "Nombre d'utilisateurs",
 	statisticsPublicationsCount = "Nombre de publications",
 	statisticsReviewsCount = "Nombre de commentaires",
 	statisticsPopularPublication = "(publication populaire)",
 	statisticsMessagesCount = "Nombre de messages",
-	
 	whatsNew = "Quoi de neuf",
+	
 	whatsNewInVersion = "Quoi de neuf dans la version",
 	areYouSure = "Êtes-vous sûr de vouloir supprimer la publication ?",
 	createShortcut = "Créer un raccourci sur le bureau",
@@ -54,8 +54,8 @@
 	relativePath = "Chemin relatif",
 	localizationDependency = "Fichier de localisation",
 	login = "S'identifier",
-	
 	profile = "Profil",
+	
 	nickname = "Pseudo",
 	password = "Mot de passe",
 	nicknameOrEmail = "E-Mail ou pseudo",
@@ -75,8 +75,8 @@
 	createAccount = "Créer un compte",
 	registrationSuccessfull = "Vérifiez votre boite mail et le dossier de courrier indésirable pour valider votre compte",
 	search = "Rechercher",
-	
 	byPopularity = "Par popularité",
+	
 	byRating = "Par notation",
 	byDate = "Par date",
 	byName = "Par nom",
@@ -90,8 +90,8 @@
 	updateAll = "Tout mettre à jour",
 	noUpdates = "Aucune mises à jour n'est disponible",
 	changeReview = "Changer de critique",
-	
 	developer = "Développeur",
+	
 	version = "Version",
 	license = "Licence",
 	category = "Catégorie",
@@ -111,5 +111,6 @@
 	usersLoveReview = "utilisateurs ont trouvé cet avis utile",
 	thanksForVote = "Merci pour votre avis.",
 	previewDepencency = "Aperçu de l'image",
-	uniqueDownloads = "Téléchargements uniques"
+	uniqueDownloads = "Téléchargements uniques",
+	hideApplicationPreviews = "Masquer les aperçus des applications"
 }

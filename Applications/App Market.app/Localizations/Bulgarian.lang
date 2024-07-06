@@ -14,23 +14,23 @@
 	yourText = "Вие:",
 	hereBeYourDialogs = "Тук ще бъдат вашите разговори",
 	hideApplicationIcons = "Скриване на иконите на приложенията",
-	
 	categoryOverview = "Общ преглед",
+	
 	categoryApplications = "Приложения",
 	categoryLibraries = "библиотеки",
 	categoryScripts = "Скриптове",
 	categoryUpdates = "Актуализации",
 	categoryWallpapers = "Тапети",
-	
 	statisticsNewUser = "Нов потребител",
+	
 	statisticsMostPopularUser = "Най-активен",
 	statisticsUsersCount = "Потребителите се броят",
 	statisticsPublicationsCount = "Публикациите се броят",
 	statisticsReviewsCount = "Отзивите се броят",
 	statisticsPopularPublication = "(популярна публикация)",
 	statisticsMessagesCount = "Съобщенията се броят",
-	
 	whatsNew = "Какво ново",
+	
 	whatsNewInVersion = "Какво ново във версията",
 	areYouSure = "Сигурни ли сте, че искате да изтриете публикацията?",
 	createShortcut = "Създайте пряк път на работния плот",
@@ -54,8 +54,8 @@
 	relativePath = "Относителен път",
 	localizationDependency = "Файл за локализация",
 	login = "Влизане",
-	
 	profile = "Профил",
+	
 	nickname = "Псевдоним",
 	password = "парола",
 	nicknameOrEmail = "Имейл или псевдоним",
@@ -75,8 +75,8 @@
 	createAccount = "Създай акаунт",
 	registrationSuccessfull = "Проверете електронната си поща и папката за спам, за да потвърдите акаунта си",
 	search = "Търсене",
-	
 	byPopularity = "По популярност",
+	
 	byRating = "По рейтинг",
 	byDate = "По дата",
 	byName = "По име",
@@ -90,8 +90,8 @@
 	updateAll = "Актуализирай всички",
 	noUpdates = "Нямате актуализации",
 	changeReview = "Промяна на прегледа",
-	
 	developer = "Разработчик",
+	
 	version = "Версия",
 	license = "Разрешително",
 	category = "Категория",
@@ -111,5 +111,6 @@
 	usersLoveReview = "потребителите намират този преглед за полезен",
 	thanksForVote = "Благодаря за вашето мнение.",
 	previewDepencency = "Визуализация на изображението",
-	uniqueDownloads = "Уникални изтегляния"
+	uniqueDownloads = "Уникални изтегляния",
+	hideApplicationPreviews = "Скриване на визуализации на приложения"
 }

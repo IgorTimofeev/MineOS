@@ -14,23 +14,23 @@
 	yourText = "Вы:",
 	hereBeYourDialogs = "Тут будуць вашы размовы",
 	hideApplicationIcons = "Схаваць значкі прыкладанняў",
-	
 	categoryOverview = "Агляд",
+	
 	categoryApplications = "Прыкладанні",
 	categoryLibraries = "Бібліятэкі",
 	categoryScripts = "Сцэнарыі",
 	categoryUpdates = "Абнаўленні",
 	categoryWallpapers = "Шпалеры",
-	
 	statisticsNewUser = "Новы карыстальнік",
+	
 	statisticsMostPopularUser = "Найбольш актыўныя",
 	statisticsUsersCount = "Карыстальнікі падлічваюцца",
 	statisticsPublicationsCount = "Падлічваюцца публікацыі",
 	statisticsReviewsCount = "Водгукі залічваюцца",
 	statisticsPopularPublication = "(папулярнае выданне)",
 	statisticsMessagesCount = "Паведамленні лічацца",
-	
 	whatsNew = "Што новага",
+	
 	whatsNewInVersion = "Што новага ў версіі",
 	areYouSure = "Вы ўпэўненыя, што хочаце выдаліць публікацыю?",
 	createShortcut = "Стварыць ярлык на працоўным стале",
@@ -54,8 +54,8 @@
 	relativePath = "Адносны шлях",
 	localizationDependency = "Файл лакалізацыі",
 	login = "Увайсці",
-	
 	profile = "Профіль",
+	
 	nickname = "Мянушка",
 	password = "Пароль",
 	nicknameOrEmail = "Электронная пошта або нік",
@@ -75,8 +75,8 @@
 	createAccount = "Стварыць уліковы запіс",
 	registrationSuccessfull = "Праверце электронную пошту і папку са спамам, каб пацвердзіць свой уліковы запіс",
 	search = "Пошук",
-	
 	byPopularity = "Па папулярнасці",
+	
 	byRating = "Па рэйтынгу",
 	byDate = "Па даце",
 	byName = "Па імені",
@@ -90,8 +90,8 @@
 	updateAll = "Абнавіць усе",
 	noUpdates = "У вас няма абнаўленняў",
 	changeReview = "Змяніць агляд",
-	
 	developer = "Распрацоўшчык",
+	
 	version = "Версія",
 	license = "Ліцэнзія",
 	category = "Катэгорыя",
@@ -111,5 +111,6 @@
 	usersLoveReview = "карыстальнікі палічылі гэты агляд карысным",
 	thanksForVote = "Дзякуй за ваша меркаванне.",
 	previewDepencency = "Папярэдні прагляд выявы",
-	uniqueDownloads = "Унікальныя загрузкі"
+	uniqueDownloads = "Унікальныя загрузкі",
+	hideApplicationPreviews = "Схаваць папярэдні прагляд прыкладанняў"
 }

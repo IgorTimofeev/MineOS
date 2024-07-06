@@ -14,23 +14,23 @@
 	yourText = "أنت:",
 	hereBeYourDialogs = "هنا ستكون محادثاتك",
 	hideApplicationIcons = "إخفاء رموز التطبيق",
-	
 	categoryOverview = "ملخص",
+	
 	categoryApplications = "التطبيقات",
 	categoryLibraries = "مكتبات",
 	categoryScripts = "نصوص",
 	categoryUpdates = "التحديثات",
 	categoryWallpapers = "خلفيات",
-	
 	statisticsNewUser = "مستخدم جديد",
+	
 	statisticsMostPopularUser = "أكثر نشاطا",
 	statisticsUsersCount = "عدد المستخدمين",
 	statisticsPublicationsCount = "عدد المنشورات",
 	statisticsReviewsCount = "عدد التعليقات",
 	statisticsPopularPublication = "(منشور شعبي)",
 	statisticsMessagesCount = "عدد الرسائل",
-	
 	whatsNew = "ما هو الجديد",
+	
 	whatsNewInVersion = "ما الجديد في الإصدار",
 	areYouSure = "هل أنت متأكد من أنك تريد حذف المنشور؟",
 	createShortcut = "إنشاء اختصار سطح المكتب",
@@ -54,8 +54,8 @@
 	relativePath = "مسار نسبي",
 	localizationDependency = "ملف الترجمة",
 	login = "يسجل دخول",
-	
 	profile = "حساب تعريفي",
+	
 	nickname = "اسم الشهرة",
 	password = "كلمه السر",
 	nicknameOrEmail = "البريد الإلكتروني أو الاسم المستعار",
@@ -75,8 +75,8 @@
 	createAccount = "إنشاء حساب",
 	registrationSuccessfull = "تحقق من البريد الإلكتروني ومجلد البريد العشوائي للتحقق من حسابك",
 	search = "بحث",
-	
 	byPopularity = "حسب الشعبية",
+	
 	byRating = "حسب التصنيف",
 	byDate = "حسب التاريخ",
 	byName = "بالاسم",
@@ -90,8 +90,8 @@
 	updateAll = "تحديث الجميع",
 	noUpdates = "ليس لديك تحديثات",
 	changeReview = "تغيير الاستعراض",
-	
 	developer = "مطور",
+	
 	version = "الإصدار",
 	license = "رخصة",
 	category = "فئة",
@@ -111,5 +111,6 @@
 	usersLoveReview = "وجد المستخدمون هذه المراجعة مفيدة",
 	thanksForVote = "شكرا لرأيك.",
 	previewDepencency = "صورة المعاينة",
-	uniqueDownloads = "تنزيلات فريدة"
+	uniqueDownloads = "تنزيلات فريدة",
+	hideApplicationPreviews = "إخفاء معاينات التطبيق"
 }

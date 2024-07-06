@@ -14,23 +14,23 @@
 	yourText = "ty:",
 	hereBeYourDialogs = "Tu budú vaše rozhovory",
 	hideApplicationIcons = "Skryť ikony aplikácií",
-	
 	categoryOverview = "Prehľad",
+	
 	categoryApplications = "Aplikácie",
 	categoryLibraries = "Knižnice",
 	categoryScripts = "Skriptá",
 	categoryUpdates = "Aktualizácie",
 	categoryWallpapers = "Tapety",
-	
 	statisticsNewUser = "Nový užívateľ",
+	
 	statisticsMostPopularUser = "Najaktívnejší",
 	statisticsUsersCount = "Používatelia sa počítajú",
 	statisticsPublicationsCount = "Publikácie sa počítajú",
 	statisticsReviewsCount = "Recenzie sa počítajú",
 	statisticsPopularPublication = "(populárna publikácia)",
 	statisticsMessagesCount = "Počet správ",
-	
 	whatsNew = "Čo je nové",
+	
 	whatsNewInVersion = "Čo je nové vo verzii",
 	areYouSure = "Naozaj chcete odstrániť publikáciu?",
 	createShortcut = "Vytvoriť zástupcu na ploche",
@@ -54,8 +54,8 @@
 	relativePath = "Relatívna cesta",
 	localizationDependency = "Lokalizačný súbor",
 	login = "Prihlásiť sa",
-	
 	profile = "Profil",
+	
 	nickname = "prezývka",
 	password = "heslo",
 	nicknameOrEmail = "E-mail alebo prezývka",
@@ -75,8 +75,8 @@
 	createAccount = "Vytvoriť účet",
 	registrationSuccessfull = "Skontrolujte svoj e-mail a priečinok so spamom a overte svoj účet",
 	search = "Vyhľadávanie",
-	
 	byPopularity = "Podľa popularity",
+	
 	byRating = "Podľa hodnotenia",
 	byDate = "Podľa dátumu",
 	byName = "Podľa názvu",
@@ -90,8 +90,8 @@
 	updateAll = "Aktualizovať všetko",
 	noUpdates = "Nemáte žiadne aktualizácie",
 	changeReview = "Zmeniť recenziu",
-	
 	developer = "Vývojár",
+	
 	version = "Verzia",
 	license = "Licencia",
 	category = "Kategória",
@@ -111,5 +111,6 @@
 	usersLoveReview = "používatelia považovali túto recenziu za užitočnú",
 	thanksForVote = "dakujem za nazor.",
 	previewDepencency = "Ukážkový obrázok",
-	uniqueDownloads = "Jedinečné sťahovanie"
+	uniqueDownloads = "Jedinečné sťahovanie",
+	hideApplicationPreviews = "Skryť ukážky aplikácií"
 }

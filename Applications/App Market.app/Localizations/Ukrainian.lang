@@ -14,23 +14,23 @@
 	yourText = "Ви:",
 	hereBeYourDialogs = "Тут будуть відображені ваші діалоги",
 	hideApplicationIcons = "Приховати значки програм",
-	
 	categoryOverview = "Головна",
+	
 	categoryApplications = "Додатки",
 	categoryLibraries = "Бібліотеки",
 	categoryScripts = "Скрипти",
 	categoryUpdates = "Оновлення",
 	categoryWallpapers = "Шпалери",
-	
 	statisticsNewUser = "Новий користувач",
+	
 	statisticsMostPopularUser = "Найбільш активний",
 	statisticsUsersCount = "Число користувачів",
 	statisticsPublicationsCount = "Число публікацій",
 	statisticsReviewsCount = "Число відгуків",
 	statisticsPopularPublication = "(Популярна публікація)",
 	statisticsMessagesCount = "Число повідомлень",
-	
 	whatsNew = "Що нового",
+	
 	whatsNewInVersion = "Що нового у версії",
 	areYouSure = "Ви впевнені, що хочете видалити публікацію?",
 	createShortcut = "Створити ярлик на робочому столі",
@@ -54,8 +54,8 @@
 	relativePath = "Відносний шлях",
 	localizationDependency = "Файл локалізації",
 	login = "Авторизація",
-	
 	profile = "Профіль",
+	
 	nickname = "Нікнейм",
 	password = "Пароль",
 	nicknameOrEmail = "Нікнейм або ел. скринька",
@@ -75,8 +75,8 @@
 	createAccount = "Створити акаунт",
 	registrationSuccessfull = "Перевірте свою пошту (і папку спаму), щоб підтвердити аккаунт",
 	search = "Пошук",
-	
 	byPopularity = "За популярністю",
+	
 	byRating = "За рейтингом",
 	byDate = "По даті",
 	byName = "По імені",
@@ -90,8 +90,8 @@
 	updateAll = "Оновити все",
 	noUpdates = "У вас найновіше ПЗ",
 	changeReview = "Змінити відгук",
-	
 	developer = "Розробник",
+	
 	version = "Версія",
 	license = "Ліцензія",
 	category = "Категорія",
@@ -111,5 +111,6 @@
 	usersLoveReview = "користувачів вважають цей відгук корисним",
 	thanksForVote = "Дякую за вашу думку",
 	previewDepencency = "Попередній перегляд зображення",
-	uniqueDownloads = "Унікальні завантаження"
+	uniqueDownloads = "Унікальні завантаження",
+	hideApplicationPreviews = "Приховати попередній перегляд програми"
 }

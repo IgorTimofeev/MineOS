@@ -14,23 +14,23 @@
 	yourText = "너:",
 	hereBeYourDialogs = "다음은 귀하의 대화 내용입니다.",
 	hideApplicationIcons = "애플리케이션 아이콘 숨기기",
-	
 	categoryOverview = "개요",
+	
 	categoryApplications = "애플리케이션",
 	categoryLibraries = "도서관",
 	categoryScripts = "스크립트",
 	categoryUpdates = "업데이트",
 	categoryWallpapers = "배경화면",
-	
 	statisticsNewUser = "새로운 사용자",
+	
 	statisticsMostPopularUser = "가장 활동적인",
 	statisticsUsersCount = "사용자 수",
 	statisticsPublicationsCount = "간행물 수",
 	statisticsReviewsCount = "리뷰 수",
 	statisticsPopularPublication = "(인기 간행물)",
 	statisticsMessagesCount = "메시지 수",
-	
 	whatsNew = "새로운 소식",
+	
 	whatsNewInVersion = "버전의 새로운 기능",
 	areYouSure = "출판물을 삭제하시겠습니까?",
 	createShortcut = "바탕 화면 바로 가기 만들기",
@@ -54,8 +54,8 @@
 	relativePath = "상대 경로",
 	localizationDependency = "현지화 파일",
 	login = "로그인",
-	
 	profile = "프로필",
+	
 	nickname = "별명",
 	password = "비밀번호",
 	nicknameOrEmail = "이메일 또는 닉네임",
@@ -75,8 +75,8 @@
 	createAccount = "계정 만들기",
 	registrationSuccessfull = "이메일 및 스팸 폴더를 확인하여 계정 확인",
 	search = "검색",
-	
 	byPopularity = "인기순으로",
+	
 	byRating = "등급별",
 	byDate = "날짜별",
 	byName = "이름으로",
@@ -90,8 +90,8 @@
 	updateAll = "모두 업데이트",
 	noUpdates = "업데이트가 없습니다.",
 	changeReview = "리뷰 변경",
-	
 	developer = "개발자",
+	
 	version = "버전",
 	license = "특허",
 	category = "범주",
@@ -111,5 +111,6 @@
 	usersLoveReview = "사용자가 이 리뷰가 도움이 되었다고 생각함",
 	thanksForVote = "의견 감사합니다.",
 	uniqueDownloads = "고유 다운로드",
-	previewDepencency = "미리보기 이미지"
+	previewDepencency = "미리보기 이미지",
+	hideApplicationPreviews = "애플리케이션 미리보기 숨기기"
 }

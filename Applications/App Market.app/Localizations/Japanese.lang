@@ -14,23 +14,23 @@
 	yourText = "君：",
 	hereBeYourDialogs = "これがあなたの会話になります",
 	hideApplicationIcons = "アプリケーションアイコンを非表示にする",
-	
 	categoryOverview = "概要",
+	
 	categoryApplications = "アプリケーション",
 	categoryLibraries = "ライブラリ",
 	categoryScripts = "スクリプト",
 	categoryUpdates = "更新",
 	categoryWallpapers = "壁紙",
-	
 	statisticsNewUser = "新しいユーザー",
+	
 	statisticsMostPopularUser = "最もアクティブ",
 	statisticsUsersCount = "ユーザー数",
 	statisticsPublicationsCount = "出版物は数えます",
 	statisticsReviewsCount = "レビュー数",
 	statisticsPopularPublication = "（人気出版物）",
 	statisticsMessagesCount = "メッセージ数",
-	
 	whatsNew = "新着情報",
+	
 	whatsNewInVersion = "バージョンの新機能",
 	areYouSure = "パブリケーションを削除してもよろしいですか？",
 	createShortcut = "デスクトップショートカットを作成します",
@@ -54,8 +54,8 @@
 	relativePath = "相対パス",
 	localizationDependency = "ローカリゼーションファイル",
 	login = "ログイン",
-	
 	profile = "プロフィール",
+	
 	nickname = "ニックネーム",
 	password = "パスワード",
 	nicknameOrEmail = "電子メールまたはニックネーム",
@@ -75,8 +75,8 @@
 	createAccount = "アカウントを作成する",
 	registrationSuccessfull = "あなたのアカウントを確認するためにあなたの電子メールとスパムフォルダをチェックしてください",
 	search = "探す",
-	
 	byPopularity = "人気で",
+	
 	byRating = "評価による",
 	byDate = "日付別",
 	byName = "名前で",
@@ -90,8 +90,8 @@
 	updateAll = "すべて更新",
 	noUpdates = "更新はありません",
 	changeReview = "レビューを変更",
-	
 	developer = "デベロッパー",
+	
 	version = "バージョン",
 	license = "ライセンス",
 	category = "カテゴリー",
@@ -111,5 +111,6 @@
 	usersLoveReview = "ユーザーはこのレビューが役に立ったと感じました",
 	thanksForVote = "ご意見ありがとうございます。",
 	previewDepencency = "プレビュー画像",
-	uniqueDownloads = "ユニークなダウンロード"
+	uniqueDownloads = "ユニークなダウンロード",
+	hideApplicationPreviews = "アプリケーションのプレビューを非表示にする"
 }
