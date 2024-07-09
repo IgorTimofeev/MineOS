@@ -14,23 +14,23 @@
 	yourText = "Ty:",
 	hereBeYourDialogs = "Tu będą twoje rozmowy",
 	hideApplicationIcons = "Ukryj ikony aplikacji",
-	
 	categoryOverview = "Przegląd",
+	
 	categoryApplications = "Aplikacje",
 	categoryLibraries = "Biblioteki",
 	categoryScripts = "Skrypty",
 	categoryUpdates = "Aktualizacje",
 	categoryWallpapers = "Tapety",
-	
 	statisticsNewUser = "Nowy użytkownik",
+	
 	statisticsMostPopularUser = "Najbardziej aktywny",
 	statisticsUsersCount = "Liczba użytkowników",
 	statisticsPublicationsCount = "Liczba publikacji",
 	statisticsReviewsCount = "Liczba recenzji",
 	statisticsPopularPublication = "(popularna publikacja)",
 	statisticsMessagesCount = "Liczba wiadomości",
-	
 	whatsNew = "Co nowego",
+	
 	whatsNewInVersion = "Co nowego w wersji",
 	areYouSure = "Czy na pewno chcesz usunąć publikację?",
 	createShortcut = "Utwórz skrót na pulpicie",
@@ -54,8 +54,8 @@
 	relativePath = "Względna ścieżka dostępu",
 	localizationDependency = "Plik lokalizacyjny",
 	login = "Zaloguj sie",
-	
 	profile = "Profil",
+	
 	nickname = "Przezwisko",
 	password = "Hasło",
 	nicknameOrEmail = "E-mail lub pseudonim",
@@ -75,8 +75,8 @@
 	createAccount = "Utwórz konto",
 	registrationSuccessfull = "Sprawdź swoją pocztę e-mail i folder ze spamem, aby zweryfikować swoje konto",
 	search = "Szukaj",
-	
 	byPopularity = "Według popularności",
+	
 	byRating = "Według oceny",
 	byDate = "Według daty",
 	byName = "Wg nazwy",
@@ -90,8 +90,8 @@
 	updateAll = "Zaktualizuj wszystko",
 	noUpdates = "Nie masz żadnych aktualizacji",
 	changeReview = "Zmień recenzję",
-	
 	developer = "Deweloper",
+	
 	version = "Wersja",
 	license = "Licencja",
 	category = "Kategoria",
@@ -111,5 +111,6 @@
 	usersLoveReview = "użytkownicy uznali tę opinię za pomocną",
 	thanksForVote = "Dziękuję za Twoją opinię.",
 	uniqueDownloads = "Unikalne pliki do pobrania",
-	previewDepencency = "Podgląd obrazu"
+	previewDepencency = "Podgląd obrazu",
+	hideApplicationPreviews = "Ukryj podglądy aplikacji"
 }

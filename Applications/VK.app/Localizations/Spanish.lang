@@ -27,7 +27,6 @@
 	userIsYourFriend = "Es tu amigo",
 	profileCounters = {
 		{
-			
 			field = "seguidores",
 			description = " seguidores"
 		},

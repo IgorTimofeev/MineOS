@@ -14,23 +14,23 @@
 	yourText = "你:",
 	hereBeYourDialogs = "这是你们的谈话内容",
 	hideApplicationIcons = "隱藏應用程序圖標",
-	
 	categoryOverview = "预览",
+	
 	categoryApplications = "软件",
 	categoryLibraries = "库",
 	categoryScripts = "脚本",
 	categoryUpdates = "更新",
 	categoryWallpapers = "壁紙",
-	
 	statisticsNewUser = "新用户",
+	
 	statisticsMostPopularUser = "最积极",
 	statisticsUsersCount = "用户数量",
 	statisticsPublicationsCount = "软件数量",
 	statisticsReviewsCount = "评论数量",
 	statisticsPopularPublication = "最受欢迎的软件",
 	statisticsMessagesCount = "信息数",
-	
 	whatsNew = "什麼是新的",
+	
 	whatsNewInVersion = "版本的新功能",
 	areYouSure = "您確定要刪除出版物嗎？",
 	createShortcut = "創建桌面快捷方式",
@@ -54,8 +54,8 @@
 	relativePath = "相對路徑",
 	localizationDependency = "本地化文件",
 	login = "登录",
-	
 	profile = "账户",
+	
 	nickname = "昵称",
 	password = "密码",
 	nicknameOrEmail = "邮箱或昵称",
@@ -75,8 +75,8 @@
 	createAccount = "注册",
 	registrationSuccessfull = "请去检查邮箱，并点击发来的链接",
 	search = "搜索",
-	
 	byPopularity = "最受欢迎",
+	
 	byRating = "最高评分",
 	byDate = "创建日期",
 	byName = "通过名称",
@@ -90,8 +90,8 @@
 	updateAll = "更新所有",
 	noUpdates = "已经是最新版",
 	changeReview = "修改评论",
-	
 	developer = "开发者",
+	
 	version = "版本",
 	license = "协议",
 	category = "类型",
@@ -111,5 +111,6 @@
 	usersLoveReview = "人认为这条评论有用",
 	thanksForVote = "感谢你的观点。",
 	previewDepencency = "預覽影像",
-	uniqueDownloads = "獨特的下載量"
+	uniqueDownloads = "獨特的下載量",
+	hideApplicationPreviews = "隱藏應用程式預覽"
 }

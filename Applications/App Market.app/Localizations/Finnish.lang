@@ -14,23 +14,23 @@
 	yourText = "Sinä:",
 	hereBeYourDialogs = "Tässä ovat keskustelusi",
 	hideApplicationIcons = "Piilota sovelluskuvakkeet",
-	
 	categoryOverview = "Yleiskatsaus",
+	
 	categoryApplications = "Sovellukset",
 	categoryLibraries = "Kirjastot",
 	categoryScripts = "Käsikirjoitukset",
 	categoryUpdates = "Päivitykset",
 	categoryWallpapers = "Taustakuvat",
-	
 	statisticsNewUser = "Uusi käyttäjä",
+	
 	statisticsMostPopularUser = "Aktiivisin",
 	statisticsUsersCount = "Käyttäjiä lasketaan",
 	statisticsPublicationsCount = "Julkaisut lasketaan",
 	statisticsReviewsCount = "Arvostelut lasketaan",
 	statisticsPopularPublication = "(suosittu julkaisu)",
 	statisticsMessagesCount = "Viestit lasketaan",
-	
 	whatsNew = "Mikä on uutta",
+	
 	whatsNewInVersion = "Mitä uutta versiossa",
 	areYouSure = "Haluatko varmasti poistaa julkaisun?",
 	createShortcut = "Luo pikakuvake työpöydälle",
@@ -54,8 +54,8 @@
 	relativePath = "Suhteellinen polku",
 	localizationDependency = "Lokalisointitiedosto",
 	login = "Kirjaudu sisään",
-	
 	profile = "Profiili",
+	
 	nickname = "Nimimerkki",
 	password = "Salasana",
 	nicknameOrEmail = "Sähköposti tai lempinimi",
@@ -75,8 +75,8 @@
 	createAccount = "Luo tili",
 	registrationSuccessfull = "Tarkista sähköpostisi ja roskapostikansiosi vahvistaaksesi tilisi",
 	search = "Hae",
-	
 	byPopularity = "Suosion mukaan",
+	
 	byRating = "Luokituksen mukaan",
 	byDate = "Päivämäärän mukaan",
 	byName = "Nimeltä",
@@ -90,8 +90,8 @@
 	updateAll = "Päivitä kaikki",
 	noUpdates = "Sinulla ei ole päivityksiä",
 	changeReview = "Muuta arvostelua",
-	
 	developer = "Kehittäjä",
+	
 	version = "Versio",
 	license = "Lisenssi",
 	category = "Kategoria",
@@ -111,5 +111,6 @@
 	usersLoveReview = "käyttäjät pitivät tätä arvostelua hyödyllisenä",
 	thanksForVote = "Kiitos mielipiteestäsi.",
 	previewDepencency = "Esikatselukuva",
-	uniqueDownloads = "Ainutlaatuiset lataukset"
+	uniqueDownloads = "Ainutlaatuiset lataukset",
+	hideApplicationPreviews = "Piilota sovellusten esikatselut"
 }

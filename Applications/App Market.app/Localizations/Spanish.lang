@@ -14,23 +14,23 @@
 	yourText = "Tu:",
 	hereBeYourDialogs = "Aqui estaran tus conversaciones",
 	hideApplicationIcons = "Ocultar iconos de aplicaciones",
-	
 	categoryOverview = "Vision General",
+	
 	categoryApplications = "Aplicaciones",
 	categoryLibraries = "Librerias",
 	categoryScripts = "Guiones",
 	categoryUpdates = "Actualizaciones",
 	categoryWallpapers = "Fondos de pantalla",
-	
 	statisticsNewUser = "Nuevo usuario",
+	
 	statisticsMostPopularUser = "Mas Activo",
 	statisticsUsersCount = "Recuento de usuarios",
 	statisticsPublicationsCount = "Recuento de publicaciones",
 	statisticsReviewsCount = "Recuento de valoraciones",
 	statisticsPopularPublication = "(publicacion popular)",
 	statisticsMessagesCount = "Recuento de mensajes",
-	
 	whatsNew = "Que hay nuevo",
+	
 	whatsNewInVersion = "Que hay nuevo en la version",
 	areYouSure = "Estas seguro que quieres eliminar la publicacion?",
 	createShortcut = "Crear Acceso Directo en el Escritorio",
@@ -54,8 +54,8 @@
 	relativePath = "Ruta Relativa",
 	localizationDependency = "Archivo de localizacion",
 	login = "Iniciar sesion",
-	
 	profile = "Perfil",
+	
 	nickname = "Apodo",
 	password = "Contraseña",
 	nicknameOrEmail = "Email o apodo",
@@ -75,8 +75,8 @@
 	createAccount = "Crear Cuenta",
 	registrationSuccessfull = "Checkea tu email y carpeta de spam para verificar tu cuenta",
 	search = "Buscar",
-	
 	byPopularity = "Por Popularidad",
+	
 	byRating = "Por Clasificacion",
 	byDate = "Por Fecha",
 	byName = "Por Nombre",
@@ -90,8 +90,8 @@
 	updateAll = "Actualizar Todo",
 	noUpdates = "No tienes actualizaciones",
 	changeReview = "Cambiar valoracion",
-	
 	developer = "Desarrollador",
+	
 	version = "Versión",
 	license = "Licencia",
 	category = "Categoria",
@@ -111,5 +111,6 @@
 	usersLoveReview = "Usuarios encontraron esta valoracion util",
 	thanksForVote = "Gracias por tu opinion.",
 	uniqueDownloads = "Descargas únicas",
-	previewDepencency = "Imagen previa"
+	previewDepencency = "Imagen previa",
+	hideApplicationPreviews = "Ocultar vistas previas de aplicaciones"
 }
