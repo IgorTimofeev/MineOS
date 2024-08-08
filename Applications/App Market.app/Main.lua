@@ -27,7 +27,7 @@ local userPath = appMarketPath .. "User.cfg"
 local cachePath = appMarketPath .. "Cache/"
 
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
-local localization = system.getLocalization(currentScriptDirectory .. "Localizations/") 
+local localization = system.getLocalization(currentScriptDirectory .. "Localizations/")
 
 local categories = {
 	{ icon = "🎸", name = localization.categoryApplications },
@@ -193,7 +193,7 @@ local function RawAPIRequest(script, postData, notUnserialize)
 		},
 		function(chunk)
 			data = data .. chunk
-			
+
 			progressIndicator:roll()
 			workspace:draw()
 		end,
@@ -239,10 +239,10 @@ end
 
 local function checkContentLength(url)
 	local handle = component.get("internet").request(url)
-	
+
 	if handle then
 		local deadline, code, message, headers = computer.uptime() + 1
-		
+
 		repeat
 			code, message, headers = handle:response()
 		until headers or computer.uptime() >= deadline
@@ -273,16 +273,16 @@ end
 
 local function checkImage(url, mneTolkoSprosit, sizeFilter)
 	local handle, reason = checkContentLength(url)
-	
+
 	if not handle then
 		return false, reason
 	end
 
 	local needCheck, data, chunk, reason = true, ""
-	
+
 	while true do
 		chunk, reason = handle.read(math.huge)
-		
+
 		if not chunk then
 			handle:close()
 
@@ -302,7 +302,7 @@ local function checkImage(url, mneTolkoSprosit, sizeFilter)
 				handle:close()
 				return false, "Wrong image file signature"
 			end
-			
+
 			local encodingMethod = string.byte(data:sub(5, 5))
 			if not (6 <= encodingMethod and encodingMethod <= 8) then
 				handle:close()
@@ -325,12 +325,12 @@ local function checkImage(url, mneTolkoSprosit, sizeFilter)
 
 			needCheck = false
 		end
-	end	
+	end
 end
 
 local function tryToDownload(...)
 	local success, reason = internet.download(...)
-	
+
 	if not success then
 		GUI.alert(reason)
 	end
@@ -395,7 +395,7 @@ end
 
 local function newRatingWidget(x, y, rating, firstColor, secondColor)
 	local object = GUI.object(x, y, 9, 1)
-	
+
 	object.colors = {
 		first = firstColor or 0xFFB600,
 		second = secondColor or 0xC3C3C3
@@ -410,15 +410,15 @@ end
 local function deletePublication(publication)
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure)
 	local buttonsLayout = container.layout:addChild(newButtonsLayout(1, 1, container.layout.width, 3))
-	
+
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
 		local success, reason = RawAPIRequest("delete", {
 			token = user.token,
 			file_id = publication.file_id,
 		})
 
-		if success then		
-			container:remove()			
+		if success then
+			container:remove()
 			updateFileList(publication.category_id)
 		else
 			GUI.alert(reason)
@@ -492,7 +492,7 @@ local function download(publication)
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.choosePath)
 
 		local versionsTable = getVersionsTable(publication.file_id)
-		
+
 		local filesystemChooserPath = versionsTable[publication.file_id] and getApplicationPathFromVersions(versionsTable[publication.file_id].path)
 		if not filesystemChooserPath then
 			if publication.category_id == 1 then
@@ -547,13 +547,13 @@ local function download(publication)
 
 					idiNahooy = idiNahooy[blyad]
 				end
-				
+
 				table.insert(idiNahooy, {
 					path = dependencyPath,
 					source_url = treeData[i].source_url,
 				})
 			end
-			
+
 			-- Пизда для формирования той ебалы, как ее там
 			local function pizda(t, offset, initPath)
 				for chlen, devka in pairs(t) do
@@ -585,9 +585,9 @@ local function download(publication)
 
 			container.layout:removeChildren(2)
 			local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
-				
+
 			local countOfShit = 1 + (publication.all_dependencies and #publication.all_dependencies or 0)
-			
+
 			local function govnoed(pizda, i)
 				container.label.text = localization.downloading .. " " .. filesystem.name(pizda.path)
 				progressBar.value = math.floor(i / countOfShit * 100)
@@ -630,7 +630,7 @@ local function download(publication)
 			if not shortcutSwitchAndLabel.hidden and shortcutSwitchAndLabel.switch.state then
 				system.createShortcut(paths.user.desktop .. filesystem.hideExtension(filesystem.name(filesystemChooser.path)), filesystemChooser.path)
 			end
-			
+
 			computer.pushSignal("system", "updateFileList")
 			saveVersions()
 		end
@@ -683,7 +683,7 @@ local function getPublicationIcon(publication)
 			return loadIcon("Application")
 		else
 			local image, reason = getImage(
-				publication, 
+				publication,
 				publication.icon_url,
 				function(width, height)
 					if width > 8 or height > 4 then
@@ -713,11 +713,11 @@ local function addApplicationInfo(container, publication, limit)
 	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, text.limit(publication.publication_name, limit, "right")))
 	container.developerLabel = container:addChild(GUI.text(13, 3, 0x878787, text.limit("©" .. publication.user_name, limit, "right")))
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and number.round(publication.average_rating) or 0))
-	
+
 	local updateState = getUpdateState(publication.file_id, publication.version)
-	
+
 	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
-	
+
 	container.downloadButton.onTouch = function()
 		download(publication)
 	end
@@ -732,7 +732,7 @@ local function addApplicationInfo(container, publication, limit)
 			filesystem.remove(getApplicationPathFromVersions(versionsTable[publication.file_id].path))
 			filesystem.remove(paths.user.desktop .. publication.publication_name .. ".lnk")
 			versionsTable[publication.file_id] = nil
-			
+
 			callLastMethod()
 			computer.pushSignal("system", "updateFileList")
 			saveVersions()
@@ -745,7 +745,7 @@ end
 local function containerScrollEventHandler(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		local first, last = object.children[1], object.children[#object.children]
-		
+
 		if e5 == 1 then
 			if first.localY < 2 then
 				for i = 1, #object.children do
@@ -808,137 +808,138 @@ local function overview()
 			category_id = 1,
 		})
 
-		if publications then
-			contentContainer:removeChildren()
+		contentContainer:removeChildren()
 
-			local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
-			iconsContainer.blockScreenEvents = true
+		local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
+		iconsContainer.blockScreenEvents = true
 
-			local width = appWidth + 4
-			local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
-			container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
-			
-			local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+		local width = appWidth + 4
+		local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
+		container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
 
-			statisticsLayout:addChild(GUI.image(1, 1, image.load(currentScriptDirectory .. "Icon.pic"))).height = 5
-			
-			local textLayout = statisticsLayout:addChild(GUI.layout(1, 1, container.width - 4, 1, 1, 1))
-			textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
 
-			local function add(key, value)
-				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. value))
-			end
+		statisticsLayout:addChild(GUI.image(1, 1, image.load(currentScriptDirectory .. "Icon.pic"))).height = 5
 
-			add(localization.statisticsUsersCount, statistics.users_count)
-			add(localization.statisticsNewUser, statistics.last_registered_user)
-			add(localization.statisticsMostPopularUser, statistics.most_popular_user)
-			add(localization.statisticsPublicationsCount, statistics.publications_count)
-			add(localization.statisticsReviewsCount, statistics.reviews_count)
-			add(localization.statisticsMessagesCount, statistics.messages_count)
-			
-			textLayout.height = #textLayout.children * 2
+		local textLayout = statisticsLayout:addChild(GUI.layout(1, 1, container.width - 4, 1, 1, 1))
+		textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
+		local function add(key, value)
+		        textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. (value or "")))
+		end
+
+		add(localization.statisticsUsersCount, statistics.users_count)
+		add(localization.statisticsNewUser, statistics.last_registered_user)
+		add(localization.statisticsMostPopularUser, statistics.most_popular_user)
+		add(localization.statisticsPublicationsCount, statistics.publications_count)
+		add(localization.statisticsReviewsCount, statistics.reviews_count)
+		add(localization.statisticsMessagesCount, statistics.messages_count)
+
+		textLayout.height = #textLayout.children * 2
+
+		if #publications > 0 then
 			local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
 			applicationPreview.panel.colors.background = 0xF0F0F0
-			statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+		end
+		statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 
-			workspace:draw()
 
-			local uptime, newUptime = computer.uptime()
-			local function tick()
-				newUptime = computer.uptime()
-				if newUptime - uptime > overviewAnimationDelay then
-					uptime = newUptime
+		workspace:draw()
 
-					local child
-					for i = 1, #iconsContainer.children do
-						child = iconsContainer.children[i]
-						
-						child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
-							
-						if child.forceX > 0 then
-							if child.forceX > overviewForceLimit then
-								child.forceX = child.forceX - overviewForceDecay
-							else
-								child.forceX = overviewForceLimit
-							end
+		local uptime, newUptime = computer.uptime()
+		local function tick()
+			newUptime = computer.uptime()
+			if newUptime - uptime > overviewAnimationDelay then
+				uptime = newUptime
+
+				local child
+				for i = 1, #iconsContainer.children do
+					child = iconsContainer.children[i]
+
+					child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
+
+					if child.forceX > 0 then
+						if child.forceX > overviewForceLimit then
+							child.forceX = child.forceX - overviewForceDecay
 						else
-							if child.forceX < -overviewForceLimit then
-								child.forceX = child.forceX + overviewForceDecay
-							else
-								child.forceX = -overviewForceLimit
-							end
+							child.forceX = overviewForceLimit
 						end
-
-						if child.forceY > 0 then
-							if child.forceY > overviewForceLimit then
-								child.forceY = child.forceY - overviewForceDecay
-							else
-								child.forceY = overviewForceLimit
-							end
+					else
+						if child.forceX < -overviewForceLimit then
+							child.forceX = child.forceX + overviewForceDecay
 						else
-							if child.forceY < -overviewForceLimit then
-								child.forceY = child.forceY + overviewForceDecay
-							else
-								child.forceY = -overviewForceLimit
-							end
+							child.forceX = -overviewForceLimit
 						end
-
-						if child.moveX <= 1 then
-							child.forceX, child.moveX = -child.forceX, 1
-						elseif child.moveX + child.width - 1 >= iconsContainer.width then
-							child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
-						end
-
-						if child.moveY <= 1 then
-							child.forceY, child.moveY = -child.forceY, 1
-						elseif child.moveY + child.height - 1 >= iconsContainer.height then
-							child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
-						end
-
-						child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 					end
 
-					workspace:draw()
-
-					return true
-				end
-			end
-
-			iconsContainer.eventHandler = function(workspace, object, e1, e2, e3, e4)
-				if e1 == "touch" or e1 == "drag" then
-					local child, deltaX, deltaY, vectorLength
-					for i = 1, #iconsContainer.children do
-						child = iconsContainer.children[i]
-						
-						deltaX, deltaY = e3 - child.x, e4 - child.y
-						vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
-						if vectorLength > 0 then
-							child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
-							child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
+					if child.forceY > 0 then
+						if child.forceY > overviewForceLimit then
+							child.forceY = child.forceY - overviewForceDecay
+						else
+							child.forceY = overviewForceLimit
+						end
+					else
+						if child.forceY < -overviewForceLimit then
+							child.forceY = child.forceY + overviewForceDecay
+						else
+							child.forceY = -overviewForceLimit
 						end
 					end
+
+					if child.moveX <= 1 then
+						child.forceX, child.moveX = -child.forceX, 1
+					elseif child.moveX + child.width - 1 >= iconsContainer.width then
+						child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
+					end
+
+					if child.moveY <= 1 then
+						child.forceY, child.moveY = -child.forceY, 1
+					elseif child.moveY + child.height - 1 >= iconsContainer.height then
+						child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
+					end
+
+					child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 				end
 
-				tick()
-			end
+				workspace:draw()
 
-			local function makeBlyad(object)
-				object.localX = math.random(1, iconsContainer.width - object.width + 1)
-				object.localY = math.random(1, iconsContainer.height - object.width + 1)
-				object.moveX = object.localX
-				object.moveY = object.localY
-				object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
-				object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
-				
-				if not tick() then
-					workspace:draw()
+				return true
+			end
+		end
+
+		iconsContainer.eventHandler = function(workspace, object, e1, e2, e3, e4)
+			if e1 == "touch" or e1 == "drag" then
+				local child, deltaX, deltaY, vectorLength
+				for i = 1, #iconsContainer.children do
+					child = iconsContainer.children[i]
+
+					deltaX, deltaY = e3 - child.x, e4 - child.y
+					vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+					if vectorLength > 0 then
+						child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
+						child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
+					end
 				end
 			end
 
-			for i = 2, #publications do
-				makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
+			tick()
+		end
+
+		local function makeBlyad(object)
+			object.localX = math.random(1, iconsContainer.width - object.width + 1)
+			object.localY = math.random(1, iconsContainer.height - object.width + 1)
+			object.moveX = object.localX
+			object.moveY = object.localY
+			object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
+			object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
+
+			if not tick() then
+				workspace:draw()
 			end
+		end
+
+		for i = 2, #publications do
+			makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
 		end
 	end
 end
@@ -952,9 +953,9 @@ local function settings()
 
 	local function addAccountShit(login, register, recover)
 		contentContainer:removeChildren()
-		
+
 		local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
-		
+
 		layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
 		local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
@@ -1044,7 +1045,7 @@ local function settings()
 
 			local textLayout = layout:addChild(GUI.layout(1, 1, 36, 5, 1, 1))
 			textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
-			
+
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.nickname, ": " .. user.name))
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp + system.getUserSettings().timeTimezone)))
@@ -1065,7 +1066,7 @@ local function settings()
 			end
 
 			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
-			
+
 			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
 				addAccountShit(false, false, true)
 			end
@@ -1194,7 +1195,7 @@ local function dialogGUI(to_user_name)
 
 	local function cloudDraw(object)
 		local backgroundColor, textColor = object.me and 0x6692FF or 0xFFFFFF, object.me and 0xFFFFFF or 0x4B4B4B
-		
+
 		screen.drawRectangle(object.x, object.y, object.width, object.height, backgroundColor, textColor, " ")
 		screen.drawText(object.x, object.y - 1, backgroundColor, "⢀" .. string.rep("⣀", object.width - 2) .. "⡀")
 		screen.drawText(object.x, object.y + object.height, backgroundColor, "⠈" .. string.rep("⠉", object.width - 2) .. "⠁")
@@ -1216,7 +1217,7 @@ local function dialogGUI(to_user_name)
 	local function newCloud(y, width, cloudText, me, timestamp)
 		local lines = text.wrap(cloudText, width - 2)
 		local object = GUI.object(me and messagesContainer.width - width - 1 or 3, y - #lines + 1, width, 1)
-		
+
 		object.lines = lines
 		object.height = #lines
 		object.me = me
@@ -1273,7 +1274,7 @@ local function dialogs()
 				dialogContainer.blockScreenEvents = true
 
 				addPanel(dialogContainer,backgroundColor)
-				
+
 				dialogContainer:addChild(GUI.keyAndValue(3, 2, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp + system.getUserSettings().timeTimezone)))
 				dialogContainer:addChild(GUI.text(3, 3, textColor, text.limit((dialogs[i].last_message_user_name == user.name and localization.yourText .. " " or "") .. dialogs[i].text, dialogContainer.width - 4, "right")))
 
@@ -1303,7 +1304,7 @@ local function previewContainerUpdate(container)
 		child = container.children[i]
 
 		child.localX = container.contentWidth + 1 + container.contentOffset
-		container.contentWidth = container.contentWidth + child.width + container.horizontalSpacing 
+		container.contentWidth = container.contentWidth + child.width + container.horizontalSpacing
 
 		if child.height > container.height then
 			container.height = child.height
@@ -1317,7 +1318,7 @@ local function previewContainerFocusItem(container, index)
 	end
 
 	container.focusedItem = index
-	
+
 	local newContentOffset = 0
 	for i = 1, index - 1 do
 		newContentOffset = newContentOffset - container.children[i].width - container.horizontalSpacing
@@ -1376,7 +1377,7 @@ newPublicationInfo = function(file_id)
 
 		if reviews then
 			contentContainer:removeChildren()
-			
+
 			local infoContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
 			infoContainer.eventHandler = containerScrollEventHandler
 
@@ -1386,16 +1387,16 @@ newPublicationInfo = function(file_id)
 
 			-- А вот эт уже контейнер чисто инфы крч
 			local detailsContainer = layout:addChild(GUI.container(3, 2, layout.width, 6))
-					
+
 			-- Тут будут находиться ваще пизда подробности о публикации
 			local ratingsContainer = detailsContainer:addChild(GUI.container(1, 1, 28, 6))
 			ratingsContainer.localX = detailsContainer.width - ratingsContainer.width + 1
 			addPanel(ratingsContainer, 0xE1E1E1)
-			
+
 			local y = 2
 
 			local function addKeyAndValue(key, value)
-				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, key .. ": ", value)); 
+				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, key .. ": ", value));
 				y = y + 1
 			end
 
@@ -1460,11 +1461,11 @@ newPublicationInfo = function(file_id)
 						local container = GUI.addBackgroundContainer(workspace, true, true, existingReviewText and localization.changeReview or localization.writeReview)
 
 						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
-						
+
 						local pizda = container.layout:addChild(GUI.container(1, 1, 1, 1))
 						local eblo = pizda:addChild(GUI.text(1, 1, 0xE1E1E1, localization.yourRating .. ": "))
 						pizda.width = eblo.width + 9
-						
+
 						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
 						cyka.eventHandler = function(workspace, object, e1, e2, e3)
 							if e1 == "touch" then
@@ -1472,7 +1473,7 @@ newPublicationInfo = function(file_id)
 								workspace:draw()
 							end
 						end
-						
+
 						local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
 						govno.disabled = true
 						govno.colors.disabled.background = 0xA5A5A5
@@ -1505,7 +1506,7 @@ newPublicationInfo = function(file_id)
 									GUI.alert("Too big review length (" .. textLength .. "). Maximum is " .. to)
 								end
 							end
-							
+
 							workspace:draw()
 						end
 
@@ -1513,7 +1514,7 @@ newPublicationInfo = function(file_id)
 					end
 				end
 			end
-			
+
 			-- Добавляем контейнер под описание и прочую пизду
 			local textDetailsContainer = detailsContainer:addChild(GUI.container(1, 1, detailsContainer.width - ratingsContainer.width, detailsContainer.height))
 			-- Ебурим саму пизду
@@ -1525,7 +1526,7 @@ newPublicationInfo = function(file_id)
 				textDetailsContainer:addChild(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, text)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 				y = y + 2
 			end
-			
+
 			local function addTextBox(t)
 				local lines = text.wrap(t, textDetailsContainer.width - 4)
 				local textBox = textDetailsContainer:addChild(GUI.textBox(3, y, textDetailsContainer.width - 4, #lines, nil, 0x969696, lines, 1, 0, 0))
@@ -1557,11 +1558,11 @@ newPublicationInfo = function(file_id)
 					for i = 1, #publication.all_dependencies do
 						local dependency = publication.dependencies_data[publication.all_dependencies[i]]
 						if dependency.publication_name then
-							local textLength = unicode.len(dependency.publication_name) 
+							local textLength = unicode.len(dependency.publication_name)
 							if x + textLength + 4 > textDetailsContainer.width - 4 then
 								x, y = 3, y + 2
 							end
-							
+
 							local button = textDetailsContainer:addChild(GUI.tagButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
 							button.onTouch = function()
 								newPublicationInfo(publication.all_dependencies[i])
@@ -1660,7 +1661,7 @@ newPublicationInfo = function(file_id)
 
 					if user.token and user.name ~= reviews[i].user_name then
 						local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
-						
+
 						local layout = reviewContainer:addChild(GUI.layout(wasHelpText.localX + wasHelpText.width + 1, y, reviewContainer.width - wasHelpText.localX - wasHelpText.width - 1, 1, 1, 1))
 						layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 						layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -1787,7 +1788,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	for i = 1, #licenses do
 		licenseComboBox:addItem(licenses[i])
 	end
-	
+
 	local nameInput = addInput(initialPublication and initialPublication.publication_name or "", "My publication")
 	local mainUrlInput = addInput(initialPublication and initialPublication.source_url or "", "http://example.com/Main.lua")
 	local iconUrlInput = addInput(initialPublication and initialPublication.icon_url or "", "http://example.com/Icon.pic")
@@ -1833,7 +1834,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	local lastDependencyType = 1
 	dependenciesLayout.addButton.onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.addDependency)
-		
+
 		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x4B4B4B, 0x969696, 0xE1E1E1))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
 		dependencyTypeComboBox:addItem(localization.localizationDependency)
@@ -1864,7 +1865,7 @@ editPublication = function(initialPublication, initialCategoryID)
 				if not result then
 					GUI.alert(reason)
 					container:remove()
-					workspace:draw()					
+					workspace:draw()
 
 					return
 				end
@@ -1906,13 +1907,13 @@ editPublication = function(initialPublication, initialCategoryID)
 			end
 		end
 		pathInput.onInputFinished, urlInput.onInputFinished = publicationNameInput.onInputFinished, publicationNameInput.onInputFinished
-		
+
 		local function updatePlaceholder()
-			urlInput.placeholderText = 
-				lastDependencyType == 1 and "http://example.com/Main.lua" 
+			urlInput.placeholderText =
+				lastDependencyType == 1 and "http://example.com/Main.lua"
 				or lastDependencyType == 2 and "http://example.com/English.lang"
 				or "http://example.com/Preview.pic"
-				
+
 			pathInput.placeholderText = pathType.switch.state and "Resources/Main.lua" or "Users/Scripts/Main.lua"
 		end
 
@@ -1972,7 +1973,7 @@ editPublication = function(initialPublication, initialCategoryID)
 				path = "Icon.pic"
 			})
 		end
-		
+
 		local success, reason = RawAPIRequest(initialPublication and "update" or "upload", {
 			-- Вот эта хня чисто для апдейта
 			file_id = initialPublication and initialPublication.file_id or nil,
@@ -1990,7 +1991,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 		if success then
 			leftList.selectedItem = categoryComboBox.selectedItem + 1
-			
+
 			if initialPublication then
 				newPublicationInfo(initialPublication.file_id)
 			else
@@ -2038,7 +2039,7 @@ updateFileList = function(category_id, updates)
 	end
 
 	contentContainer:removeChildren()
-	
+
 	if updates then
 		local i = 1
 		while i <= #result do
@@ -2072,7 +2073,7 @@ updateFileList = function(category_id, updates)
 							file_id = result[i].file_id,
 							language_id = config.language_id,
 						})
-						
+
 						local versionsTable = getVersionsTable(publication.file_id)
 						versionsTable[publication.file_id].version = publication.version
 						tryToDownload(publication.source_url, versionsTable[publication.file_id].path)
@@ -2084,10 +2085,10 @@ updateFileList = function(category_id, updates)
 									if not dependency.publication_name then
 										container.label.text = localization.downloading .. " " .. dependency.path
 										workspace:draw()
-										
+
 										if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
 											local dependencyPath = getDependencyPath(versionsTable[publication.file_id].path, dependency)
-											
+
 											versionsTable[publication.all_dependencies[j]] = {
 												path = dependencyPath,
 												version = dependency.version,
@@ -2126,7 +2127,7 @@ updateFileList = function(category_id, updates)
 			orderByComboBox:addItem(localization.byRating)
 			orderByComboBox:addItem(localization.byName)
 			orderByComboBox:addItem(localization.byDate)
-			
+
 			orderByComboBox.selectedItem = config.orderBy
 
 			local orderDirectionComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
@@ -2181,7 +2182,7 @@ updateFileList = function(category_id, updates)
 
 		for i = 1, #result do
 			contentContainer:addChild(newApplicationPreview(x, y, result[i]))
-			
+
 			if counter >= appsPerPage then
 				break
 			elseif counter % appsPerWidth == 0 then
@@ -2271,7 +2272,7 @@ window.onResizeFinished = function()
 	appsPerHeight = math.floor((contentContainer.height - 6 + appVSpacing) / (appHeight + appVSpacing))
 	appsPerPage = appsPerWidth * appsPerHeight
 	currentPage = 0
-	
+
 	contentContainer:removeChildren()
 	callLastMethod()
 end
