@@ -825,7 +825,7 @@ local function overview()
 		textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
 		local function add(key, value)
-		        textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. (value or "")))
+		        textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. value))
 		end
 
 		add(localization.statisticsUsersCount, statistics.users_count)
