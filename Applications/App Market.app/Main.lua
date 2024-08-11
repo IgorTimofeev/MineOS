@@ -808,137 +808,137 @@ local function overview()
 			category_id = 1,
 		})
 
-		if publications then
-			contentContainer:removeChildren()
+		contentContainer:removeChildren()
 
-			local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
-			iconsContainer.blockScreenEvents = true
+		local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
+		iconsContainer.blockScreenEvents = true
 
-			local width = appWidth + 4
-			local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
-			container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
-			
-			local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+		local width = appWidth + 4
+		local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
+		container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
+		
+		local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
 
-			statisticsLayout:addChild(GUI.image(1, 1, image.load(currentScriptDirectory .. "Icon.pic"))).height = 5
-			
-			local textLayout = statisticsLayout:addChild(GUI.layout(1, 1, container.width - 4, 1, 1, 1))
-			textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		statisticsLayout:addChild(GUI.image(1, 1, image.load(currentScriptDirectory .. "Icon.pic"))).height = 5
+		
+		local textLayout = statisticsLayout:addChild(GUI.layout(1, 1, container.width - 4, 1, 1, 1))
+		textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
-			local function add(key, value)
-				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. value))
-			end
+		local function add(key, value)
+			textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. value))
+		end
 
-			add(localization.statisticsUsersCount, statistics.users_count)
-			add(localization.statisticsNewUser, statistics.last_registered_user)
-			add(localization.statisticsMostPopularUser, statistics.most_popular_user)
-			add(localization.statisticsPublicationsCount, statistics.publications_count)
-			add(localization.statisticsReviewsCount, statistics.reviews_count)
-			add(localization.statisticsMessagesCount, statistics.messages_count)
-			
-			textLayout.height = #textLayout.children * 2
+		add(localization.statisticsUsersCount, statistics.users_count)
+		add(localization.statisticsNewUser, statistics.last_registered_user)
+		add(localization.statisticsMostPopularUser, statistics.most_popular_user)
+		add(localization.statisticsPublicationsCount, statistics.publications_count)
+		add(localization.statisticsReviewsCount, statistics.reviews_count)
+		add(localization.statisticsMessagesCount, statistics.messages_count)
+		
+		textLayout.height = #textLayout.children * 2
 
+		if #publications > 0 then
 			local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
 			applicationPreview.panel.colors.background = 0xF0F0F0
 			statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+		end
 
-			workspace:draw()
+		workspace:draw()
 
-			local uptime, newUptime = computer.uptime()
-			local function tick()
-				newUptime = computer.uptime()
-				if newUptime - uptime > overviewAnimationDelay then
-					uptime = newUptime
+		local uptime, newUptime = computer.uptime()
+		local function tick()
+			newUptime = computer.uptime()
+			if newUptime - uptime > overviewAnimationDelay then
+				uptime = newUptime
 
-					local child
-					for i = 1, #iconsContainer.children do
-						child = iconsContainer.children[i]
+				local child
+				for i = 1, #iconsContainer.children do
+					child = iconsContainer.children[i]
+					
+					child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
 						
-						child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
-							
-						if child.forceX > 0 then
-							if child.forceX > overviewForceLimit then
-								child.forceX = child.forceX - overviewForceDecay
-							else
-								child.forceX = overviewForceLimit
-							end
+					if child.forceX > 0 then
+						if child.forceX > overviewForceLimit then
+							child.forceX = child.forceX - overviewForceDecay
 						else
-							if child.forceX < -overviewForceLimit then
-								child.forceX = child.forceX + overviewForceDecay
-							else
-								child.forceX = -overviewForceLimit
-							end
+							child.forceX = overviewForceLimit
 						end
-
-						if child.forceY > 0 then
-							if child.forceY > overviewForceLimit then
-								child.forceY = child.forceY - overviewForceDecay
-							else
-								child.forceY = overviewForceLimit
-							end
+					else
+						if child.forceX < -overviewForceLimit then
+							child.forceX = child.forceX + overviewForceDecay
 						else
-							if child.forceY < -overviewForceLimit then
-								child.forceY = child.forceY + overviewForceDecay
-							else
-								child.forceY = -overviewForceLimit
-							end
+							child.forceX = -overviewForceLimit
 						end
-
-						if child.moveX <= 1 then
-							child.forceX, child.moveX = -child.forceX, 1
-						elseif child.moveX + child.width - 1 >= iconsContainer.width then
-							child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
-						end
-
-						if child.moveY <= 1 then
-							child.forceY, child.moveY = -child.forceY, 1
-						elseif child.moveY + child.height - 1 >= iconsContainer.height then
-							child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
-						end
-
-						child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 					end
 
-					workspace:draw()
-
-					return true
-				end
-			end
-
-			iconsContainer.eventHandler = function(workspace, object, e1, e2, e3, e4)
-				if e1 == "touch" or e1 == "drag" then
-					local child, deltaX, deltaY, vectorLength
-					for i = 1, #iconsContainer.children do
-						child = iconsContainer.children[i]
-						
-						deltaX, deltaY = e3 - child.x, e4 - child.y
-						vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
-						if vectorLength > 0 then
-							child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
-							child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
+					if child.forceY > 0 then
+						if child.forceY > overviewForceLimit then
+							child.forceY = child.forceY - overviewForceDecay
+						else
+							child.forceY = overviewForceLimit
+						end
+					else
+						if child.forceY < -overviewForceLimit then
+							child.forceY = child.forceY + overviewForceDecay
+						else
+							child.forceY = -overviewForceLimit
 						end
 					end
+
+					if child.moveX <= 1 then
+						child.forceX, child.moveX = -child.forceX, 1
+					elseif child.moveX + child.width - 1 >= iconsContainer.width then
+						child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
+					end
+
+					if child.moveY <= 1 then
+						child.forceY, child.moveY = -child.forceY, 1
+					elseif child.moveY + child.height - 1 >= iconsContainer.height then
+						child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
+					end
+
+					child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 				end
 
-				tick()
-			end
+				workspace:draw()
 
-			local function makeBlyad(object)
-				object.localX = math.random(1, iconsContainer.width - object.width + 1)
-				object.localY = math.random(1, iconsContainer.height - object.width + 1)
-				object.moveX = object.localX
-				object.moveY = object.localY
-				object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
-				object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
-				
-				if not tick() then
-					workspace:draw()
+				return true
+			end
+		end
+
+		iconsContainer.eventHandler = function(workspace, object, e1, e2, e3, e4)
+			if e1 == "touch" or e1 == "drag" then
+				local child, deltaX, deltaY, vectorLength
+				for i = 1, #iconsContainer.children do
+					child = iconsContainer.children[i]
+					
+					deltaX, deltaY = e3 - child.x, e4 - child.y
+					vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+					if vectorLength > 0 then
+						child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
+						child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
+					end
 				end
 			end
 
-			for i = 2, #publications do
-				makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
+			tick()
+		end
+
+		local function makeBlyad(object)
+			object.localX = math.random(1, iconsContainer.width - object.width + 1)
+			object.localY = math.random(1, iconsContainer.height - object.width + 1)
+			object.moveX = object.localX
+			object.moveY = object.localY
+			object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
+			object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
+			
+			if not tick() then
+				workspace:draw()
 			end
+		end
+
+		for i = 2, #publications do
+			makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
 		end
 	end
 end
