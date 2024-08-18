@@ -1887,7 +1887,7 @@ editPublication = function(initialPublication, initialCategoryID)
 					) or
 					nil,
 				source_url = lastDependencyType ~= 3 and urlInput.text or nil,
-				preview = lastDependencyType == 4
+				preview = (lastDependencyType == 4) and 1 or 0
 			})
 
 			container:remove()
