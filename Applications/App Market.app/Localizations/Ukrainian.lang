@@ -5,7 +5,7 @@
 	settings = "Налаштування",
 	newMessage = "Нове повідомлення",
 	newMessagePersonal = "Особисте повідомлення",
-	newMessageToDeveloper = "Написати повідомлення розробнику",
+	newMessageToDeveloper = "Написати розробнику",
 	dialogWith = "Діалог з ",
 	send = "Відправити",
 	toWho = "Кому:",
