@@ -112,5 +112,5 @@
 	thanksForVote = "Дякую за вашу думку",
 	previewDepencency = "Попередній перегляд зображення",
 	uniqueDownloads = "Унікальні завантаження",
-	hideApplicationPreviews = "Приховати попередній перегляд програми"
+	hideApplicationPreviews = "Приховати попередній перегляд"
 }
