@@ -1622,7 +1622,7 @@ newPublicationInfo = function(file_id)
 
 			previewContainer.onItemFocused = function()
 				leftButton.hidden = previewContainer.contentOffset == 0
-				rightButton.hidden = previewContainer.contentOffset + previewContainer.contentWidth < previewContainer.width
+				rightButton.hidden = (previewContainer.contentOffset + previewContainer.contentWidth < previewContainer.width) and #previewContainer.children > 1
 			end
 
 			previewContainer:onItemFocused()
