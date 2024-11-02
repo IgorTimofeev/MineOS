@@ -425,7 +425,7 @@ addStage(function()
 	
 	local diskLayout = layout:addChild(GUI.layout(1, 1, layout.width, 11, 1, 1))
 	diskLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-	diskLayout:setSpacing(1, 1, 0)
+	diskLayout:setSpacing(1, 1, 1)
 
 	local HDDImage = loadImage("HDD")
 
@@ -447,10 +447,11 @@ addStage(function()
 
 		local function addDisk(proxy, picture, disabled)
 			local disk = diskLayout:addChild(GUI.container(1, 1, 14, diskLayout.height))
+			disk.blockScreenEvents = true
 
-			local formatContainer = disk:addChild(GUI.container(1, 1, disk.width, disk.height))
-			formatContainer:addChild(GUI.panel(1, 1, formatContainer.width, formatContainer.height, 0xD2D2D2))
-			formatContainer:addChild(GUI.button(1, formatContainer.height, formatContainer.width, 1, 0xCC4940, 0xE1E1E1, 0x990000, 0xE1E1E1, localization.erase)).onTouch = function()
+			disk:addChild(GUI.panel(1, 1, disk.width, disk.height, 0xD2D2D2))
+
+			disk:addChild(GUI.button(1, disk.height, disk.width, 1, 0xCC4940, 0xE1E1E1, 0x990000, 0xE1E1E1, localization.erase)).onTouch = function()
 				local list, path = proxy.list("/")
 				for i = 1, #list do
 					path = "/" .. list[i]
