@@ -183,7 +183,6 @@ function(...)
 		end
 	end
 
-	gpu.setActiveBuffer(0)
 	status(reason, 1)
 end,
 
