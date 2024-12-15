@@ -55,7 +55,7 @@ for j = 1, buttonCount do
 		buttons[j][i] = buttonsContainer:addChild(GUI.button(x, y, buttonWidth, buttonHeight, 0x3C3C3C, 0xB4B4B4, 0x696969, 0xD2D2D2, " "))
 		buttons[j][i].onTouch = function()
 			set(i, j)
-			buttons[j][i].firstParent:draw()
+			buttons[j][i].workspace:draw()
 		end
 
 		x = x + buttonWidth + stepX
@@ -81,10 +81,10 @@ tool.onSelection = function()
 		end
 
 		window.image.data = image.expand(window.image.data,
-			currentY > 1 and height,
-			currentY < 3 and height,
-			currentX > 1 and width,
-			currentX < 3 and width,
+			currentY > 1 and height or 0,
+			currentY < 3 and height or 0,
+			currentX > 1 and width or 0,
+			currentX < 3 and width or 0,
 		0x0, 0x0, 1, " ")
 
 		window.image.reposition()
