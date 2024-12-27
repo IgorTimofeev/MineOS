@@ -1,4 +1,4 @@
-
+-- Pizda
 ---------------------------------------- System initialization ----------------------------------------
 
 -- Obtaining boot filesystem component proxy
