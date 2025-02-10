@@ -352,7 +352,7 @@ end
 local function checkUserInputs()
 	local nameEmpty = #usernameInput.text == 0
 	local nameVaild = usernameInput.text:match("^%w[%w%s_]+$")
-	local passValid = withoutPasswordSwitchAndLabel.switch.state or #passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text == passwordSubmitInput.text
+	local passValid = withoutPasswordSwitchAndLabel.switch.state or (#passwordInput.text > 0 and #passwordSubmitInput.text > 0 and passwordInput.text == passwordSubmitInput.text)
 
 	if (nameEmpty or nameVaild) and passValid then
 		usernamePasswordText.hidden = true
