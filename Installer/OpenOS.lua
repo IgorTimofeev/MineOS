@@ -58,7 +58,7 @@ end
 
 -- Checking if installer can be downloaded from GitHub, because of PKIX errors, server blacklists, etc
 do
-	local success, result = pcall(component.internet.request, "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/Main.lua")
+	local success, result = pcall(component.internet.request, "https://raw.githubusercontent.com/happymimimix/MineOS_Bugfix/master/Installer/Main.lua")
 
 	if not success then
 		if result then
@@ -102,7 +102,7 @@ end
 -- Flashing EEPROM with tiny script that will run installer itself after reboot.
 -- It's necessary, because we need clean computer without OpenOS hooks to computer.pullSignal()
 component.eeprom.set([[
-	local connection, data, chunk = component.proxy(component.list("internet")()).request("https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/Main.lua"), ""
+	local connection, data, chunk = component.proxy(component.list("internet")()).request("https://raw.githubusercontent.com/happymimimix/MineOS_Bugfix/master/Installer/Main.lua"), ""
 	
 	while true do
 		chunk = connection.read(math.huge)
