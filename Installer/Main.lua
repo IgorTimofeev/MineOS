@@ -418,7 +418,7 @@ end)
 -- Filesystem selection stage
 addStage(function()
 	prevButton.disabled = false
-	nextButton.disabled = true
+	nextButton.disabled = false
 
 	layout:addChild(GUI.object(1, 1, 1, 1))
 	addTitle(0x696969, localization.select)
