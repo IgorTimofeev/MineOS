@@ -1321,7 +1321,7 @@ local function createEditOrRightClickMenu(menu)
 	end
 
 	menu:addItem("⇲", localization.paste, not clipboard.history[1], "^V").onTouch = function()
-		paste(clipboard.history[1])
+		paste(clipboard.paste())
 	end
 
 	menu:addSeparator()
