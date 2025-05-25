@@ -3064,7 +3064,7 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 			input:setCursorPosition(unicode.len(input.text) + 1)
 
                 -- V
-		elseif e4 == 47 and type(clipboard.paste()) ~= "table" then 
+		elseif e4 == 47 and type(clipboard.paste()) ~= "table" and clipboard.paste() ~= nil then 
 			input.text = input.text .. tostring(clipboard.paste())
 			input:setCursorPosition(unicode.len(input.text)+1)
 		else
