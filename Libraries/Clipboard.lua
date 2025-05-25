@@ -14,4 +14,9 @@ function Clipboard.paste()
   return Clipboard.history[1]
 end
 
+function Clipboard.clear()
+  Clipboard.history = {}
+  return true
+end
+
 return Clipboard
