@@ -970,7 +970,7 @@ local function deleteSelectedData()
 		clearSelection()
 	end
 end
-print(clipboard)
+
 local function copy()
 	if codeView.selections[1] then
 		if codeView.selections[1].to.line == codeView.selections[1].from.line then
