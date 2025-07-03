@@ -267,7 +267,10 @@ function system.call(method, ...)
 			end
 		end
 
-		path, line = path:match("\t+([^:]+%.lua):(%d+):")
+		local iter = path:gmatch("\t+([^:]+%.lua):(%d+):")
+		iter()
+		
+		path, line = iter()
 
 		-- Weird case on some server machines, unable to reproduce,
 		-- seems like traceback parsing error
