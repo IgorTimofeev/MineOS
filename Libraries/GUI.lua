@@ -1039,7 +1039,7 @@ function GUI.alert(...)
 		end
 	end
 
-	workspace:draw(true)
+	workspace:draw()
 	workspace:start()
 end
 
