@@ -378,7 +378,9 @@ prevButton.onTouch = function()
 	loadStage()
 end
 
-nextButton.onTouch = function()
+nextButton.onTouch = function(_, _, _, _, _, _, _, username)
+	nextButton.lastTouchUsername = username
+
 	stage = stage + 1
 	loadStage()
 end
@@ -503,11 +505,14 @@ addStage(function()
 	addImage(0, 0, "User")
 	addTitle(0x696969, localization.setup)
 
+	usernameInput.text = nextButton.lastTouchUsername
 	layout:addChild(usernameInput)
 	layout:addChild(passwordInput)
 	layout:addChild(passwordSubmitInput)
 	layout:addChild(usernamePasswordText)
 	layout:addChild(withoutPasswordSwitchAndLabel)
+	
+	checkUserInputs()
 end)
 
 -- Downloads customization stage
