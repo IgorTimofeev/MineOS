@@ -41,6 +41,7 @@
 	no = "No",
 	cancel = "Cancel",
 	open = "Open",
+	save = "Saev",
 	applyToAll = "Apply 2 all",
 	toDirectory = "2 foldr",
 	copying = "Copying",
@@ -75,6 +76,7 @@
 	rename = "Renaem",
 	editShortcut = "Edit shortcut",
 	createShortcut = "Creaet shortcut",
+	deleteWithSource = "Deleet wif sourec",
 	addToDock = "Add 2 Dock",
 	removeFromDock = "Remoev frum Dock",
 	moveRight = "moov riet",
@@ -101,6 +103,7 @@
 	shutdown = "Shutdown",
 	logout = "Logout",
 	reboot = "Reboot",
+	takeScreenshot = "taek screenshot",
 	
 	shortcutIsCorrupted = "Shortcut iz linked 2 non-existent fiel",
 	sortAutomatically = "Align 2 grid",

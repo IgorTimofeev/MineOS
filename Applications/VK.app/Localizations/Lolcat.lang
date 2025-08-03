@@ -168,7 +168,7 @@
 	conversations = "Conversations",
 	you = "u: ",
 	typeMessageHere = "riet  mesaeg...",
-	fwdMessages = "informashun: ",
+	fwdMessages = "Informashun: ",
 	attachments = "Investments: ",
 	attachmentsTypes = {
 		photo = "foot",
