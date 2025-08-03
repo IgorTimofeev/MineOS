@@ -1,11 +1,11 @@
-{	
+{
 	help = "Pomoc",
 	helpInfo = {
 		"• Každý model pozostáva z tvarov. Ich počet závisí na vlastnostiach servera, ale pôvodne je to 24 na každý model",
 		"• Model môže mať 2 stavy: pasívny a aktívny. Ak položíte vytlačený model v minecraftovom svete a kliknete naň, model zmení stav. Počet tvarov je limitovaný na oba stavy",
 		"• Držte ľavé tlačidlo myši pre položenie prvého bodu tvaru podľa X a Y. Hýbte myšou pre zmenu veľkosti tvaru. Použite koleso myši pre zmenu Z pozície. Pustite tlačidlo na dokončenie upravovania tvarov",
 		"• Stlačte pravé tlačidlo myši pre výber tvaru pod kurzorom",
-		"• Scrollujte toolbar pre iné možnosti",
+		"• Scrollujte toolbar pre iné možnosti"
 	},
 	file = "Súbor",
 	new = "Nový",
@@ -19,7 +19,7 @@
 	rotate = "Otáčať",
 	flip = "Prevrátiť",
 	color = "C",
-	offset = "Offset",
+	offset = "Kompenzácia",
 	scale = "Veľkosť",
 	projectorEnabled = "Zapnutý",
 	xAxis = "X-osi",
@@ -38,5 +38,5 @@
 	blockSettings = "Vlastnosti modelu",
 	projectorSettings = "Vlastnosti projektoru",
 	elementSettings = "Vlastnosti tvaru",
-	failedToPrint = "Nepodarilo sa vytlačiť",
+	failedToPrint = "Nepodarilo sa vytlačiť"
 }

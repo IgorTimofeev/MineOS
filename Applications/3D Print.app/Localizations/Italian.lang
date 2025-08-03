@@ -17,7 +17,7 @@
 	add = "Inserisci",
 	remove = "Rimuovere",
 	rotate = "Ruotare",
-	flip = "Flip",
+	flip = "Capovolgimento",
 	color = "C",
 	offset = "Compensare",
 	scale = "Scala",

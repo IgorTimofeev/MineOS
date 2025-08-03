@@ -31,24 +31,24 @@
 	profileCounters = {
 		{
 			field = "nasledovníkov",
-			description = "nasledovníkov",
+			description = "nasledovníkov"
 		},
 		{
 			field = "priatelia",
-			description = "priatelia",
+			description = "priatelia"
 		},
 		{
 			field = "fotografie",
-			description = "fotografie",
+			description = "fotografie"
 		},
 		{
 			field = "videá",
-			description = "videá",
+			description = "videá"
 		},
 		{
 			field = "audio",
-			description = "audio",
-		},
+			description = "audio"
+		}
 	},
 	profileShowAdditional = "Zobraziť podrobnosti",
 	profileHideAdditional = "Skryť podrobné informácie",
@@ -81,7 +81,7 @@
 		peopleMain = "Ľudia najdôležitejší",
 		lifeMain = "Život najdôležitejší",
 		alcohol = "OTN. ",
-		smoking = "OTN. ",
+		smoking = "OTN. "
 	},
 	months = {
 		"januára",
@@ -95,7 +95,7 @@
 		"september",
 		"október",
 		"november",
-		"December",
+		"December"
 	},
 	relationStatuses = {
 		{
@@ -107,7 +107,7 @@
 			"v aktívnom vyhľadávaní",
 			"milenec",
 			"v civilnom sobáši",
-			[0] = "nešpecifikované ",
+			[0] = "nešpecifikované "
 		},
 		{
 			"nie je vydatá",
@@ -118,8 +118,8 @@
 			"v aktívnom vyhľadávaní",
 			"milenec",
 			"v civilnom sobáši",
-			[0] = "nešpecifikované ",
-		},
+			[0] = "nešpecifikované "
+		}
 	},
 	personalPoliticalTypes = {
 		"Komunistický",
@@ -130,7 +130,7 @@
 		"Monarchický",
 		"Ultrakonzervatívne",
 		"Ľahostajný",
-		"Libertariánsky",
+		"Libertariánsky"
 	},
 	personalPeopleMainTypes = {
 		"Inteligencia a kreativita",
@@ -138,7 +138,7 @@
 		"Krása a zdravie",
 		"Moc a bohatstvo",
 		"Odvaha a vytrvalosť",
-		"Humor a láska k životu",
+		"Humor a láska k životu"
 	},
 	personalLifeMainTypes = {
 		"Rodina a deti",
@@ -148,21 +148,21 @@
 		"Zlepšenie sveta",
 		"Sebarozvoj",
 		"Krása a umenie",
-		"Sláva a vplyv",
+		"Sláva a vplyv"
 	},
 	personalBlyadTypes = {
 		"Ostro negatívne",
 		"Negatívne",
 		"Kompromis",
 		"Neutrálne",
-		"Pozitívny",
+		"Pozitívny"
 	},
 	
 	friends = "Priatelia",
 	friendsOnline = "Online priatelia",
 	friendsMutual = "Spoloční priatelia",
 	
-	news = "Newsfeed",
+	news = "Kŕmenie noviniek",
 	
 	send = "Odoslať",
 	conversations = "Rozhovory",
@@ -182,7 +182,7 @@
 		wall_reply = "repost",
 		sticker = "nálepka",
 		gift = "darček",
-		audio_message = "audio",
+		audio_message = "audio"
 	},
 	sentFromMineOS = "(Odoslané cez klienta MineOS VK)",
 	
@@ -192,5 +192,5 @@
 	
 	settings = "nastavenie",
 	
-	exit = "Odhlásiť sa",
+	exit = "Odhlásiť sa"
 }
