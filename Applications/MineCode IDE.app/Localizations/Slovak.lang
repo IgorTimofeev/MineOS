@@ -10,7 +10,7 @@
 	launchWithArguments = "Bežte s argumentmi",
 	addBreakpoint = "Pridajte bod prerušenia",
 	clearBreakpoints = "Vymazať body zlomu",
-	finishDebug = "Stop",
+	finishDebug = "Zastavenie",
 	continueDebug = "ďalej",
 	gotoLine = "Prejsť na riadok",
 	lineNumber = "Linka",

@@ -5,7 +5,7 @@
 		"• Mallilla voi myös olla 2 tilaa: passiivinen ja aktiivinen. ",
 		"• Pidä hiiren vasenta painiketta painettuna asettaaksesi ensimmäisen muotopisteen X:n ja Y:n kohdalle. Muuta muotoa vetämällä hiirtä. ",
 		"• Paina hiiren oikeaa painiketta valitaksesi muodon kohdistimen alla",
-		"• Vierittämällä työkalupalkkia voit näyttää muita vaihtoehtoja",
+		"• Vierittämällä työkalupalkkia voit näyttää muita vaihtoehtoja"
 	},
 	file = "Tiedosto",
 	new = "Uusi",
@@ -26,10 +26,10 @@
 	yAxis = "Y-akseli",
 	zAxis = "Z-akseli",
 	lightLevel = "Valon taso",
-	emitRedstone = "Emit redstone",
+	emitRedstone = "Säteile Redstone",
 	collidable = "Törmäys",
 	buttonMode = "Painiketila",
-	label = "Label",
+	label = "Merkitä",
 	tooltip = "Työkaluvinkki",
 	tintEnabled = "Käytä sävyä",
 	tintColor = "Sävy väri",
@@ -38,5 +38,5 @@
 	blockSettings = "Mallin ominaisuudet",
 	projectorSettings = "Projektorin ominaisuudet",
 	elementSettings = "Muodon ominaisuudet",
-	failedToPrint = "Tulostus epäonnistui",
+	failedToPrint = "Tulostus epäonnistui"
 }

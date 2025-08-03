@@ -53,7 +53,7 @@
 	add = "Voeg toe",
 	relativePath = "Relatief pad",
 	localizationDependency = "Lokalisatiebestand",
-	login = "Log in",
+	login = "Inloggen",
 	profile = "Profiel",
 	
 	nickname = "naam",

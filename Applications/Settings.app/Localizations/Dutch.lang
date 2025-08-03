@@ -14,7 +14,7 @@
 	
 	wallpaper = "Achtergrond",
 	wallpaperWallpaper = "Achtergrond",
-	wallpaperScreensaver = "Screensaver",
+	wallpaperScreensaver = "Schermen",
 	wallpaperScreensaverPath = "Screensaver script pad",
 	wallpaperScreensaverEnabled = "Screensaver ingeschakeld",
 	wallpaperScreensaverDelay = "Vertraging",

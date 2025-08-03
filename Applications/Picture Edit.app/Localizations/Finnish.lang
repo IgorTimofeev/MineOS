@@ -6,7 +6,7 @@
 	path = "Polku:",
 	save = "Tallentaa",
 	saveAs = "Tallenna nimellä",
-	ok = "Ok",
+	ok = "Hyvä",
 	cancel = "Peruuttaa",
 	fileName = "Tiedoston nimi",
 	newPicture = "Uusi kuva",
@@ -36,11 +36,11 @@
 		"F - pistekirjoitustyökalu",
 		null,
 		"X - vaihtaa värejä",
-		"D - nollaa piirustuksen värit",
+		"D - nollaa piirustuksen värit"
 	},
 	tool1 = "Valintatyökalun avulla voit valita haluamasi alueen kuvasta ja suorittaa sille joitain toimintoja. ",
 	fill = "Täyttää",
-	outline = "Outline",
+	outline = "Hahmotella",
 	rasterizeLine = "Rasteroi viiva",
 	rasterizeEllipse = "Rasteroi ellipsi",
 	clear = "Asia selvä",
@@ -87,5 +87,5 @@
 	transparency = "Läpinäkyvyys:",
 	force = "Pakottaa",
 	rasterizePolygon = "Rasteroi monikulmio",
-	polygonEdges = "Monikulmion reunojen lukumäärä:",
+	polygonEdges = "Monikulmion reunojen lukumäärä:"
 }
