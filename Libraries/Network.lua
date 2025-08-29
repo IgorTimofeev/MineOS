@@ -1,4 +1,3 @@
-
 local GUI = require("GUI")
 local event = require("Event")
 local filesystem = require("Filesystem")
@@ -22,7 +21,7 @@ network.modemTimeout = 2
 
 network.internetProxy = nil
 network.internetDelay = 0.05
-network.internetTimeout = 0.25
+network.internetTimeout = 1
 
 network.proxySpaceUsed = 0
 network.proxySpaceTotal = 1073741824
@@ -127,58 +126,62 @@ local function FTPEnterPassiveModeAndRunCommand(commandSocketHandle, command, da
 	FTPSocketWrite(commandSocketHandle, "PASV")
 
 	local success, result = FTPSocketRead(commandSocketHandle)
-	if success then
-		local digits = {result:match("Entering Passive Mode %((%d+),(%d+),(%d+),(%d+),(%d+),(%d+)%)")}
-		if #digits == 6 then
-			local address, port =  table.concat(digits, ".", 1, 4), tonumber(digits[5]) * 256 + tonumber(digits[6])
-
-			FTPSocketWrite(commandSocketHandle, command)
-
-			local dataSocketHandle = network.internetProxy.connect(address, port)
-			if dataToWrite then
-				event.sleep(network.internetDelay)
-				dataSocketHandle.read(1)
-				dataSocketHandle.write(dataToWrite)
-				dataSocketHandle.close()
-
-				return true
-			else
-				local success, result = FTPSocketRead(dataSocketHandle)
-				dataSocketHandle.close()
-
-				if success then
-					return true, result
-				else
-					return false, result
-				end
-			end
-		else
-			return false, "Entering passive mode failed: wrong address byte array. Socket response message was: " .. tostring(result)
-		end
-	else
+	if not success then
 		return false, result
+	end
+
+	local digits = {result:match("Entering Passive Mode %((%d+),(%d+),(%d+),(%d+),(%d+),(%d+)%)")}
+	if #digits ~= 6 then
+		return false, "Entering passive mode failed: wrong address byte array. Socket response message was: " .. tostring(result)
+	end
+
+	local address, port = table.concat(digits, ".", 1, 4), tonumber(digits[5]) * 256 + tonumber(digits[6])
+	FTPSocketWrite(commandSocketHandle, command)
+
+	local dataSocketHandle = network.internetProxy.connect(address, port)
+	if dataToWrite then
+		event.sleep(network.internetDelay)
+		dataSocketHandle.read(1)
+		dataSocketHandle.write(dataToWrite)
+		dataSocketHandle.close()
+
+		return true
+	else
+		local success, result = FTPSocketRead(dataSocketHandle)
+		dataSocketHandle.close()
+
+		return not not success, result
 	end
 end
 
 local function FTPParseFileInfo(result)
-	local size, year, month, day, hour, minute, sec, type, name = result:match("Size=(%d+);Modify=(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)(%d%d)[^;]*;Type=([^;]+);%s([^\r\n]+)")
-	if size then
-		return
-			true,
-			name,
-			type == "dir",
-			tonumber(size),
-			os.time({
-				year = year,
-				day = day,
-				month = month,
-				hour = hour,
-				minute = minute,
-				sec = sec
-			})
-	else
+	local info = {}
+
+	for token in result:gmatch("[^; ]+") do
+		local key, value = token:match("(.+)=(.+)")
+
+		if key then 
+			key = key:lower()
+
+			if key == "size" or key == "sizd" then
+				info["size"] = tonumber(value)				
+			elseif key == "modify" then
+				info["modify"] = tonumber(value)
+			elseif key == "type" then
+				info["isdir"] = not not value:match("dir")
+			else
+				info[key] = value
+			end
+		else
+			info["filename"] = token
+		end
+	end
+
+	if not info["filename"] or info["isdir"] == nil then
 		return false, "File not exists"
 	end
+
+	return true, info["filename"], info["isdir"], info["size"] or 0, info["modify"] or 0
 end
 
 local function FTPFileInfo(socketHandle, path, field)
@@ -254,20 +257,22 @@ function network.connectToFTP(address, port, user, password)
 				end
 
 				proxy.list = function(path)
-					local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "MLSD -a " .. path)
-					if success then
-						local list = FTPParseLines(result)
-						for i = 1, #list do
-							local success, name, isDirectory = FTPParseFileInfo(list[i])
-							if success then
-								list[i] = name .. (isDirectory and "/" or "")
-							end
-						end
+					local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "MLSD " .. path)	
 
-						return list
-					else
-						return {}
+					if not success then
+						return nil, result
 					end
+
+					local list = FTPParseLines(result)
+					for i = 1, #list do
+						local success, name, isDirectory = FTPParseFileInfo(list[i])
+
+						if success then
+							list[i] = name .. (isDirectory and "/" or "")
+						end
+					end
+
+					return list
 				end
 
 				proxy.isDirectory = function(path)
@@ -281,7 +286,7 @@ function network.connectToFTP(address, port, user, password)
 
 				proxy.lastModified = function(path)
 					local success, result = check(FTPFileInfo(socketHandle, path, "lastModified"))
-					if success then
+					if success and result ~= false then
 						return result
 					else
 						return 0
@@ -328,6 +333,10 @@ function network.connectToFTP(address, port, user, password)
 				end
 
 				proxy.close = function(fileHandle)
+					if not fileHandles[fileHandle] then
+						return
+					end
+
 					filesystemProxy.close(fileHandle)
 
 					if fileHandles[fileHandle].needUpload then
