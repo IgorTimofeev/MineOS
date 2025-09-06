@@ -1,4 +1,5 @@
 local GUI = require("GUI")
+local FTP = require("FTP")
 local event = require("Event")
 local filesystem = require("Filesystem")
 local system = require("System")
@@ -64,338 +65,176 @@ function network.getFTPProxyName(address, port, user)
 	return user .. "@" .. address .. ":" .. port
 end
 
-local function FTPSocketWrite(socketHandle, data)
-	local success, result = pcall(socketHandle.write, data .. "\r\n")
-	if success then
-		return true, result
-	else
-		return false, result
-	end
-end
-
-local function FTPSocketRead(socketHandle)
-	event.sleep(network.internetDelay)
-
-	local deadline, data, success, result = computer.uptime() + network.internetTimeout, ""
-	while computer.uptime() < deadline do
-		success, result = pcall(socketHandle.read, math.huge)
-		if success then
-			if not result or #result == 0 then
-				if #data > 0 then
-					return true, data
-				end
-			else
-				data, deadline = data .. result, computer.uptime() + network.internetTimeout
-			end
-		else
-			return false, result
-		end
-	end
-
-	return false, "Socket read time out"
-end
-
-local function FTPParseLines(data)
-	local lines = {}
-
-	for line in data:gmatch("[^\r\n]+") do
-		table.insert(lines, line)
-	end
-
-	return lines
-end
-
-local function FTPLogin(socketHandle, user, password)
-	FTPSocketWrite(socketHandle, "USER " .. user)
-	FTPSocketWrite(socketHandle, "PASS " .. password)
-	FTPSocketWrite(socketHandle, "TYPE I")
-	
-	local success, result = FTPSocketRead(socketHandle)
-	if success then
-		if result:match("TYPE okay") or result:match("200") then
-			return true
-		else
-			return false, "Authentication failed"
-		end
-	else
-		return false, result
-	end
-end
-
-local function FTPEnterPassiveModeAndRunCommand(commandSocketHandle, command, dataToWrite)
-	FTPSocketWrite(commandSocketHandle, "PASV")
-
-	local success, result = FTPSocketRead(commandSocketHandle)
-	if not success then
-		return false, result
-	end
-
-	local digits = {result:match("Entering Passive Mode %((%d+),(%d+),(%d+),(%d+),(%d+),(%d+)%)")}
-	if #digits ~= 6 then
-		return false, "Entering passive mode failed: wrong address byte array. Socket response message was: " .. tostring(result)
-	end
-
-	local address, port = table.concat(digits, ".", 1, 4), tonumber(digits[5]) * 256 + tonumber(digits[6])
-	FTPSocketWrite(commandSocketHandle, command)
-
-	local dataSocketHandle = network.internetProxy.connect(address, port)
-	if dataToWrite then
-		event.sleep(network.internetDelay)
-		dataSocketHandle.read(1)
-		dataSocketHandle.write(dataToWrite)
-		dataSocketHandle.close()
-
-		return true
-	else
-		local success, result = FTPSocketRead(dataSocketHandle)
-		dataSocketHandle.close()
-
-		return not not success, result
-	end
-end
-
-local function FTPParseFileInfo(result)
-	local info = {}
-
-	for token in result:gmatch("[^; ]+") do
-		local key, value = token:match("(.+)=(.+)")
-
-		if key then 
-			key = key:lower()
-
-			if key == "size" or key == "sizd" then
-				info["size"] = tonumber(value)				
-			elseif key == "modify" then
-				info["modify"] = tonumber(value)
-			elseif key == "type" then
-				info["isdir"] = not not value:match("dir")
-			else
-				info[key] = value
-			end
-		else
-			info["filename"] = token
-		end
-	end
-
-	if not info["filename"] or info["isdir"] == nil then
-		return false, "File not exists"
-	end
-
-	return true, info["filename"], info["isdir"], info["size"] or 0, info["modify"] or 0
-end
-
-local function FTPFileInfo(socketHandle, path, field)
-	FTPSocketWrite(socketHandle, "MLST " .. path)
-	
-	local success, result = FTPSocketRead(socketHandle)
-	if success then
-		local success, name, isDirectory, size, lastModified = FTPParseFileInfo(result)
-		if success then
-			if field == "isDirectory" then
-				return true, isDirectory
-			elseif field == "lastModified" then
-				return true, lastModified
-			else
-				return true, size
-			end
-		else
-			return true, false
-		end
-	else
-		return false, result
-	end
-end
-
-local function check(...)
-	local result = {...}
-	if not result[1] then
-		GUI.alert(table.unpack(result, 2))
-	end
-	return table.unpack(result)
-end
-
 function network.connectToFTP(address, port, user, password)
-	if network.internetProxy then
-		local socketHandle, reason = network.internetProxy.connect(address, port)
-		if socketHandle then
-			FTPSocketRead(socketHandle)
-
-			local result, reason = FTPLogin(socketHandle, user, password)
-			if result then
-
-				local proxy, fileHandles, label = {}, {}, network.getFTPProxyName(address, port, user)
-
-				proxy.type = "filesystem"
-				proxy.slot = 0
-				proxy.address = label
-				proxy.networkFTP = true
-
-				proxy.getLabel = function()
-					return label
-				end
-
-				proxy.spaceUsed = function()
-					return network.proxySpaceUsed
-				end
-
-				proxy.spaceTotal = function()
-					return network.proxySpaceTotal
-				end
-
-				proxy.setLabel = function(text)
-					label = text
-					return true
-				end
-
-				proxy.isReadOnly = function()
-					return false
-				end
-
-				proxy.closeSocketHandle = function()
-					filesystem.unmount(proxy)
-					return socketHandle.close()
-				end
-
-				proxy.list = function(path)
-					local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "MLSD " .. path)	
-
-					if not success then
-						return nil, result
-					end
-
-					local list = FTPParseLines(result)
-					for i = 1, #list do
-						local success, name, isDirectory = FTPParseFileInfo(list[i])
-
-						if success then
-							list[i] = name .. (isDirectory and "/" or "")
-						end
-					end
-
-					return list
-				end
-
-				proxy.isDirectory = function(path)
-					local success, result = check(FTPFileInfo(socketHandle, path, "isDirectory"))
-					if success then
-						return result
-					else
-						return false
-					end
-				end
-
-				proxy.lastModified = function(path)
-					local success, result = check(FTPFileInfo(socketHandle, path, "lastModified"))
-					if success and result ~= false then
-						return result
-					else
-						return 0
-					end
-				end
-
-				proxy.size = function(path)
-					local success, result = check(FTPFileInfo(socketHandle, path, "size"))
-					if success then
-						return result
-					else
-						return 0
-					end
-				end
-
-				proxy.exists = function(path)
-					local success, result = check(FTPFileInfo(socketHandle, path))
-					if success then
-						return result
-					else
-						return false
-					end
-				end
-
-				proxy.open = function(path, mode)
-					local temporaryPath = system.getTemporaryPath()
-					
-					if mode == "r" or mode == "rb" or mode == "a" or mode == "ab" then
-						local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "RETR " .. path)		
-						
-						filesystem.write(temporaryPath, success and result or "")
-					end
-					
-					local fileHandle, reason = filesystemProxy.open(temporaryPath, mode)
-					if fileHandle then
-						fileHandles[fileHandle] = {
-							temporaryPath = temporaryPath,
-							path = path,
-							needUpload = mode ~= "r" and mode ~= "rb",
-						}
-					end
-
-					return fileHandle, reason
-				end
-
-				proxy.close = function(fileHandle)
-					if not fileHandles[fileHandle] then
-						return
-					end
-
-					filesystemProxy.close(fileHandle)
-
-					if fileHandles[fileHandle].needUpload then
-						local data = filesystem.read(fileHandles[fileHandle].temporaryPath)
-
-						check(FTPEnterPassiveModeAndRunCommand(socketHandle, "STOR " .. fileHandles[fileHandle].path, data))
-					end
-
-					filesystem.remove(fileHandles[fileHandle].temporaryPath)
-					fileHandles[fileHandle] = nil
-				end
-
-				proxy.write = function(...)
-					return filesystemProxy.write(...)
-				end
-
-				proxy.read = function(...)
-					return filesystemProxy.read(...)
-				end
-
-				proxy.seek = function(...)
-					return filesystemProxy.seek(...)
-				end
-
-				proxy.remove = function(path)
-					if proxy.isDirectory(path) then		
-						local list = proxy.list(path)
-						for i = 1, #list do
-							proxy.remove((path .. "/" .. list[i]):gsub("/+", "/"))
-						end
-
-						FTPSocketWrite(socketHandle, "RMD " .. path)
-					else
-						FTPSocketWrite(socketHandle, "DELE " .. path)
-					end
-				end
-
-				proxy.makeDirectory = function(path)
-					FTPSocketWrite(socketHandle, "MKD " .. path)
-					return true
-				end
-
-				proxy.rename = function(oldPath, newPath)
-					FTPSocketWrite(socketHandle, "RNFR " .. oldPath)
-					FTPSocketWrite(socketHandle, "RNTO " .. newPath)
-
-					return true
-				end
-
-				return proxy
-			else
-				return false, reason
-			end
-		else
-			return false, reason
-		end
-	else
+	if not network.internetProxy then
 		return false, "Internet component is not available"
 	end
+
+	local client, reason = FTP.connect(address, port)
+	if not client then
+		return false, reason
+	end
+
+	local result, reason = client:login(user, password)
+	if not result then
+		return false, reason
+	end
+
+	local result, reason = client:setMode("I")
+	if not result then
+		return false, reason
+	end
+
+	local result, reason = client:changeWorkingDirectory("/")
+	if not result then
+		return false, reason
+	end	
+
+	local function getFileField(path, field)
+		local result, reason = client:getFileInfo(path, true)
+		if not result then
+			error(reason)
+		end
+
+		return result[field]
+	end
+
+	local label = network.getFTPProxyName(address, port, user)
+
+	local proxy, fileHandles = {}, {}
+	proxy.type = "filesystem"
+	proxy.slot = 0
+	proxy.address = label
+	proxy.networkFTP = true
+	
+	-- Send command every 30 seconds so server wont suddenly drop connection
+	local timerHandler = event.addHandler(
+		function()
+			client:keepAlive()
+		end,
+		30
+	)
+
+	function proxy.getLabel()
+		return label
+	end
+
+	function proxy.spaceUsed()
+		return network.proxySpaceUsed
+	end
+
+	function proxy.spaceTotal()
+		return network.proxySpaceTotal
+	end
+
+	function proxy.setLabel(text) 
+		label = text
+		return true
+	end
+
+	function proxy.isReadOnly()
+		return false
+	end
+
+	function proxy.closeSocketHandle()
+		filesystem.unmount(proxy)
+		event.removeHandler(timerHandler)
+
+		return client:close()
+	end
+
+	function proxy.list(path)
+		local result, reason = client:listDirectory(path)
+
+		if not result then
+			error(reason)
+		end
+
+		local list = {}
+		for _, entry in pairs(result) do
+			table.insert(list, entry.isdir and (entry.name .. "/") or entry.name)
+		end
+
+		return list
+	end
+
+	function proxy.isDirectory(path)
+		return getFileField(path, "isdir")
+	end
+		
+	function proxy.lastModified(path)
+		return getFileField(path, "modify")
+	end
+
+	function proxy.size(path)
+		return getFileField(path, "size")
+	end
+
+	function proxy.exists(path)
+		return client:fileExists(path, true)
+	end
+
+	function proxy.open(path, mode)
+		local tmp = system.getTemporaryPath()
+
+		if mode == "r" or mode == "rb" or mode == "a" or mode == "ab" then
+			local success, reason = client:readFileToFilesystem(path, tmp)
+			if not success then
+				error(reason)
+			end
+		end
+
+		local handle, reason = filesystemProxy.open(tmp, mode)
+		if not handle then
+			return nil, reason
+		end
+
+		fileHandles[handle] = {
+			temporaryPath = tmp,
+			path = path,
+			needUpload = mode ~= "r" and mode ~= "rb"
+		}
+
+		return handle
+	end
+
+	function proxy.close(handle)
+		if not fileHandles[handle] then
+			return
+		end
+
+		filesystemProxy.close(handle)
+
+		if fileHandles[handle].needUpload then
+			client:writeFileFromFilesystem(fileHandles[handle].path, fileHandles[handle].temporaryPath)
+		end
+	end
+
+	function proxy.write(...)
+		return filesystemProxy.write(...)
+	end
+
+	function proxy.read(...)
+		return filesystemProxy.read(...)
+	end
+
+	function proxy.seek(...)
+		return filesystemProxy.seek(...)
+	end
+
+	function proxy.remove(path)
+		return client:removeFile(path)
+	end
+
+	function proxy.makeDirectory(path)
+		return client:makeDirectory(path)
+	end
+
+	function proxy.rename(from, to)
+		return client:renameFile(from, to)
+	end
+	
+	return proxy
 end
 
 ----------------------------------------------------------------------------------------------------------------
