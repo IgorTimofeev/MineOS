@@ -7,6 +7,7 @@ local screen = require("Screen")
 local paths = require("Paths")
 local text = require("Text")
 local number = require("Number")
+local clipboard = require("Clipboard")
 
 -----------------------------------------------------------------------------------------
 
@@ -3061,7 +3062,13 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 		-- End
 		elseif e4 == 207 then 
 			input:setCursorPosition(unicode.len(input.text) + 1)
-		
+
+                -- V
+		elseif e4 == 47 and type(clipboard.paste()) ~= "table" and clipboard.paste() ~= nil then
+                        local startPos = input.cursorPosition
+                        local toPaste = tostring(clipboard.paste())
+			input.text = unicode.sub(input.text, 1,startPos) .. toPaste ..  unicode.sub(input.text, startPos, unicode.len(input.text))
+			input:setCursorPosition(startPos + unicode.len(toPaste)+1)
 		else
 			local char = unicode.char(e3)
 			
