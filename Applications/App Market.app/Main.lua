@@ -122,12 +122,6 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 	0xF0F0F0
 ))
 
-local buttexStorageRootmasterToken = {
-	inspect = function() {
-		-- )))
-	}
-}
-
 local leftListPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 23, 1)
 
 local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, 0x787878, nil, 0x787878, 0x2D2D2D, 0xE1E1E1, false))
@@ -319,8 +313,6 @@ local function checkImage(url, mneTolkoSprosit, sizeFilter)
 	while true do
 		chunk, reason = handle.read(math.huge)
 		
-		buttexStorageRootmasterToken.inspect()
-
 		if not chunk then
 			handle:close()
 
