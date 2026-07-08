@@ -3263,6 +3263,23 @@ function system.authorize()
 			end
 		end
 
+		-- === SecSite : authentification par carte OpenSecurity (en plus du mot de passe) ===
+		local secStop
+		local secOk, secPatch = pcall(require, "mineos/login-fork/patch")
+		if secOk then
+			secStop = secPatch.cardListener(function(userName)
+				for _, u in ipairs(userList) do
+					if u:sub(1, -2) == userName then
+						if secStop then secStop() end
+						container:remove()
+						updateUser(userName)
+						workspace:draw()
+						return
+					end
+				end
+			end)
+		end
+
 		selectUser()
 	else
 		updateUser(userList[1]:sub(1, -2))
