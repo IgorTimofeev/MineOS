@@ -4,7 +4,7 @@
 -- (nécessite le radar OC HBM pour des positions ; en repli redstone, pas de blips).
 
 local ROOT = (os.getenv and os.getenv("SECSITE_ROOT")) or "/home/secsite"
-package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. package.path
+package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. (package.path or "")
 
 local GUI = require("GUI")
 local system = require("System")

@@ -2,7 +2,7 @@
 -- Application MineOS — consultation du journal d'audit (connexions, portes, radar, sécurité).
 
 local ROOT = (os.getenv and os.getenv("SECSITE_ROOT")) or "/home/secsite"
-package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. package.path
+package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. (package.path or "")
 
 local GUI = require("GUI")
 local system = require("System")

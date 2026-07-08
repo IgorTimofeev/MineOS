@@ -10,7 +10,7 @@
 --    login mot de passe MineOS reste pleinement fonctionnel.
 
 local ROOT = (os.getenv and os.getenv("SECSITE_ROOT")) or "/home/secsite"
-package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. package.path
+package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. (package.path or "")
 
 local ok, system = pcall(require, "System")
 if not ok then return end

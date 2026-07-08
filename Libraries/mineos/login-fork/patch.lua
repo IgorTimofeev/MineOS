@@ -7,7 +7,7 @@
 -- À CÔTÉ, il ne remplace rien.
 
 local ROOT = (os.getenv and os.getenv("SECSITE_ROOT")) or "/home/secsite"
-package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. package.path
+package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. (package.path or "")
 
 local net = require("mineos/lib/net")
 local card = require("mineos/lib/card")

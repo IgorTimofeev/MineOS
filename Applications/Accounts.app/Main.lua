@@ -3,7 +3,7 @@
 -- et sessions actives. Toutes les opérations passent par le serveur (permission manage_accounts).
 
 local ROOT = (os.getenv and os.getenv("SECSITE_ROOT")) or "/home/secsite"
-package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. package.path
+package.path = ROOT .. "/?.lua;" .. ROOT .. "/?/init.lua;" .. (package.path or "")
 
 local GUI = require("GUI")
 local system = require("System")
