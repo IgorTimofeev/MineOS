@@ -143,7 +143,7 @@ do
 		computer.shutdown()
 	end
 
-	if component.invoke(GPUAddress, "getDepth") ~= 8 then
+	if component.invoke(GPUAddress, "getDepth") < 8 then
 		warning("Tier 3 GPU and screen are required")
 	end
 
