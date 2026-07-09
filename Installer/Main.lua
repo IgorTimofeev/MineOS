@@ -127,6 +127,7 @@ local function deserialize(text)
 end
 
 -- Clearing screen
+component.invoke(GPUAddress, "setDepth", 8)
 component.invoke(GPUAddress, "setBackground", 0xE1E1E1)
 component.invoke(GPUAddress, "fill", 1, 1, screenWidth, screenHeight, " ")
 
@@ -144,7 +145,7 @@ do
 	end
 
 	if component.invoke(GPUAddress, "getDepth") < 8 then
-		warning("Tier 3 GPU and screen are required")
+		warning("At least Tier 3 GPU and screen are required")
 	end
 
 	if computer.totalMemory() < 1024 * 1024 * 2 then

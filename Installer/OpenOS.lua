@@ -10,7 +10,7 @@ do
 
 	-- GPU/screen
 	if gpu.getDepth() < 8 or gpu.maxResolution() < 160 then
-		table.insert(potatoes, "Tier 3 graphics card and screen");
+		table.insert(potatoes, "At least Tier 3 graphics card and screen");
 	end
 
 	-- RAM

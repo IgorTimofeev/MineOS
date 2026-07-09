@@ -192,7 +192,7 @@ event.addHandler(
 
 			local function bindScreen(address)
 				screen.setScreenAddress(address, false)
-				screen.setColorDepth(screen.getMaxColorDepth())
+				screen.setColorDepth(8)
 
 				workspace:draw()
 			end
