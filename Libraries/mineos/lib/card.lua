@@ -6,9 +6,10 @@
 --   * RFID      : `scan([1-64])` déclenche `rfidData` = (uuid, playerName, distance, data)
 --                 -> identifiant = data. ACTIF : il faut appeler scan().
 
-local component = require("component")
-local computer = require("computer")
-local event = require("event")
+-- Globales OC (dispo sous OpenOS ET MineOS) ; MineOS n'a pas de lib "computer" à require.
+local component = _G.component or require("component")
+local computer = _G.computer or require("computer")
+local event = _G.event or require("event")
 
 local card = {}
 
