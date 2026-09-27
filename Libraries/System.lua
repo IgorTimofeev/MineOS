@@ -1186,7 +1186,9 @@ local function iconOnDoubleClick(icon)
 end
 
 local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" then
+	if e1 == "touch" then		
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		local iconField = icon.parent
 
 		icon.lastTouchX = e3
@@ -1214,10 +1216,14 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 		end
 	
 	elseif e1 == "double_touch" and e5 == 0 then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		iconOnDoubleClick(icon, e1, e2, e3, e4, e5, ...)
 	
 	-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
 	elseif e1 == "drag" and icon.parent.iconConfigEnabled and workspace.capturedObject == icon then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		icon.localX = icon.localX + e3 - icon.lastTouchX
 		icon.localY = icon.localY + e4 - icon.lastTouchY
 		icon.lastTouchX = e3
@@ -1874,6 +1880,8 @@ end
 
 local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundObject, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		local iconField = backgroundObject.parent
 
 		workspace.focusedObject = iconField
@@ -1896,6 +1904,8 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundOb
 		end
 	
 	elseif e1 == "drag" and workspace.capturedObject == backgroundObject then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		local iconField = backgroundObject.parent
 		local selection = iconField.selection
 
@@ -2123,8 +2133,11 @@ function system.listIconField(x, y, width, height, path, ...)
 
 		if e1 == "touch" then
 			if e5 == 1 then
+				e3, e4 = math.ceil(e3), math.ceil(e4)
+
 				iconOnRightClick(cell.parent:getSelectedIcons(), icon, e1, e2, e3, e4, e5, ...)
 			end
+
 		elseif e1 == "double_touch" then
 			iconOnDoubleClick(icon)
 		end
@@ -2641,6 +2654,8 @@ end
 
 local function dockIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, e6, ...)
 	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		icon.selected = true
 		workspace:draw()
 
