@@ -77,7 +77,7 @@ local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local configPath = paths.user.applicationData .. "MineCode IDE/Config9.cfg"
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/")
 local findStartFrom
-local clipboard
+local clipboard = require('Clipboard')
 local breakpointLines
 local lastErrorLine
 local autocompleteDatabase
@@ -974,13 +974,13 @@ end
 local function copy()
 	if codeView.selections[1] then
 		if codeView.selections[1].to.line == codeView.selections[1].from.line then
-			clipboard = { unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol) }
+			clipboard.copy({ unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol) })
 		else
-			clipboard = { unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1) }
+			clipboard.copy({ unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1) })
 			for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
-				table.insert(clipboard, lines[line])
+				table.insert(clipboard.history[1], lines[line])
 			end
-			table.insert(clipboard, unicode.sub(lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
+			table.insert(clipboard.history[1], unicode.sub(lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
 		end
 	end
 end
@@ -1320,8 +1320,8 @@ local function createEditOrRightClickMenu(menu)
 		copy()
 	end
 
-	menu:addItem("⇲", localization.paste, not clipboard, "^V").onTouch = function()
-		paste(clipboard)
+	menu:addItem("⇲", localization.paste, not clipboard.history[1], "^V").onTouch = function()
+		paste(clipboard.paste())
 	end
 
 	menu:addSeparator()
@@ -1453,8 +1453,8 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 					copy()
 				end
 			-- V
-			elseif e4 == 47 and clipboard then
-				paste(clipboard)
+			elseif e4 == 47 and clipboard.paste() then
+				paste(clipboard.paste())
 			-- X
 			elseif e4 == 45 then
 				if codeView.selections[1] then
