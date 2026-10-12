@@ -13,6 +13,6 @@
 	mmHg = " mm Hg",
 	speed = " m/z, ",
 	population = "Populashun: ",
-	city = "Tyep city naym heer",
-	cityError = "Wrong result. Check city naym an twie agaen."
+	city = "Tyep citi naym heer",
+	cityError = "Wrong result. Check citi naym an tri agaen."
 }

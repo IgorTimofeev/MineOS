@@ -1,10 +1,10 @@
 {
 	noPictures = "Thar iz no picturez.",
 	slideShow = "Slideshow",
-	delay = "Delay: ",
+	delay = "Delai: ",
 	seconds = " secondz",
 	fullScreen = "Full screen",
-	setWallpaper = "Do u wantz ot set dis picchur az wallpapah?",
+	setWallpaper = "Doez u wantz 2 set dis picchur az wallpapah?",
 	yes = "Yez",
 	no = "No",
 	start = "Start",
