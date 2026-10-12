@@ -4,49 +4,49 @@
 	settingsStyle = "Color scheem",
 	settingsAdditional = "Additional propertiez",
 	
-	invalidPassword = "Invalid login or password",
-	username = "E-mail or foen numbr",
+	invalidPassword = "Invalid logen or password",
+	username = "E-mail or phoen numbr",
 	password = "Password",
-	login = "entr",
-	twoFactorEnabled = "Ues 2AF",
-	twoFactor = "2AF coed",
-	saveLogin = "Saev login informashun:",
+	login = "Entr",
+	twoFactorEnabled = "Uz 2FA",
+	twoFactor = "2FA coed",
+	saveLogin = "Saev logen informashun:",
 	
-	loadCountConversations = "teh numbr ov loadd dialogues",
-	loadCountMessages = "numbr ov mesagez 2 download",
-	loadCountNews = "numbr ov downloaded newz",
-	scrollSpeed = "teh scroll sped",
-	loadCountWall = "numbr ov postz 2 download",
-	loadCountFriends = "numbr ov frenz 2 download",
-	loadCountDocs = "numbr ov documents 2 download",
+	loadCountConversations = "Teh numbr ov loadd dialoguez",
+	loadCountMessages = "Numbr ov messagez 2 downlod",
+	loadCountNews = "Numbr ov downloadd newz",
+	scrollSpeed = "Teh scroll sped",
+	loadCountWall = "Numbr ov postz 2 downlod",
+	loadCountFriends = "Numbr ov friendz 2 downlod",
+	loadCountDocs = "Numbr ov documentz 2 downlod",
 	
 	profile = "Profiel",
-	message = "mesaeg",
-	sendMessage = "Send mesaeg",
-	addToFriends = "Add as frend",
-	friendRequestSent = "Request has been sent",
-	userSubscribedToYou = "Subscribed 2 u",
-	userIsYourFriend = "u haz frenz",
+	message = "Messaeg",
+	sendMessage = "Send messaeg",
+	addToFriends = "Add az friend",
+	friendRequestSent = "Request haz been sent",
+	userSubscribedToYou = "Subscribd 2 u",
+	userIsYourFriend = "U haev friendz",
 	
 	profileCounters = {
 		{
-			field = "followers",
-			description = " followers"
+			field = "followerz",
+			description = " followerz"
 		},
 		{
-			field = "frenz",
-			description = " frenz"
+			field = "friendz",
+			description = " friendz"
 		},
 		{
-			field = "fotos",
-			description = " fotos"
+			field = "fotoz",
+			description = " fotoz"
 		},
 		{
 			field = "videoz",
 			description = " videoz"
 		},
 		{
-			field = "audios",
+			field = "audioz",
 			description = " audio"
 		}
 	},
@@ -55,70 +55,70 @@
 	profileTitleMainInformation = "Basic informashun",
 	profileTitlePersonal = "Lief posishun",
 	profileTitleAdditions = "Personal informashun",
-	profileTitleContacts = "Contacts",
+	profileTitleContacts = "Contactz",
 	profileKeys = {
-		education = "edumacashun",
+		education = "Educashun",
 		inspiredBy = "Inspier",
-		relation = "relashuns",
-		birthday = "birfdai",
+		relation = "Relashunz",
+		birthday = "Birthday",
 		city = "City",
 		homeCity = "Hometown",
-		languages = "Languages",
+		languages = "Languagez",
 		occupation = "Plaec ov werk",
 		mobilePhone = "Mobiel",
-		homePhone = "Alt. foen",
-		site = "websiet",
+		homePhone = "Alt. phoen",
+		site = "Websiet",
 		activities = "Activity",
-		interests = "Interests",
+		interests = "Interestz",
 		music = "Favoriet music",
-		movies = "Favoriet movai",
+		movies = "Favoriet movei",
 		books = "Favoriet book",
 		tv = "Favoriet show",
-		games = "Favoriet gaem",
+		games = "Favoriet gaym",
 		quotes = "Favoriet quoet",
 		religion = "Outlook",
-		political = "Polit. conviction",
-		peopleMain = "ppl most important",
+		political = "Polit. convicshun",
+		peopleMain = "Peopel most important",
 		lifeMain = "Lief most important",
 		alcohol = "OTN. 4 alcohol",
-		smoking = "OTN. towardz smoking"
+		smoking = "OTN. towardz smokin"
 	},
 	months = {
-		"januawee",
-		"februawee",
+		"january",
+		"february",
 		"march",
 		"april",
-		"cud",
+		"may",
 		"juen",
 		"july",
 		"august",
-		"septembah",
+		"septembr",
 		"octobr",
 		"novembr",
 		"decembr"
 	},
 	relationStatuses = {
 		{
-			"not married",
-			"haz  girlfriend",
-			"engaged",
-			"married",
-			"iz complicatd",
-			"in actiev search",
-			"lovah",
-			"in civil marriaeg",
-			[0] = "unspecified"
+			"not marrid",
+			"haev a girlfriend",
+			"engagd",
+			"marrid",
+			"it'z complicatd",
+			"en actiev search",
+			"lovr",
+			"en civil marriaeg",
+			[0] = "unspecifid"
 		},
 		{
-			"not married",
-			"haz  frend",
-			"engaged",
-			"married",
-			"iz complicatd",
-			"in actiev search",
-			"lovah",
-			"in civil marriaeg",
-			[0] = "unspecified"
+			"not marrid",
+			"haev a friend",
+			"engagd",
+			"marrid",
+			"it'z complicatd",
+			"en actiev search",
+			"lovr",
+			"en civil marriaeg",
+			[0] = "unspecifid"
 		}
 	},
 	personalPoliticalTypes = {
@@ -133,64 +133,64 @@
 		"Libertarian"
 	},
 	personalPeopleMainTypes = {
-		"Intelligenec an creativity",
-		"Kindness an honesty",
-		"Beauty an health",
-		"powr an wealth",
-		"Couraeg an perseveranec",
-		"Humor an luv ov lief"
+		"Intelligenec and creativity",
+		"Kindnez and honesty",
+		"Beauty and health",
+		"Powr and wealth",
+		"Couraeg and perseveranec",
+		"Humor and loov ov lief"
 	},
 	personalLifeMainTypes = {
-		"Family an children",
-		"Careah an money",
-		"Entertanement an recreation",
-		"Scienec an research",
-		"Improving teh wurld",
+		"Family and children",
+		"Carer and money",
+		"Entertanement and recreashun",
+		"Scienec and research",
+		"Improvin teh world",
 		"Self-development",
-		"Beauty an art",
-		"Faem an influenec"
+		"Beauty and art",
+		"Faym and influenec"
 	},
 	personalBlyadTypes = {
 		"Sharply negatiev",
 		"Negatiev",
-		"compromiez",
+		"Compromiz",
 		"Neutral",
-		"positiv"
+		"Positiev"
 	},
 	
-	friends = "frenz",
-	friendsOnline = "Onlien frenz",
-	friendsMutual = "Mutual frenz",
+	friends = "Friendz",
+	friendsOnline = "Onlien friendz",
+	friendsMutual = "Mutual friendz",
 	
-	news = "Newsfeed",
+	news = "Newsfed",
 	
 	send = "Send",
-	conversations = "Conversations",
-	you = "u: ",
-	typeMessageHere = "riet  mesaeg...",
+	conversations = "Conversashunz",
+	you = "U: ",
+	typeMessageHere = "Wriet a messaeg...",
 	fwdMessages = "Informashun: ",
-	attachments = "Investments: ",
+	attachments = "Investmentz: ",
 	attachmentsTypes = {
-		photo = "foot",
+		photo = "foto",
 		video = "video",
 		audio = "audio",
 		doc = "document",
 		link = "link",
-		market = "goods",
+		market = "goodz",
 		market_album = "product catalog",
 		wall = "record",
 		wall_reply = "repost",
-		sticker = "stickah",
+		sticker = "stickr",
 		gift = "gift",
 		audio_message = "audio"
 	},
-	sentFromMineOS = " (Sent via MineOS VK Client)",
+	sentFromMineOS = " (Sent via MineOz VK Client)",
 	
-	documents = "Documents",
-	documentsCount = "Total documents",
-	documentsAdd = "Upload document",
+	documents = "Documentz",
+	documentsCount = "Total documentz",
+	documentsAdd = "Uplod document",
 	
-	settings = "settingz",
+	settings = "Settingz",
 	
 	exit = "Logout"
 }
