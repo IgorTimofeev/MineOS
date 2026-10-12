@@ -76,11 +76,11 @@
 	registrationSuccessfull = "अपना खाता सत्यापित करने के लिए अपना ई-मेल और स्पैम फ़ोल्डर जांचें",
 	search = "खोज",
 	byPopularity = "लोकप्रियता से",
-	
 	byRating = "रेटिंग के अनुसार",
 	byDate = "तिथि के अनुसार",
 	byName = "नाम से",
 	desc = "अवरोही",
+	
 	asc = "आरोही",
 	publish = "सॉफ्टवेयर प्रकाशित करें",
 	install = "स्थापित करना",
@@ -91,11 +91,11 @@
 	noUpdates = "आपके पास कोई अपडेट नहीं है",
 	changeReview = "समीक्षा बदलें",
 	developer = "डेवलपर",
-	
 	version = "संस्करण",
 	license = "लाइसेंस",
 	category = "श्रेणी",
 	updated = "अद्यतन",
+	
 	reviews = "समीक्षा",
 	yourRating = "तुम्हारी रेटिंग",
 	writeReviewHere = "यहां समीक्षा टेक्स्ट टाइप करें",
@@ -112,5 +112,9 @@
 	thanksForVote = "आपकी राय के लिए धन्यवाद।",
 	uniqueDownloads = "अद्वितीय डाउनलोड",
 	previewDepencency = "छवि का पूर्वावलोकन करें",
-	hideApplicationPreviews = "एप्लिकेशन पूर्वावलोकन छुपाएं"
+	hideApplicationPreviews = "एप्लिकेशन पूर्वावलोकन छुपाएं",
+	hostMirror = "आईना",
+	hostDirect = "प्रत्यक्ष",
+	hostAuto = "स्वचालित रूप से चुनें",
+	host = "बाज़ार सर्वर"
 }

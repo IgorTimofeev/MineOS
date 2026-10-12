@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Controlla la tua cartella e-mail e spam per verificare il tuo account",
 	search = "Ricerca",
 	byPopularity = "Di popolarità",
-	
 	byRating = "Per valutazione",
 	byDate = "Per data",
 	byName = "Per nome",
 	desc = "Discendente",
+	
 	asc = "Ascendente",
 	publish = "Pubblica software",
 	install = "Installare",
@@ -91,11 +91,11 @@
 	noUpdates = "Non avete aggiornamenti",
 	changeReview = "Modifica revisione",
 	developer = "Sviluppatore",
-	
 	version = "Versione",
 	license = "Licenza",
 	category = "Categoria",
 	updated = "Aggiornare",
+	
 	reviews = "Recensione",
 	yourRating = "La tua valutazione",
 	writeReviewHere = "Tipo rivedere il testo qui",
@@ -112,5 +112,9 @@
 	thanksForVote = "Grazie per la tua opinione.",
 	previewDepencency = "Anteprima dell'immagine",
 	uniqueDownloads = "Download unici",
-	hideApplicationPreviews = "Nascondi le anteprime delle applicazioni"
+	hideApplicationPreviews = "Nascondi le anteprime delle applicazioni",
+	host = "Server del mercato",
+	hostAuto = "Scegli automaticamente",
+	hostDirect = "Diretto",
+	hostMirror = "Specchio"
 }

@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Проверете електронната си поща и папката за спам, за да потвърдите акаунта си",
 	search = "Търсене",
 	byPopularity = "По популярност",
-	
 	byRating = "По рейтинг",
 	byDate = "По дата",
 	byName = "По име",
 	desc = "Низходящо",
+	
 	asc = "Възходящ",
 	publish = "Публикувайте софтуер",
 	install = "Инсталирай",
@@ -91,11 +91,11 @@
 	noUpdates = "Нямате актуализации",
 	changeReview = "Промяна на прегледа",
 	developer = "Разработчик",
-	
 	version = "Версия",
 	license = "Разрешително",
 	category = "Категория",
 	updated = "Актуализиран",
+	
 	reviews = "Отзиви",
 	yourRating = "Вашата оценка",
 	writeReviewHere = "Въведете текст за преглед тук",
@@ -112,5 +112,9 @@
 	thanksForVote = "Благодаря за вашето мнение.",
 	previewDepencency = "Визуализация на изображението",
 	uniqueDownloads = "Уникални изтегляния",
-	hideApplicationPreviews = "Скриване на визуализации на приложения"
+	hideApplicationPreviews = "Скриване на визуализации на приложения",
+	hostMirror = "Огледало",
+	hostDirect = "Директен",
+	hostAuto = "Изберете автоматично",
+	host = "Пазарен сървър"
 }

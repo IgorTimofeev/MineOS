@@ -76,11 +76,11 @@
 	registrationSuccessfull = "이메일 및 스팸 폴더를 확인하여 계정 확인",
 	search = "검색",
 	byPopularity = "인기순으로",
-	
 	byRating = "등급별",
 	byDate = "날짜별",
 	byName = "이름으로",
 	desc = "내림차순",
+	
 	asc = "오름차순",
 	publish = "소프트웨어 게시",
 	install = "설치",
@@ -91,11 +91,11 @@
 	noUpdates = "업데이트가 없습니다.",
 	changeReview = "리뷰 변경",
 	developer = "개발자",
-	
 	version = "버전",
 	license = "특허",
 	category = "범주",
 	updated = "업데이트됨",
+	
 	reviews = "리뷰",
 	yourRating = "당신의 순위",
 	writeReviewHere = "여기에 리뷰 텍스트 입력",
@@ -112,5 +112,9 @@
 	thanksForVote = "의견 감사합니다.",
 	uniqueDownloads = "고유 다운로드",
 	previewDepencency = "미리보기 이미지",
-	hideApplicationPreviews = "애플리케이션 미리보기 숨기기"
+	hideApplicationPreviews = "애플리케이션 미리보기 숨기기",
+	hostAuto = "자동으로 선택",
+	hostDirect = "직접",
+	hostMirror = "거울",
+	host = "마켓 서버"
 }
