@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Bevestig uw account via de link in de e-mail (controleer uw spam map)",
 	search = "Zoeken",
 	byPopularity = "Op populariteit",
-	
 	byRating = "Op beoordeling",
 	byDate = "Op datum",
 	byName = "Op naam",
 	desc = "Aflopend",
+	
 	asc = "Oplopend",
 	publish = "Publiseer software",
 	install = "Installeer",
@@ -91,11 +91,11 @@
 	noUpdates = "Je hebt momenteel geen updates",
 	changeReview = "Verander beoordeling",
 	developer = "Ontwikkelaar",
-	
 	version = "Versie",
 	license = "Licentie",
 	category = "Categorie",
 	updated = "Geüpdated",
+	
 	reviews = "Beoordelingen",
 	yourRating = "Jou Beoordelingen",
 	writeReviewHere = "Schrijf uw beoordeling hier",
@@ -112,5 +112,9 @@
 	thanksForVote = "Bedankt voor uw mening.",
 	previewDepencency = "Voorbeeldafbeelding",
 	uniqueDownloads = "Unieke downloads",
-	hideApplicationPreviews = "Applicatievoorbeelden verbergen"
+	hideApplicationPreviews = "Applicatievoorbeelden verbergen",
+	hostMirror = "Spiegel",
+	hostDirect = "Direct",
+	host = "Marktserver",
+	hostAuto = "Kies automatisch"
 }

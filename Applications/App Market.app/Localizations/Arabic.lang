@@ -76,11 +76,11 @@
 	registrationSuccessfull = "تحقق من البريد الإلكتروني ومجلد البريد العشوائي للتحقق من حسابك",
 	search = "بحث",
 	byPopularity = "حسب الشعبية",
-	
 	byRating = "حسب التصنيف",
 	byDate = "حسب التاريخ",
 	byName = "بالاسم",
 	desc = "تنازلي",
+	
 	asc = "تصاعدي",
 	publish = "نشر البرامج",
 	install = "ثَبَّتَ",
@@ -91,11 +91,11 @@
 	noUpdates = "ليس لديك تحديثات",
 	changeReview = "تغيير الاستعراض",
 	developer = "مطور",
-	
 	version = "الإصدار",
 	license = "رخصة",
 	category = "فئة",
 	updated = "محدث",
+	
 	reviews = "المراجعات",
 	yourRating = "تقييمك",
 	writeReviewHere = "اكتب نص المراجعة هنا",
@@ -112,5 +112,9 @@
 	thanksForVote = "شكرا لرأيك.",
 	previewDepencency = "صورة المعاينة",
 	uniqueDownloads = "تنزيلات فريدة",
-	hideApplicationPreviews = "إخفاء معاينات التطبيق"
+	hideApplicationPreviews = "إخفاء معاينات التطبيق",
+	hostMirror = "مرآة",
+	hostDirect = "مباشر",
+	hostAuto = "اختر تلقائيًا",
+	host = "خادم السوق"
 }

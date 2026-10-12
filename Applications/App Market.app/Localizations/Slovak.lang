@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Skontrolujte svoj e-mail a priečinok so spamom a overte svoj účet",
 	search = "Vyhľadávanie",
 	byPopularity = "Podľa popularity",
-	
 	byRating = "Podľa hodnotenia",
 	byDate = "Podľa dátumu",
 	byName = "Podľa názvu",
 	desc = "Zostupne",
+	
 	asc = "Vzostupne",
 	publish = "Publikovanie softvéru",
 	install = "Inštalácia",
@@ -91,11 +91,11 @@
 	noUpdates = "Nemáte žiadne aktualizácie",
 	changeReview = "Zmeniť recenziu",
 	developer = "Vývojár",
-	
 	version = "Verzia",
 	license = "Licencia",
 	category = "Kategória",
 	updated = "Aktualizované",
+	
 	reviews = "Recenzie",
 	yourRating = "Vaše hodnotenie",
 	writeReviewHere = "Sem zadajte text recenzie",
@@ -112,5 +112,9 @@
 	thanksForVote = "dakujem za nazor.",
 	previewDepencency = "Ukážkový obrázok",
 	uniqueDownloads = "Jedinečné sťahovanie",
-	hideApplicationPreviews = "Skryť ukážky aplikácií"
+	hideApplicationPreviews = "Skryť ukážky aplikácií",
+	hostMirror = "Zrkadlo",
+	host = "Trhový server",
+	hostDirect = "Priame",
+	hostAuto = "Vyberte si automaticky"
 }

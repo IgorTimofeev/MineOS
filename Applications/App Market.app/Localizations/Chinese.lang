@@ -76,11 +76,11 @@
 	registrationSuccessfull = "请去检查邮箱，并点击发来的链接",
 	search = "搜索",
 	byPopularity = "最受欢迎",
-	
 	byRating = "最高评分",
 	byDate = "创建日期",
 	byName = "通过名称",
 	desc = "降序",
+	
 	asc = "上升",
 	publish = "發佈軟件",
 	install = "安装",
@@ -91,11 +91,11 @@
 	noUpdates = "已经是最新版",
 	changeReview = "修改评论",
 	developer = "开发者",
-	
 	version = "版本",
 	license = "协议",
 	category = "类型",
 	updated = "已更新",
+	
 	reviews = "评论",
 	yourRating = "你的评分",
 	writeReviewHere = "在这里写评论",
@@ -112,5 +112,9 @@
 	thanksForVote = "感谢你的观点。",
 	previewDepencency = "預覽影像",
 	uniqueDownloads = "獨特的下載量",
-	hideApplicationPreviews = "隱藏應用程式預覽"
+	hideApplicationPreviews = "隱藏應用程式預覽",
+	hostDirect = "直接的",
+	hostMirror = "鏡子",
+	hostAuto = "自動選擇",
+	host = "市場伺服器"
 }

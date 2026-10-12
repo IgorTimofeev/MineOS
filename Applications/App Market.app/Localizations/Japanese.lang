@@ -76,11 +76,11 @@
 	registrationSuccessfull = "あなたのアカウントを確認するためにあなたの電子メールとスパムフォルダをチェックしてください",
 	search = "探す",
 	byPopularity = "人気で",
-	
 	byRating = "評価による",
 	byDate = "日付別",
 	byName = "名前で",
 	desc = "降順",
+	
 	asc = "上昇",
 	publish = "ソフトウェアを公開する",
 	install = "インストール",
@@ -91,11 +91,11 @@
 	noUpdates = "更新はありません",
 	changeReview = "レビューを変更",
 	developer = "デベロッパー",
-	
 	version = "バージョン",
 	license = "ライセンス",
 	category = "カテゴリー",
 	updated = "更新しました",
+	
 	reviews = "レビュー",
 	yourRating = "あなたの評価",
 	writeReviewHere = "ここにレビューテキストを入力します",
@@ -112,5 +112,9 @@
 	thanksForVote = "ご意見ありがとうございます。",
 	previewDepencency = "プレビュー画像",
 	uniqueDownloads = "ユニークなダウンロード",
-	hideApplicationPreviews = "アプリケーションのプレビューを非表示にする"
+	hideApplicationPreviews = "アプリケーションのプレビューを非表示にする",
+	hostMirror = "鏡",
+	hostAuto = "自動的に選択",
+	host = "マーケットサーバー",
+	hostDirect = "直接"
 }

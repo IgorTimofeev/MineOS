@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Праверце электронную пошту і папку са спамам, каб пацвердзіць свой уліковы запіс",
 	search = "Пошук",
 	byPopularity = "Па папулярнасці",
-	
 	byRating = "Па рэйтынгу",
 	byDate = "Па даце",
 	byName = "Па імені",
 	desc = "Зніжэнне",
+	
 	asc = "Узыходзячая",
 	publish = "Праграму для публікацыі",
 	install = "Ўсталяваць",
@@ -91,11 +91,11 @@
 	noUpdates = "У вас няма абнаўленняў",
 	changeReview = "Змяніць агляд",
 	developer = "Распрацоўшчык",
-	
 	version = "Версія",
 	license = "Ліцэнзія",
 	category = "Катэгорыя",
 	updated = "Абноўлены",
+	
 	reviews = "Водгукі",
 	yourRating = "Ваш рэйтынг",
 	writeReviewHere = "Увядзіце тэкст агляду тут",
@@ -112,5 +112,9 @@
 	thanksForVote = "Дзякуй за ваша меркаванне.",
 	previewDepencency = "Папярэдні прагляд выявы",
 	uniqueDownloads = "Унікальныя загрузкі",
-	hideApplicationPreviews = "Схаваць папярэдні прагляд прыкладанняў"
+	hideApplicationPreviews = "Схаваць папярэдні прагляд прыкладанняў",
+	host = "Маркет сервер",
+	hostAuto = "Выбіраць аўтаматычна",
+	hostDirect = "Прамы",
+	hostMirror = "Люстэрка"
 }

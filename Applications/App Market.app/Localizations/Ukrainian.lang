@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Перевірте свою пошту (і папку спаму), щоб підтвердити аккаунт",
 	search = "Пошук",
 	byPopularity = "За популярністю",
-	
 	byRating = "За рейтингом",
 	byDate = "По даті",
 	byName = "По імені",
 	desc = "За зменшенням",
+	
 	asc = "За зростанням",
 	publish = "Опублікувати ПЗ",
 	install = "Встановити",
@@ -91,11 +91,11 @@
 	noUpdates = "У вас найновіше ПЗ",
 	changeReview = "Змінити відгук",
 	developer = "Розробник",
-	
 	version = "Версія",
 	license = "Ліцензія",
 	category = "Категорія",
 	updated = "Оновлено",
+	
 	reviews = "Відгуки",
 	yourRating = "Оцініть додаток",
 	writeReviewHere = "Пишіть відгук тут",
@@ -112,5 +112,9 @@
 	thanksForVote = "Дякую за вашу думку",
 	previewDepencency = "Попередній перегляд зображення",
 	uniqueDownloads = "Унікальні завантаження",
-	hideApplicationPreviews = "Приховати попередній перегляд"
+	hideApplicationPreviews = "Приховати попередній перегляд",
+	hostAuto = "Виберіть автоматично",
+	host = "Сервер ринку",
+	hostDirect = "Прямий",
+	hostMirror = "Дзеркало"
 }

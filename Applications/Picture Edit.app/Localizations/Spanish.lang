@@ -36,7 +36,7 @@
 		"F - herramienta braille",
 		null,
 		"X - cambiar de color",
-		"D - restablecer los colores del dibujo",
+		"D - restablecer los colores del dibujo"
 	},
 	tool1 = "La herramienta de selección le permite seleccionar el área preferida en la imagen y realizar algunas operaciones en ella. ",
 	fill = "Llenar",
@@ -73,7 +73,7 @@
 	rotate180 = "Girar 180 grados",
 	rotate270 = "Girar 270 grados",
 	flipVertical = "Voltear vertical",
-	flipHorizontal = "Flip horizontal",
+	flipHorizontal = "Voltear horizontalmente",
 	hueSaturation = "La saturación de color",
 	colorBalance = "Balance de color",
 	photoFilter = "filtro de foto",
@@ -87,5 +87,5 @@
 	transparency = "Transparencia:",
 	force = "Fuerza",
 	rasterizePolygon = "Rasterizar polígono",
-	polygonEdges = "Número de aristas del polígono:",
+	polygonEdges = "Número de aristas del polígono:"
 }

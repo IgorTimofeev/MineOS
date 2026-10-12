@@ -76,11 +76,11 @@
 	registrationSuccessfull = "Tarkista sähköpostisi ja roskapostikansiosi vahvistaaksesi tilisi",
 	search = "Hae",
 	byPopularity = "Suosion mukaan",
-	
 	byRating = "Luokituksen mukaan",
 	byDate = "Päivämäärän mukaan",
 	byName = "Nimeltä",
 	desc = "Laskeva",
+	
 	asc = "Nouseva",
 	publish = "Julkaise ohjelmisto",
 	install = "Asentaa",
@@ -91,11 +91,11 @@
 	noUpdates = "Sinulla ei ole päivityksiä",
 	changeReview = "Muuta arvostelua",
 	developer = "Kehittäjä",
-	
 	version = "Versio",
 	license = "Lisenssi",
 	category = "Kategoria",
 	updated = "Päivitetty",
+	
 	reviews = "Arvostelut",
 	yourRating = "Arviosi",
 	writeReviewHere = "Kirjoita arvosteluteksti tähän",
@@ -112,5 +112,9 @@
 	thanksForVote = "Kiitos mielipiteestäsi.",
 	previewDepencency = "Esikatselukuva",
 	uniqueDownloads = "Ainutlaatuiset lataukset",
-	hideApplicationPreviews = "Piilota sovellusten esikatselut"
+	hideApplicationPreviews = "Piilota sovellusten esikatselut",
+	hostAuto = "Valitse automaattisesti",
+	hostDirect = "Suoraan",
+	host = "Markkinapalvelin",
+	hostMirror = "Peili"
 }

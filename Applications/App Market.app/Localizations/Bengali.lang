@@ -76,11 +76,11 @@
 	registrationSuccessfull = "আপনার অ্যাকাউন্ট যাচাই করতে আপনার ই-মেইল এবং স্প্যাম ফোল্ডার চেক করুন",
 	search = "অনুসন্ধান করুন",
 	byPopularity = "জনপ্রিয়তা দ্বারা",
-	
 	byRating = "রেটিং দ্বারা",
 	byDate = "তারিখ অনুসারে",
 	byName = "নামে",
 	desc = "অবরোহী",
+	
 	asc = "আরোহী",
 	publish = "সফটওয়্যার প্রকাশ করুন",
 	install = "ইনস্টল করুন",
@@ -91,11 +91,11 @@
 	noUpdates = "আপনার কোন আপডেট নেই",
 	changeReview = "পর্যালোচনা পরিবর্তন করুন",
 	developer = "বিকাশকারী",
-	
 	version = "সংস্করণ",
 	license = "লাইসেন্স",
 	category = "শ্রেণী",
 	updated = "আপডেট করা হয়েছে",
+	
 	reviews = "রিভিউ",
 	yourRating = "তোমার রেটিং",
 	writeReviewHere = "এখানে পর্যালোচনা পাঠ্য টাইপ করুন",
@@ -112,5 +112,9 @@
 	thanksForVote = "আপনার মতামতের জন্য ধন্যবাদ.",
 	previewDepencency = "পূর্বরূপ চিত্র",
 	uniqueDownloads = "অনন্য ডাউনলোড",
-	hideApplicationPreviews = "অ্যাপ্লিকেশন পূর্বরূপ লুকান"
+	hideApplicationPreviews = "অ্যাপ্লিকেশন পূর্বরূপ লুকান",
+	hostAuto = "স্বয়ংক্রিয়ভাবে নির্বাচন করুন",
+	host = "মার্কেট সার্ভার",
+	hostDirect = "সরাসরি",
+	hostMirror = "আয়না"
 }
