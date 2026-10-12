@@ -57,7 +57,7 @@
 	previewDepencency = "Preview imaeg",
 	
 	login = "Log en",
-	host = "Market servr",
+	host = "Markut servr",
 	hostAuto = "Chooz automaticalli",
 	hostDirect = "Direct",
 	hostMirror = "Mirror",
