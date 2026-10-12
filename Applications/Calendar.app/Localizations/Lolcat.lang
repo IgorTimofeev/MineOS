@@ -1,6 +1,6 @@
 {
-	weekLine = "Mo  Tu  ew  Th  Fr  Sa  Su",
-	weekLineAlt = "Su  Mo  Tu  ew  Th  Fr  Sa",
+	weekLine = "Mo  Tu  We  Th  Fr  Sa  Su",
+	weekLineAlt = "Su  Mo  Tu  We  Th  Fr  Sa",
 	months = {
 		"Januwee",
 		"Februwee",

@@ -67,8 +67,8 @@
 	
 	tasks = "Autostart",
 	tasksInfo = "U can add az maen scriptz az u wantz 2 automaticalli execuet dem en ordr at teh specifid tiem",
-	tasksBefore = "Run b4 runnin teh Oz",
-	tasksAfter = "Run aftr startin teh Oz",
+	tasksBefore = "Run b4 runnin teh Os",
+	tasksAfter = "Run aftr startin teh Os",
 	tasksPath = "Teh path 2 teh skript",
 	tasksEnabled = "Task enabld",
 	
