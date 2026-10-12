@@ -12,7 +12,7 @@
 	updatingFileList = "Updatin fiel list...",
 	network = "Netwerk",
 	networkTimeout = "Remoet computr iz not respondin",
-	networkAccessDenied = "Accez 2 teh filesystem ov teh remoet computr iz denid. Contact iz ownr 2 git appropriaet privilegez",
+	networkAccessDenied = "Accez 2 teh filesystem ov teh remoet computr iz denid. Contact it's ownr 2 git appropriaet privilegez",
 	networkAllowReadAndWrite = "Filesystem accez",
 	networkModemNotAvailable = "Attach modem 2 uz netwerk funcshunz",
 	networkState = "Enabel netwerk moed",
@@ -57,7 +57,7 @@
 	folder = "Foldr",
 	unknown = "Unknown",
 	calculatingSize = "calculatin…",
-	filesWillBeRemovedPermanently = "fiel(z) will bees removd permanentli",
+	filesWillBeRemovedPermanently = "fiel(s) will bees removd permanentli",
 	fileDeletingFailure = "Faild 2 deleet fiel",
 	
 	properties = "Propertiez",

@@ -31,8 +31,8 @@
 	statisticsPopularPublication = "(popular publicashun)",
 	statisticsMessagesCount = "Messagez cownt",
 	
-	whatsNew = "Wut'z nu",
-	whatsNewInVersion = "Wut'z nu en versshun",
+	whatsNew = "Wut's nu",
+	whatsNewInVersion = "Wut's nu en vershun",
 	areYouSure = "R ur suer wantz 2 deleet publicashun?",
 	createShortcut = "Creaet desktop shortcut",
 	editing = "Edit publicashun",
@@ -73,7 +73,7 @@
 	exit = "Log out",
 	changePassword = "Chaneg password",
 	newPassword = "Nu password",
-	singleSession = "Iz not mi computr",
+	singleSession = "It's not mi computr",
 	currentPassword = "Current password",
 	language = "Descripshunz languaeg",
 	publications = "Publicashunz",
@@ -98,7 +98,7 @@
 	
 	changeReview = "Chaneg review",
 	developer = "Developah",
-	version = "Versshun",
+	version = "Vershun",
 	license = "Licenz",
 	category = "Categori",
 	updated = "Updatd",

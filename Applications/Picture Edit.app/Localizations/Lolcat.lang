@@ -6,7 +6,7 @@
 	path = "Path: ",
 	save = "Saev",
 	saveAs = "Saev az",
-	ok = "Ok",
+	ok = "K",
 	cancel = "Cancel",
 	fileName = "Fiel naym",
 	newPicture = "Nu picchur",
@@ -23,7 +23,7 @@
 	transFor = "Transparenci foreground",
 	hotkeys = "Hotkeyz",
 	hotkeysText = {
-		"Thar r sum hotkeyz dat workz exactli liek en real fotoshop:",
+		"Thar r sum hotkeyz dat werkz exactli liek en real fotoshop:",
 		" ",
 		"M - selecshun tool",
 		"V - moov tool",
@@ -64,9 +64,9 @@
 	eraseFor = "Eraz foreground:",
 	eraseAlpha = "Eraz alaf:",
 	eraseSym = "Eraz symbol:",
-	tool7 = "Text tool allowz u 2 tyep sum text data wif selectd primwee color riet on ur imaeg! Iz tiem 2 sai \"ur mom gai\" 2 everyoen <3",
+	tool7 = "Text tool allowz u 2 tyep sum text data wif selectd primwee color riet on ur imaeg! It's tiem 2 sai \"ur mom gai\" 2 everyoen <3",
 	tool8 = "Fill tool allowz u 2 automaticalli fill areaz wif selectd primwee color jus liek en Panet. Oh Ceiling cat, wheer iz mi RAM...?",
-	tool9 = "Brailel tool allowz u 2 draw pixelz wif Brailel symbolz on ur imaeg. Select preferrd mien-pixelz via meun aboov, configuer transparenci affectin an \"Let'z go fellaz!\"",
+	tool9 = "Brailel tool allowz u 2 draw pixelz wif Brailel symbolz on ur imaeg. Select preferrd miin-pixelz via meun aboev, configuer transparenci affectin an \"Let's go fellaz!\"",
 	image = "Imaeg",
 	edit = "Edit",
 	rotate90 = "Rotaet bi 90 degreez",
@@ -87,5 +87,5 @@
 	transparency = "Transparenci: ",
 	force = "Forec",
 	rasterizePolygon = "Rasteriez polygon",
-	polygonEdges = "Numbr ov polygon edgez:"
+	polygonEdges = "Numbah ov polygon edgez:"
 }

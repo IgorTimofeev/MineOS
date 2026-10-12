@@ -1,9 +1,9 @@
 {
 	help = "Halp",
 	helpInfo = {
-		"• Evwee model consistz ov shapez. Der cownt dependz ov servr propertiez, but bi default iz 24 pah wan model",
-		"• Model alos can haz 2 statez: passiev an actiev. If u plaec printd model en minecraft wurld an perform click on it, model will chaneg iz staet 2 teh opposiet. Shaep cownt iz limitd 2 both statez",
-		"• Hold left mouz button 2 plaec furst point ov shaep bi X an i. Drag mouz 2 resiez shaep. Uz mouz wheel 2 chaneg Z coordinaet. Releaz button 2 finish shaep editin",
+		"• Evwee model consistz ov shapez. Der cownt dependz ov servr propertiez, but bi default it's 24 pah wan model",
+		"• Model alos can haz 2 statez: passiev an actiev. If u plaec printd model en minecraft wurld an perform click on it, model will chaneg it's staet 2 teh opposiet. Shaep cownt iz limitd 2 both statez",
+		"• Hold left mouz button 2 plaec furst point ov shaep bi X an Y. Drag mouz 2 resiez shaep. Uz mouz wheel 2 chaneg Z coordinaet. Releaz button 2 finish shaep editin",
 		"• Prez riet mouz button 2 select shaep undr cursor",
 		"• Scroll toolbar 2 show othr opshunz"
 	},
@@ -23,11 +23,11 @@
 	scale = "Scael",
 	projectorEnabled = "Enabld",
 	xAxis = "X-axiz",
-	yAxis = "i-axiz",
+	yAxis = "Y-axiz",
 	zAxis = "Z-axiz",
 	lightLevel = "Liet level",
 	emitRedstone = "Emit redstoen",
-	collidable = "Collisshun",
+	collidable = "Collishun",
 	buttonMode = "Button moed",
 	label = "Label",
 	tooltip = "Tooltip",

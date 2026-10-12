@@ -40,7 +40,7 @@
 	appearanceMenu = "Meun bakground",
 	appearanceBlurEnabled = "Interfaec blurrin",
 	appearanceTransparencyEnabled = "Interfaec transparenci",
-	appearanceTransparencyInfo = "Disablin teh last 3 opshunz will significantli reduec teh numbr ov direct callz 2 teh CUP / GPU an increaz performanec",
+	appearanceTransparencyInfo = "Disablin teh last 3 opshunz will significantli reduec teh numbah ov direct callz 2 teh CUP / GPU an increaz performanec",
 	appearanceDropDownDefaultBackground = "Drop down meun bakground",
 	appearanceDropDownDefaultText = "Drop down meun text",
 	appearanceDropDownSeparator = "Drop down meun separator",
