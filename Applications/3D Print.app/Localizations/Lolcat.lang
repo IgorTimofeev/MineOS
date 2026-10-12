@@ -1,11 +1,11 @@
 {
 	help = "Halp",
 	helpInfo = {
-		"• Every model consistz ov shapez. Their count dependz ov servr propertiez, but by default it'z 24 pah 1 model",
-		"• Model also can haev 2 statez: passiev and actiev. If u plaec printd model en minecraft world and perform a click on it, model will chaneg it'z staet 2 teh opposiet. Shaep count iz limitd 2 both statez",
-		"• Hold left mouz button 2 plaec first point ov shaep by X and Y. Drag mouz 2 resiez shaep. Uz mouz wheel 2 chaneg Z coordinaet. Releaz button 2 finish shaep editin",
-		"• Prez riet mouz button 2 select shaep undr cursor",
-		"• Scroll toolbar 2 show othr opshunz"
+		"• Evwee model consistz ov shapez. Their count dependz ov servr propertiez, but by default iz 24 pah wan model",
+		"• Model alos can haz 2 statez: passiev an actiev. If u plaec printd model en minecraft wurld an performclick on it, model will chaneg iz staet ot teh opposiet. Shaep count iz limitd ot both statez",
+		"• Hold left mouz button ot plaec first point ov shaep by X an Y. Drag mouz ot resiez shaep. Uz mouz wheel ot chaneg Z coordinaet. Releaz button ot finish shaep editin",
+		"• Prez riet mouz button ot select shaep undr cursor",
+		"• Scroll toolbar ot show othr opshunz"
 	},
 	file = "Fiel",
 	new = "Nu",
@@ -25,7 +25,7 @@
 	xAxis = "X-axiz",
 	yAxis = "Y-axiz",
 	zAxis = "Z-axiz",
-	lightLevel = "Light level",
+	lightLevel = "Liet level",
 	emitRedstone = "Emit redstoen",
 	collidable = "Collisshun",
 	buttonMode = "Button moed",
@@ -38,5 +38,5 @@
 	blockSettings = "Model propertiez",
 	projectorSettings = "Projector propertiez",
 	elementSettings = "Shaep propertiez",
-	failedToPrint = "Faild 2 print"
+	failedToPrint = "Faild ot print"
 }

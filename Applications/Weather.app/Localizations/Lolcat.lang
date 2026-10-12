@@ -14,5 +14,5 @@
 	speed = " m/z, ",
 	population = "Populashun: ",
 	city = "Tyep city naym heer",
-	cityError = "Wrong result. Check city naym and try agaen."
+	cityError = "Wrong result. Check city naym an twie agaen."
 }

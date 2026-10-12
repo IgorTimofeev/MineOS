@@ -16,6 +16,6 @@
 		"Decembr"
 	},
 	startWeek = "Start week frum ",
-	monday = "Monday",
-	sunday = "Sunday"
+	monday = "Mondai",
+	sunday = "Sundai"
 }

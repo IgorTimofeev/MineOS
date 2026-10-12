@@ -13,20 +13,20 @@
 	saveLogin = "Saev logen informashun:",
 	
 	loadCountConversations = "Teh numbr ov loadd dialoguez",
-	loadCountMessages = "Numbr ov messagez 2 downlod",
+	loadCountMessages = "Numbr ov messagez ot downlod",
 	loadCountNews = "Numbr ov downloadd newz",
 	scrollSpeed = "Teh scroll sped",
-	loadCountWall = "Numbr ov postz 2 downlod",
-	loadCountFriends = "Numbr ov friendz 2 downlod",
-	loadCountDocs = "Numbr ov documentz 2 downlod",
+	loadCountWall = "Numbr ov postz ot downlod",
+	loadCountFriends = "Numbr ov friendz ot downlod",
+	loadCountDocs = "Numbr ov documentz ot downlod",
 	
 	profile = "Profiel",
 	message = "Messaeg",
 	sendMessage = "Send messaeg",
 	addToFriends = "Add az friend",
 	friendRequestSent = "Request haz been sent",
-	userSubscribedToYou = "Subscribd 2 u",
-	userIsYourFriend = "U haev friendz",
+	userSubscribedToYou = "Subscribd ot u",
+	userIsYourFriend = "U haz friendz",
 	
 	profileCounters = {
 		{
@@ -60,7 +60,7 @@
 		education = "Educashun",
 		inspiredBy = "Inspier",
 		relation = "Relashunz",
-		birthday = "Birthday",
+		birthday = "Birthdai",
 		city = "City",
 		homeCity = "Hometown",
 		languages = "Languagez",
@@ -100,10 +100,10 @@
 	relationStatuses = {
 		{
 			"not marrid",
-			"haev a girlfriend",
+			"havegirlfriend",
 			"engagd",
 			"marrid",
-			"it'z complicatd",
+			"iz complicatd",
 			"en actiev search",
 			"lovr",
 			"en civil marriaeg",
@@ -111,10 +111,10 @@
 		},
 		{
 			"not marrid",
-			"haev a friend",
+			"havefriend",
 			"engagd",
 			"marrid",
-			"it'z complicatd",
+			"iz complicatd",
 			"en actiev search",
 			"lovr",
 			"en civil marriaeg",
@@ -133,22 +133,22 @@
 		"Libertarian"
 	},
 	personalPeopleMainTypes = {
-		"Intelligenec and creativity",
-		"Kindnez and honesty",
-		"Beauty and health",
-		"Powr and wealth",
-		"Couraeg and perseveranec",
-		"Humor and loov ov lief"
+		"Intelligenec an creativity",
+		"Kindnez an honesty",
+		"Beauty an health",
+		"Powr an wealth",
+		"Couraeg an perseveranec",
+		"Humor an loov ov lief"
 	},
 	personalLifeMainTypes = {
-		"Family and children",
-		"Carer and money",
-		"Entertanement and recreashun",
-		"Scienec and research",
-		"Improvin teh world",
+		"Family an children",
+		"Carer an money",
+		"Entertanement an recreashun",
+		"Scienec an research",
+		"Improvin teh wurld",
 		"Self-development",
-		"Beauty and art",
-		"Faym and influenec"
+		"Beauty an art",
+		"Faym an influenec"
 	},
 	personalBlyadTypes = {
 		"Sharply negatiev",
@@ -167,11 +167,11 @@
 	send = "Send",
 	conversations = "Conversashunz",
 	you = "U: ",
-	typeMessageHere = "Wriet a messaeg...",
+	typeMessageHere = "Writemessaeg...",
 	fwdMessages = "Informashun: ",
 	attachments = "Investmentz: ",
 	attachmentsTypes = {
-		photo = "foto",
+		photo = "foot",
 		video = "video",
 		audio = "audio",
 		doc = "document",
