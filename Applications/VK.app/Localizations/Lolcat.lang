@@ -23,7 +23,7 @@
 	profile = "Profiel",
 	message = "Messaeg",
 	sendMessage = "Send messaeg",
-	addToFriends = "Add az friend",
+	addToFriends = "Add az frein",
 	friendRequestSent = "Request haz been sent",
 	userSubscribedToYou = "Subscribd 2 u",
 	userIsYourFriend = "U haz friendz",
@@ -111,7 +111,7 @@
 		},
 		{
 			"not marrid",
-			"haz friend",
+			"haz frein",
 			"engagd",
 			"marrid",
 			"iz complicatd",
