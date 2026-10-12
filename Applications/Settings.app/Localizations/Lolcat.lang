@@ -40,7 +40,7 @@
 	appearanceMenu = "Meun bakground",
 	appearanceBlurEnabled = "Interfaec blurrin",
 	appearanceTransparencyEnabled = "Interfaec transparenci",
-	appearanceTransparencyInfo = "Disablin teh last 3 opshunz will significantli reduec teh numbah ov direct callz 2 teh CUP / GPU an increaz performanec",
+	appearanceTransparencyInfo = "Disablin teh last 3 opshunz will significantli reduec teh numbah ov direct callz 2 teh CUP / GUP an increaz performanec",
 	appearanceDropDownDefaultBackground = "Drop down meun bakground",
 	appearanceDropDownDefaultText = "Drop down meun text",
 	appearanceDropDownSeparator = "Drop down meun separator",
@@ -86,7 +86,7 @@
 	disksSpaceFree = "Free",
 	disksInfo = "Formattin will deleet all data frum teh selectd disk wifout teh possibiliti ov recovwee, eithr en teh gaym or on teh host",
 	
-	system = "System",
+	system = "Sistem",
 	systemArchitecture = "CUP architecchur",
 	systemUnloading = "Automatic unloadin",
 	systemRAM = "Memori management",

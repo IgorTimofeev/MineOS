@@ -6,7 +6,7 @@
 	instructionTitle = "Instrucshun",
 	instructionData = "On teh left sied ov teh screen thar r switchez dat tell nanitez 2 activaet biocontactz. Each cat haz uniqeu configurashun ov biocontactz, allowin nanitez 2 impoz variouz buffz / debuffz. Activatin 2 contactz iz saef 4 lief, largr numbah will cauz seriouz injuriez. U can activaet up 2 4 contactz at tiem. Experiment, look 4 teh desird effectz an add dem 2 ur favoritez 4 latr uz. Teh button \"saev configurashun\" iz useful 4 transferrin 2 ur othr configurashun ov nanitez (4 dis u ned 2 haz an creatd instanec en teh inventori)",
 	syncWelcome = "Welcoem",
-	syncInfo = "B4 usin teh program, creaet an drink packet ov nanitez. Then approach teh system unit or servr rack wif teh wirelez modem installd 4 synchronizashun",
+	syncInfo = "B4 usin teh program, creaet an drink packet ov nanitez. Then approach teh sistem unit or servr rack wif teh wirelez modem installd 4 synchronizashun",
 	syncProgress = "Thar iz synchronizashun wif nanitez, doez not leaev teh computr til teh procez iz completd:",
 	syncContacts = "biocontact updaet %d ov %d",
 	favourites = "Selectd effectz",
