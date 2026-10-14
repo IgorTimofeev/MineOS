@@ -351,22 +351,31 @@ local function loadStage()
 end
 
 local function checkUserInputs()
-	local nameEmpty = #usernameInput.text == 0
-	local nameVaild = usernameInput.text:match("^%w[%w%s_]+$")
-	local passValid = withoutPasswordSwitchAndLabel.switch.state or (#passwordInput.text > 0 and #passwordSubmitInput.text > 0 and passwordInput.text == passwordSubmitInput.text)
+	-- (
+	if not usernameInput.text:match("^%w[%w%s_]+$") then
+		usernamePasswordText.text = localization.usernameInvalid
+		usernamePasswordText.width = #usernamePasswordText.text
 
-	if (nameEmpty or nameVaild) and passValid then
-		usernamePasswordText.hidden = true
-		nextButton.disabled = nameEmpty or not nameVaild or not passValid
-	else
 		usernamePasswordText.hidden = false
 		nextButton.disabled = true
 
-		if nameVaild then
-			usernamePasswordText.text = localization.passwordsArentEqual
-		else
-			usernamePasswordText.text = localization.usernameInvalid
-		end
+	-- (((
+	elseif not withoutPasswordSwitchAndLabel.switch.state and (#passwordInput.text > 0 and #passwordSubmitInput.text > 0 and passwordInput.text ~= passwordSubmitInput.text) then
+		usernamePasswordText.text = localization.passwordsArentEqual
+		usernamePasswordText.width = #usernamePasswordText.text
+
+		usernamePasswordText.hidden = false
+		nextButton.disabled = true
+
+	-- (((
+	elseif #usernameInput.text == 0 or (not withoutPasswordSwitchAndLabel.switch.state and (#passwordInput.text == 0 or #passwordSubmitInput.text == 0)) then
+		usernamePasswordText.hidden = true
+		nextButton.disabled = true
+
+	-- )
+	else
+		usernamePasswordText.hidden = true
+		nextButton.disabled = false
 	end
 end
 
@@ -501,8 +510,6 @@ end)
 
 -- User profile setup stage
 addStage(function()
-	checkUserInputs()
-
 	addImage(0, 0, "User")
 	addTitle(0x696969, localization.setup)
 
