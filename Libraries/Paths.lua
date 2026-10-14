@@ -11,6 +11,7 @@ paths.system.extensions = "/Extensions/"
 paths.system.mounts = "/Mounts/"
 paths.system.temporary = "/Temporary/"
 paths.system.wallpapers = "/Wallpapers/"
+paths.system.themes = "/Themes/"
 paths.system.users = "/Users/"
 paths.system.versions = "/Versions.cfg"
 

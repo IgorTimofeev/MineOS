@@ -14,6 +14,7 @@ local args, options = system.parseArguments(...)
 
 local userSettings = system.getUserSettings()
 local localization = system.getSystemLocalization()
+local theme = system.getSystemTheme()
 
 local FTPMountPath = paths.system.mounts .. "FTP/"
 local configPath = paths.user.applicationData .. "Finder/Config.cfg"
@@ -23,6 +24,7 @@ local config = {
 		{ name = "Desktop", path = paths.user.desktop },
 		{ name = "Applications", path = paths.system.applications },
 		{ name = "Wallpapers", path = paths.system.wallpapers },
+		{ name = "Themes", path = paths.system.themes },
 		{ name = "Libraries", path = paths.system.libraries },
 		{ name = "User", path = paths.user.home },
 		{ name = "Trash", path = paths.user.trash },
@@ -34,9 +36,6 @@ local config = {
 if filesystem.exists(configPath) then
 	config = filesystem.readTable(configPath)
 end
-
-local sidebarTitleColor = 0xC3C3C3
-local sidebarItemColor = 0x5A5A5A
 
 local pathHistory = {}
 local pathHistoryCurrent = 0
@@ -50,22 +49,22 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 	1,
 	math.min(100, windowsContainer.width),
 	math.min(26, windowsContainer.height),
-	0xF0F0F0
+	theme.altBackground2
 ))
 
-local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x2D2D2D))
+local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, theme.background4))
 
-local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, 0x3C3C3C, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "<"))
-prevButton.colors.disabled.background = 0x4B4B4B
-prevButton.colors.disabled.text = 0xA5A5A5
+local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, theme.background5, theme.foreground5, theme.altBackground2, theme.altForeground2, "<"))
+prevButton.colors.disabled.background = theme.background5
+prevButton.colors.disabled.text = theme.foreground12
 
-local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, 0x3C3C3C, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
+local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, theme.background5, theme.foreground5, theme.altBackground2, theme.altForeground2, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
-local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, 0x3C3C3C, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0xE1E1E1, 0x4B4B4B, true))
+local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, theme.background5, theme.foreground3, theme.background6, theme.foreground3, theme.altBackground2, theme.altForeground2, true))
 modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
-local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, 0x3C3C3C, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
+local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, theme.background5, theme.foreground5, theme.altBackground2, theme.altForeground2, "FTP"))
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not network.internetProxy
 
@@ -78,16 +77,16 @@ sidebarItemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNME
 sidebarItemsLayout:setSpacing(1, 1, 0)
 sidebarItemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x3C3C3C, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 16, 1, theme.background5, theme.foreground5, theme.foreground11, theme.background5, theme.foreground3, nil, localization.search, true))
 
 local iconField
 
 local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
-local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x3C3C3C))
+local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, theme.background5))
 
-local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x4B4B4B, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
+local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, theme.background6, theme.foreground5, theme.altBackground2, theme.altForeground2, "→"))
 
-local resizer = window:addChild(GUI.resizer(1, 1, 3, 4, 0xC3C3C3, 0x0))
+local resizer = window:addChild(GUI.resizer(1, 1, 3, 4, theme.altBackground5, 0x0))
 
 window.actionButtons:moveToFront()
 
@@ -118,7 +117,7 @@ local function setVerticalScroll(value)
 
 		local child
 
-		for i = 2, iconsCount do
+		for i = 1, #iconField.children do
 			child = iconField.children[i]
 
 			if child ~= iconField.backgroundObject then
@@ -176,14 +175,14 @@ local function sidebarItemDraw(object)
 	local textColor, limit = object.textColor, object.width - 2
 	
 	if object.path == iconField.path then
-		textColor = 0xB4B4B4
+		textColor = theme.foreground6
 
-		screen.drawRectangle(object.x, object.y, object.width, 1, 0x2D2D2D, textColor, " ")
-		screen.drawText(object.x, object.y, 0xFFDB80, "▎ ")
+		screen.drawRectangle(object.x, object.y, object.width, 1, theme.background4, textColor, " ")
+		screen.drawText(object.x, object.y, theme.accentBackground1, "▎ ")
 
 		if object.onRemove then
 			limit = limit - 2
-			screen.drawText(object.x + object.width - 2, object.y, 0x3C3C3C, "x")
+			screen.drawText(object.x + object.width - 2, object.y, theme.background5, "x")
 		end
 	end
 	
@@ -215,11 +214,11 @@ local function addSidebarObject(textColor, text, path)
 end
 
 local function addSidebarTitle(...)
-	return addSidebarObject(sidebarTitleColor, ...)
+	return addSidebarObject(theme.foreground5, ...)
 end
 
 local function addSidebarItem(...)
-	return addSidebarObject(sidebarItemColor, ...)
+	return addSidebarObject(theme.foreground12, ...)
 end
 
 local function addSidebarSeparator()
@@ -380,11 +379,11 @@ FTPButton.onTouch = function()
 		ad, po, us, pa = la.address, tostring(la.port), la.user, la.password
 	end
 
-	local addressInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ad, localization.networkFTPAddress, true))
-	local portInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, po, localization.networkFTPPort, true))
-	local userInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, us, localization.networkFTPUser, true))
-	local passwordInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, pa, localization.networkFTPPassword, true, "*"))
-	container.layout:addChild(GUI.button(1, 1, 36, 3, 0x5A5A5A, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "OK")).onTouch = function()
+	local addressInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, ad, localization.networkFTPAddress, true)))
+	local portInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, po, localization.networkFTPPort, true)))
+	local userInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, us, localization.networkFTPUser, true)))
+	local passwordInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, pa, localization.networkFTPPassword, true, "*")))
+	container.layout:addChild(system.applyThemeToBackgroundContainerPrimaryButton(GUI.button(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, "OK"))).onTouch = function()
 		container:remove()
 
 		local port = tonumber(portInput.text)
@@ -469,28 +468,28 @@ local function updateIconField()
 		config.gridMode and
 		system.gridIconField(
 			1, 4, 1, 1, 2, 2, path,
-			0x3C3C3C,
-			0xC3C3C3,
-			0x3C3C3C,
-			0x696969,
+			theme.altForeground5,
+			theme.altBackground5,
+			theme.altForeground5,
+			theme.altBackground11,
 			nil
 		) or
 		system.listIconField(
 			1, 4, 1, 1, path,
 			
-			0xF0F0F0,
+			theme.altBackground2,
 
-			0xFFFFFF,
-			0x000000,
+			theme.altBackground1,
+			theme.altForeground1,
 			
 			nil,
-			0x3C3C3C,
+			theme.altForeground5,
 			
-			0xE1E1E1,
-			0x3C3C3C,
+			theme.altBackground3,
+			theme.altForeground5,
 
-			0xCC2440,
-			0xFFFFFF
+			theme.accentBackground2,
+			theme.accentForeground2
 		)
 	)
 
@@ -543,7 +542,7 @@ local function updateIconField()
 		local x, path = 2, "/"
 
 		local function addNode(text, path)
-			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xC3C3C3, nil, 0xFFFFFF, text)).onTouch = function()
+			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, theme.foreground5, nil, theme.foreground1, text)).onTouch = function()
 				addPath(path)
 				updateFileListAndDraw()
 			end
@@ -554,7 +553,7 @@ local function updateIconField()
 		addNode("root", "/")
 
 		for node in iconField.path:gsub("/$", ""):gmatch("[^/]+") do
-			statusContainer:addChild(GUI.text(x, 1, 0x696969, " ► "))
+			statusContainer:addChild(GUI.text(x, 1, theme.foreground11, " ► "))
 			x = x + 3
 			
 			path = path .. node .. "/"
@@ -576,7 +575,7 @@ local function updateIconField()
 end
 
 gotoButton.onTouch = function()
-	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xC3C3C3, 0xC3C3C3, 0x4B4B4B, 0xC3C3C3, nil, nil))
+	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, theme.background5, theme.foreground5, theme.foreground11, theme.background5, theme.foreground3, nil, nil))
 	
 	input.onInputFinished = function()
 		input:remove()

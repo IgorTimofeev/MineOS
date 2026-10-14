@@ -2,10 +2,11 @@
 local GUI = require("GUI")
 local paths = require("Paths")
 local system = require("System")
+local filesystem = require("Filesystem")
 
 local module = {}
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
@@ -24,6 +25,35 @@ module.onTouch = function()
 	
 	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.appearanceTransparencyInfo}, 1, 0, 0, true, true))
 
+	-- Theme
+	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, "Theme"))
+
+	local themeComboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
+
+	local list = filesystem.list(paths.system.themes)
+	for i = 1, #list do
+		if filesystem.extension(list[i]) == ".thm" then
+			local name = filesystem.hideExtension(list[i])
+			
+			themeComboBox:addItem(name).onTouch = function()
+				userSettings.theme = name
+				theme = system.getTheme(paths.system.themes)
+
+				system.updateSystemTheme()
+				system.updateWorkspace()
+				system.updateDesktop()
+				workspace:draw()
+
+				system.saveUserSettings()
+			end
+
+			if name == userSettings.theme then
+				themeComboBox.selectedItem = themeComboBox:count()
+			end
+		end
+	end
+		
+	-- Icon sizes
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceSize))
 
 	local iconWidthSlider = window.contentLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 8, 16, userSettings.iconWidth, false, localization.appearanceHorizontal .. ": ", ""))

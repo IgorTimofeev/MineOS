@@ -4766,6 +4766,9 @@ local function menuAddContextMenuItem(menu, ...)
 	item.switchMode = true
 	item.onTouch = menuContextMenuItemOnTouch
 	item.contextMenu = contextMenuCreate(1, 1)
+
+	item.contextMenu.colors = menu.colors.contextMenu
+
 	item.contextMenu.onMenuClosed = function()
 		item.pressed = false
 		item.workspace:draw()
@@ -4786,7 +4789,29 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 			background = backgroundPressedColor,
 			text = textPressedColor,
 		},
-		transparency = backgroundTransparency
+		transparency = backgroundTransparency,
+
+		contextMenu = {
+			default = {
+				background = GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
+				text = GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
+				icon = GUI.CONTEXT_MENU_DEFAULT_ICON_COLOR
+			},
+			selected = {
+				background = GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
+				text = GUI.CONTEXT_MENU_PRESSED_TEXT_COLOR,
+				icon = GUI.CONTEXT_MENU_PRESSED_ICON_COLOR
+			},
+			disabled = {
+				text = GUI.CONTEXT_MENU_DISABLED_TEXT_COLOR,
+				icon = GUI.CONTEXT_MENU_DISABLED_ICON_COLOR
+			},
+			separator = GUI.CONTEXT_MENU_SEPARATOR_COLOR,
+			transparency = {
+				background = nil,
+				shadow = GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+			}
+		}
 	}
 	
 	menu.blockScreenEvents = true

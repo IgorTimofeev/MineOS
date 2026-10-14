@@ -26,6 +26,7 @@ module.onTouch = function()
 				userSettings.localizationLanguage = name
 				localization = system.getLocalization(paths.system.localizations)
 
+				system.updateSystemLocalization()
 				system.updateWorkspace()
 				system.updateDesktop()
 				workspace:draw()
