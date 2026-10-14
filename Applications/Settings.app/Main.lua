@@ -17,7 +17,7 @@ local scrollSpeed = 2
 
 --------------------------------------------------------------------------------
 
-local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 100, 29, theme.altBackground2))
+local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 100, 29, theme.background1))
 
 local leftPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 1, 1)
 
@@ -34,15 +34,15 @@ local function moduleDraw(object)
 	local textColor
 
 	if object.pressed then
-		textColor = theme.foreground3
+		textColor = theme.altForeground1
 
-		screen.drawRectangle(object.x, object.y, object.width, object.height, theme.background4, textColor, " ")
+		screen.drawRectangle(object.x, object.y, object.width, object.height, theme.altBackground2, textColor, " ")
 		
 		for y = object.y, object.y + object.height - 1 do
 			screen.drawText(object.x, y, theme.accentBackground1, "▎ ")
 		end
 	else
-		textColor = theme.foreground9
+		textColor = theme.altForeground8
 	end
 
 	screen.drawImage(object.x + 1, object.y, object.icon)

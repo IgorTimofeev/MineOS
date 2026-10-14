@@ -515,7 +515,7 @@ end
 --------------------------------------------------------------------------------
 
 local function addMainDesktopMenuItem(menu)
-	local item = menu:addContextMenuItem("💻", 0xF0F0F0)
+	local item = menu:addContextMenuItem("💻", theme.altForeground1)
 	
 	item:addItem("🛈", localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
@@ -660,18 +660,18 @@ local function uploadToPastebin(path)
 end
 
 local function applyThemeToContextMenuColorsTable(colors)
-	colors.default.background = theme.background3
-	colors.default.text = theme.foreground4
-	colors.default.icon = theme.foreground11
+	colors.default.background = theme.altBackground1
+	colors.default.text = theme.altForeground3
+	colors.default.icon = theme.altForeground10
 
 	colors.selected.background = theme.accentBackground1
 	colors.selected.text = theme.accentForeground1
 	colors.selected.icon = theme.accentForeground1
 
-	colors.disabled.text = theme.foreground8
-	colors.disabled.icon = theme.foreground8
+	colors.disabled.text = theme.altForeground11
+	colors.disabled.icon = theme.altForeground11
 
-	colors.separator = theme.background4
+	colors.separator = theme.altBackground2
 
 	-- menu.colors.transparency.background = 0.5
 	-- menu.colors.transparency.shadow = 0.5
@@ -691,26 +691,26 @@ function system.applyThemeToMenu(menu)
 end
 
 function system.applyThemeToBackgroundContainerInput(input)
-	input.colors.default.background = theme.altBackground3
-	input.colors.default.foreground = theme.altForeground8
+	input.colors.default.background = theme.background2
+	input.colors.default.foreground = theme.foreground1
 
-	input.colors.focused.background = theme.altBackground3
-	input.colors.focused.foreground = theme.altForeground4
+	input.colors.focused.background = theme.background2
+	input.colors.focused.foreground = theme.foreground1
 
-	input.colors.placeholderText = theme.altForeground11
+	input.colors.placeholderText = theme.foreground11
 
 	return input
 end
 
 function system.applyThemeToBackgroundContainerPrimaryButton(button)
-	button.colors.default.background = theme.altBackground10
-	button.colors.default.text = theme.altForeground16
+	button.colors.default.background = theme.altBackground6
+	button.colors.default.text = theme.altForeground3
 
-	button.colors.pressed.background = theme.background4
-	button.colors.pressed.text = theme.foreground4
+	button.colors.pressed.background = theme.altBackground4
+	button.colors.pressed.text = theme.altForeground1
 
-	button.colors.disabled.background = theme.altBackground10
-	button.colors.disabled.text = theme.altForeground12
+	button.colors.disabled.background = theme.altBackground2
+	button.colors.disabled.text = theme.altForeground8
 	
 	return button
 end
@@ -1718,6 +1718,9 @@ local function listIconFieldUpdateFileList(iconField)
 			anyIconAddInfo(cell, path)
 			anyIconFieldAddIcon(iconField, cell)
 
+			cell.colors.defaultForeground = theme.foreground1
+			cell.colors.alternativeForeground = theme.foreground1
+
 			cell.draw = firstCell
 
 			return cell
@@ -1726,9 +1729,7 @@ local function listIconFieldUpdateFileList(iconField)
 		local function newOtherCell(text)
 			local cell = GUI.tableTextCell(text)
 
-			cell.colors.defaultForeground = 0xA5A5A5
-			cell.colors.alternativeForeground = 0xA5A5A5
-
+		
 			return cell
 		end
 
@@ -2423,7 +2424,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					addMainDesktopMenuItem(window.menu)
 
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
-					local contextMenu = window.menu:addContextMenuItem(name, 0xD2D2D2)
+					local contextMenu = window.menu:addContextMenuItem(name)
 
 					contextMenu:addItem("⛌", localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
 						window:remove()
@@ -2883,9 +2884,9 @@ function system.updateDesktop()
 	end
 
 	local dockColors = {
-		selectionBackground = theme.altBackground4,
-		selectionText = theme.altForeground4,
-		defaultText = theme.foreground3,
+		selectionBackground = theme.background1,
+		selectionText = theme.foreground2,
+		defaultText = theme.foreground1,
 		selectionTransparency = userSettings.interfaceTransparencyEnabled and 0.5 or nil
 	}
 
@@ -3033,7 +3034,7 @@ function system.updateDesktop()
 	local overrideDockContainerDraw = dockContainer.draw
 	
 	dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos = theme.background8, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
+		local color, currentDockTransparency, currentDockWidth, xPos = theme.altBackground6, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
 
 		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 3, -1 do
 			screen.drawText(xPos, y, color, "◢", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
@@ -3057,8 +3058,8 @@ function system.updateDesktop()
 		1,
 		workspace.width,
 
-		theme.background3,
-		theme.foreground9,
+		theme.altBackground1,
+		theme.altForeground5,
 		theme.accentBackground1,
 		theme.accentForeground1
 	))
@@ -3076,12 +3077,12 @@ function system.updateDesktop()
 	local dateWidget, dateWidgetText = system.addMenuWidget(system.menuWidget(1))
 	
 	dateWidget.draw = function(dateWidget)
-		screen.drawText(dateWidget.x, 1, theme.foreground10, dateWidgetText)
+		screen.drawText(dateWidget.x, 1, theme.altForeground8, dateWidgetText)
 	end
 
 	local batteryWidget, batteryWidgetPercent, batteryWidgetText = system.addMenuWidget(system.menuWidget(1))
 	batteryWidget.draw = function(batteryWidget)
-		screen.drawText(batteryWidget.x, 1, theme.foreground10, batteryWidgetText)
+		screen.drawText(batteryWidget.x, 1, theme.altForeground8, batteryWidgetText)
 
 		local pixelPercent = math.floor(batteryWidgetPercent * 4 + 0.5)
 		
@@ -3092,7 +3093,7 @@ function system.updateDesktop()
 		local index = screen.getIndex(batteryWidget.x + #batteryWidgetText, 1)
 		
 		for i = 1, 4 do
-			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or theme.foreground14, i < 4 and "⠶" or "╸")
+			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or theme.altBackground4, i < 4 and "⠶" or "╸")
 			index = index + 1
 		end
 	end
@@ -3103,12 +3104,12 @@ function system.updateDesktop()
 		local barWidth = RAMWidget.width - #text
 		local activeWidth = math.ceil(RAMPercent * barWidth)
 
-		screen.drawText(RAMWidget.x, 1, theme.foreground10, text)
+		screen.drawText(RAMWidget.x, 1, theme.altForeground8, text)
 		
 		local index = screen.getIndex(RAMWidget.x + #text, 1)
 		
 		for i = 1, barWidth do
-			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or theme.foreground14, "━")
+			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or theme.altBackground4, "━")
 			index = index + 1
 		end
 	end
@@ -3195,7 +3196,7 @@ function system.updateDesktop()
 end
 
 function system.updateColorScheme()
-	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or theme.background2
+	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or theme.altBackground1
 	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
 end
 
@@ -3474,7 +3475,7 @@ function system.getDockContainer()
 end
 
 function system.addBlurredOrDefaultPanel(container, x, y, width, height)
-	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, theme.background3))
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, theme.altBackground1))
 end
 
 function system.addConsoleWindow()

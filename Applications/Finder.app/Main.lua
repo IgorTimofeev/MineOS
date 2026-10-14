@@ -49,22 +49,22 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 	1,
 	math.min(100, windowsContainer.width),
 	math.min(26, windowsContainer.height),
-	theme.altBackground2
+	theme.background1
 ))
 
-local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, theme.background4))
+local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, theme.altBackground2))
 
-local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, theme.background5, theme.foreground5, theme.altBackground2, theme.altForeground2, "<"))
-prevButton.colors.disabled.background = theme.background5
-prevButton.colors.disabled.text = theme.foreground12
+local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, "<"))
+prevButton.colors.disabled.background = theme.altBackground3
+prevButton.colors.disabled.text = theme.altForeground11
 
-local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, theme.background5, theme.foreground5, theme.altBackground2, theme.altForeground2, ">"))
+local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
-local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, theme.background5, theme.foreground3, theme.background6, theme.foreground3, theme.altBackground2, theme.altForeground2, true))
+local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, theme.altBackground3, theme.altForeground5, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, true))
 modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
-local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, theme.background5, theme.foreground5, theme.altBackground2, theme.altForeground2, "FTP"))
+local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, "FTP"))
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not network.internetProxy
 
@@ -77,16 +77,16 @@ sidebarItemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNME
 sidebarItemsLayout:setSpacing(1, 1, 0)
 sidebarItemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 16, 1, theme.background5, theme.foreground5, theme.foreground11, theme.background5, theme.foreground3, nil, localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 16, 1, theme.altBackground3, theme.altForeground5, theme.altForeground11, theme.altBackground3, theme.altForeground1, nil, localization.search, true))
 
 local iconField
 
 local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
-local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, theme.background5))
+local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, theme.altBackground3))
 
-local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, theme.background6, theme.foreground5, theme.altBackground2, theme.altForeground2, "→"))
+local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, theme.altBackground4, theme.altForeground5, theme.background1, theme.foreground1, "→"))
 
-local resizer = window:addChild(GUI.resizer(1, 1, 3, 4, theme.altBackground5, 0x0))
+local resizer = window:addChild(GUI.resizer(1, 1, 3, 4, theme.background5, 0x0))
 
 window.actionButtons:moveToFront()
 
@@ -175,9 +175,9 @@ local function sidebarItemDraw(object)
 	local textColor, limit = object.textColor, object.width - 2
 	
 	if object.path == iconField.path then
-		textColor = theme.foreground6
+		textColor = theme.altForeground3
 
-		screen.drawRectangle(object.x, object.y, object.width, 1, theme.background4, textColor, " ")
+		screen.drawRectangle(object.x, object.y, object.width, 1, theme.altBackground2, textColor, " ")
 		screen.drawText(object.x, object.y, theme.accentBackground1, "▎ ")
 
 		if object.onRemove then
@@ -214,11 +214,11 @@ local function addSidebarObject(textColor, text, path)
 end
 
 local function addSidebarTitle(...)
-	return addSidebarObject(theme.foreground5, ...)
+	return addSidebarObject(theme.altForeground3, ...)
 end
 
 local function addSidebarItem(...)
-	return addSidebarObject(theme.foreground12, ...)
+	return addSidebarObject(theme.altForeground11, ...)
 end
 
 local function addSidebarSeparator()
@@ -467,26 +467,26 @@ local function updateIconField()
 	iconField = window:addChild(
 		config.gridMode and
 		system.gridIconField(
-			1, 4, 1, 1, 2, 2, path,
-			theme.altForeground5,
-			theme.altBackground5,
-			theme.altForeground5,
-			theme.altBackground11,
+			1, 4, 1, 1, 3, 2, path,
+			theme.foreground3,
+			theme.background4,
+			theme.foreground1,
+			theme.background9,
 			nil
 		) or
 		system.listIconField(
 			1, 4, 1, 1, path,
 			
-			theme.altBackground2,
+			theme.background1,
 
-			theme.altBackground1,
-			theme.altForeground1,
+			theme.background1,
+			theme.foreground1,
 			
 			nil,
-			theme.altForeground5,
+			theme.foreground10,
 			
-			theme.altBackground3,
-			theme.altForeground5,
+			theme.background2,
+			theme.foreground10,
 
 			theme.accentBackground2,
 			theme.accentForeground2
@@ -542,7 +542,7 @@ local function updateIconField()
 		local x, path = 2, "/"
 
 		local function addNode(text, path)
-			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, theme.foreground5, nil, theme.foreground1, text)).onTouch = function()
+			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, theme.altForeground3, nil, theme.altForeground1, text)).onTouch = function()
 				addPath(path)
 				updateFileListAndDraw()
 			end
@@ -553,7 +553,7 @@ local function updateIconField()
 		addNode("root", "/")
 
 		for node in iconField.path:gsub("/$", ""):gmatch("[^/]+") do
-			statusContainer:addChild(GUI.text(x, 1, theme.foreground11, " ► "))
+			statusContainer:addChild(GUI.text(x, 1, theme.altForeground11, " ► "))
 			x = x + 3
 			
 			path = path .. node .. "/"
@@ -575,7 +575,7 @@ local function updateIconField()
 end
 
 gotoButton.onTouch = function()
-	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, theme.background5, theme.foreground5, theme.foreground11, theme.background5, theme.foreground3, nil, nil))
+	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, theme.altBackground3, theme.altForeground5, theme.altForeground11, theme.altBackground3, theme.altForeground1, nil, nil))
 	
 	input.onInputFinished = function()
 		input:remove()
