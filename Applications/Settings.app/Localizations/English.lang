@@ -1,5 +1,6 @@
 {
 	open = "Open",
+	ok = "Ok",
 	cancel = "Cancel",
 
 	screen = "Screen",
@@ -7,10 +8,13 @@
 	screenAutoScale = "Autoscaling",
 	screenWidth = "Width",
 	screenHeight = "Height",
+	screenColorDepth = "Color depth",
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Using this option will allow you to select the optimal screen resolution to get rid of the \"black rectangles\" effect",
 	screenInvalidResolution = "The text in the input fields should consist of digits, should be greater than %d, and the maximum resolution should't exceed %d characters",
 	screenPreciseMode = "Precise mode",
+	screenColorDepthAlertTitle = "Alert",
+	screenColorDepthAlertMessage = "Setting the color depth to 1bit may render the interface unreadable",
 	
 	wallpaper = "Wallpaper",
 	wallpaperWallpaper = "Wallpaper",

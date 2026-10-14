@@ -2615,6 +2615,12 @@ function system.updateResolution()
 		screen.setResolution(screen.getMaxResolution())
 	end
 
+	if userSettings.interfaceColorDepth then
+		screen.setColorDepth(userSettings.interfaceColorDepth)
+	else
+		screen.setColorDepth(screen.getMaxColorDepth())
+	end
+
 	workspace.width, workspace.height = screen.getResolution()
 
 	desktopIconField.width = workspace.width

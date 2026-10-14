@@ -118,7 +118,7 @@ function()
 	if screenAddress then
 		gpu.bind(screenAddress, true)
 		screenWidth, screenHeight = gpu.getResolution()
-		gpu.setDepth(8)	
+		gpu.setDepth(gpu.maxDepth())	
 	end
 end,
 

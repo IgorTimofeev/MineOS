@@ -117,6 +117,87 @@ module.onTouch = function()
 		return width, height
 	end
 
+	-- Color depth
+	window.contentLayout:addChild(
+		GUI.text(1, 1, 0x2D2D2D, localization.screenColorDepth)
+	)
+
+	local colorDepthComboBox = window.contentLayout:addChild(
+		GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)
+	)
+
+	local availableColorDepthValues = {1, 4, 8}
+	if screen.getMaxColorDepth() >= 16 then
+		table.insert(availableColorDepthValues, 16)
+	end
+
+	local function showColorDepthAlert(onSettingConfirmed)
+		local container = GUI.addBackgroundContainer(workspace, true, true, localization.screenColorDepthAlertTitle)
+
+		local layout = container.layout:addChild(GUI.layout(1, 1, 40, 6, 1, 2))
+
+		layout:addChild(
+			GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.screenColorDepthAlertMessage}, 1, 0, 0, true, true)
+		):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+
+		-- Ok / cancel
+		layout:setDirection(1, 2, GUI.DIRECTION_HORIZONTAL)
+		layout:setSpacing(1, 2, 3)
+
+		layout:setPosition(
+			1, 
+			2, 
+			layout:addChild(
+				GUI.button(1, 1, 16, 3, 0xE1E1E1, 0x555555, 0x880000, 0xFFFFFF, localization.ok)
+			)
+		).onTouch = function()
+			onSettingConfirmed()
+			container:remove()
+		end
+
+		layout:setPosition(
+			1, 
+			2, 
+			layout:addChild(
+				GUI.button(1, 1, 16, 3, 0xE1E1E1, 0x555555, 0x880000, 0xFFFFFF, localization.cancel)
+			)
+		).onTouch = function()
+			container:remove()
+		end
+	end
+	
+	local function setColorDepth(depth)
+		local function confirmSetting()
+			userSettings.interfaceColorDepth = depth
+
+			system.updateResolution()
+			system.updateResolution()
+			system.updateWallpaper()
+			workspace:draw()
+		
+			system.saveUserSettings()		
+		end
+
+		if depth == 1 then
+			showColorDepthAlert(confirmSetting)
+		else
+			confirmSetting()
+		end
+	end
+
+	local selectedColorDepth = userSettings.interfaceColorDepth or screen.getColorDepth()
+	for i = 1, #availableColorDepthValues do
+		local depth = availableColorDepthValues[i]
+
+		colorDepthComboBox:addItem(depth .. "bit").onTouch = function()
+			setColorDepth(depth)
+		end
+
+		if selectedColorDepth == depth then
+			colorDepthComboBox.selectedItem = i
+		end
+	end
+
 	autoscalingSwtich.onStateChanged = function()
 		updateSwitch()
 		updateCykaTextBox()
@@ -135,6 +216,7 @@ module.onTouch = function()
 			workspace:draw()
 		end
 	end
+
 	heightInput.onInputFinished = widthInput.onInputFinished
 
 	updateSwitch()
