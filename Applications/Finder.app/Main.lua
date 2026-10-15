@@ -372,6 +372,7 @@ end
 
 FTPButton.onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.networkFTPNewConnection)
+	system.applyThemeToBackgroundContainer(container)
 
 	local ad, po, us, pa
 	if #userSettings.networkFTPConnections > 0 then
@@ -489,7 +490,7 @@ local function updateIconField()
 			nil,
 			theme.foreground10,
 			
-			theme.background2,
+			theme.background1,
 			theme.foreground10,
 
 			theme.accentBackground2,

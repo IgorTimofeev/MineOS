@@ -767,8 +767,8 @@ end
 
 function system.applyThemeToBackgroundContainer(b)
 	if b.panel then
-		b.panel.colors.background = userSettings.interfaceTransparencyEnabled and 0x0 or theme.altBackground1
-		b.panel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.3
+		b.panel.colors.background = userSettings.interfaceTransparencyEnabled and 0x0 or theme.background1
+		b.panel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.3 or nil
 	end
 
 	if b.label then
@@ -3201,12 +3201,13 @@ function system.updateDesktop()
 	local overrideDockContainerDraw = dockContainer.draw
 	
 	dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos = theme.dockBackground, theme.dockTransparency, dockContainer.width - 2, dockContainer.x
+		local transparencyEnabled = userSettings.interfaceTransparencyEnabled and theme.dockTransparency ~= nil
+		local color, currentDockTransparency, currentDockWidth, xPos = theme.dockBackground, theme.dockTransparency or 0.5, dockContainer.width - 2, dockContainer.x
 
 		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 3, -1 do
-			screen.drawText(xPos, y, color, "◢", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
-			screen.drawRectangle(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
-			screen.drawText(xPos + currentDockWidth + 1, y, color, "◣", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
+			screen.drawText(xPos, y, color, "◢", transparencyEnabled and currentDockTransparency)
+			screen.drawRectangle(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", transparencyEnabled and currentDockTransparency)
+			screen.drawText(xPos + currentDockWidth + 1, y, color, "◣", transparencyEnabled and currentDockTransparency)
 
 			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.1, currentDockWidth - 2, xPos + 1
 			
