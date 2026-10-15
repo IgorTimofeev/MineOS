@@ -1,5 +1,6 @@
 {
 	open = "Open",
+	ok = "K",
 	cancel = "Cancel",
 	
 	screen = "Screen",
@@ -7,10 +8,13 @@
 	screenAutoScale = "Autoscalin",
 	screenWidth = "Width",
 	screenHeight = "Hiet",
+	screenColorDepth = "Color depth",
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Usin dis opshun will allow u 2 select teh optimal screen resolushun 2 git rid ov teh \"black rectanglez\" effect",
 	screenInvalidResolution = "Teh text en teh input fieldz shud consist ov digitz, shud bees greatr than %d, an teh maximum resolushun shud't exced %d characterz",
 	screenPreciseMode = "Preciz moed",
+	screenColorDepthAlertTitle = "Alert",
+	screenColorDepthAlertMessage = "Settin teh color depth 2 1bit mai rendr teh interfaec unreadabel",
 	
 	wallpaper = "Wallpapah",
 	wallpaperWallpaper = "Wallpapah",
@@ -26,6 +30,7 @@
 	wallpaperInfo = "Disablin dis opshun will significantli reduec teh consumpshun ov RAM an increaz performanec",
 	
 	appearance = "Appearanec",
+	appearanceTheme = "Theem",
 	appearanceExtensions = "Fiel extensshunz",
 	appearanceHidden = "Hidden filez",
 	appearanceApplications = "Applicashun iconz",
@@ -40,7 +45,6 @@
 	appearanceMenu = "Meun bakground",
 	appearanceBlurEnabled = "Interfaec blurrin",
 	appearanceTransparencyEnabled = "Interfaec transparenci",
-	appearanceTransparencyInfo = "Disablin teh last 3 opshunz will significantli reduec teh numbah ov direct callz 2 teh CUP / GUP an increaz performanec",
 	appearanceDropDownDefaultBackground = "Drop down meun bakground",
 	appearanceDropDownDefaultText = "Drop down meun text",
 	appearanceDropDownSeparator = "Drop down meun separator",
