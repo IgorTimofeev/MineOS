@@ -2082,7 +2082,7 @@ end
 function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButtonText, placeholderText, path)
 	local filesystemDialog = GUI.container(x, y, width, height)
 	
-	filesystemDialog:addChild(GUI.panel(1, height - 2, width, 3, 0xD2D2D2))
+	filesystemDialog.backgroundPanel = filesystemDialog:addChild(GUI.panel(1, height - 2, width, 3, 0xD2D2D2))
 	
 	filesystemDialog.cancelButton = filesystemDialog:addChild(GUI.adaptiveRoundedButton(1, height - 1, 1, 0, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xE1E1E1, cancelButtonText))
 	filesystemDialog.submitButton = filesystemDialog:addChild(GUI.adaptiveRoundedButton(1, height - 1, 1, 0, 0x3C3C3C, 0xE1E1E1, 0xE1E1E1, 0x3C3C3C, submitButtonText))
@@ -2198,6 +2198,10 @@ local function filesystemChooserEventHandler(workspace, object, e1)
 		workspace:draw()
 
 		local filesystemDialog = GUI.addFilesystemDialog(workspace, false, 50, math.floor(workspace.height * 0.8), object.submitButtonText, object.cancelButtonText, object.placeholderText, object.filesystemDialogPath)
+
+		if object.onFilesystemDialogAdded then
+			object.onFilesystemDialogAdded(filesystemDialog)
+		end
 
 		for key in pairs(object.extensionFilters) do
 			filesystemDialog:addExtensionFilter(key)
@@ -4766,6 +4770,9 @@ local function menuAddContextMenuItem(menu, ...)
 	item.switchMode = true
 	item.onTouch = menuContextMenuItemOnTouch
 	item.contextMenu = contextMenuCreate(1, 1)
+
+	item.contextMenu.colors = menu.colors.contextMenu
+
 	item.contextMenu.onMenuClosed = function()
 		item.pressed = false
 		item.workspace:draw()
@@ -4786,7 +4793,29 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 			background = backgroundPressedColor,
 			text = textPressedColor,
 		},
-		transparency = backgroundTransparency
+		transparency = backgroundTransparency,
+
+		contextMenu = {
+			default = {
+				background = GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR,
+				text = GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR,
+				icon = GUI.CONTEXT_MENU_DEFAULT_ICON_COLOR
+			},
+			selected = {
+				background = GUI.CONTEXT_MENU_PRESSED_BACKGROUND_COLOR,
+				text = GUI.CONTEXT_MENU_PRESSED_TEXT_COLOR,
+				icon = GUI.CONTEXT_MENU_PRESSED_ICON_COLOR
+			},
+			disabled = {
+				text = GUI.CONTEXT_MENU_DISABLED_TEXT_COLOR,
+				icon = GUI.CONTEXT_MENU_DISABLED_ICON_COLOR
+			},
+			separator = GUI.CONTEXT_MENU_SEPARATOR_COLOR,
+			transparency = {
+				background = nil,
+				shadow = GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+			}
+		}
 	}
 	
 	menu.blockScreenEvents = true

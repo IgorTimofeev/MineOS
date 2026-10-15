@@ -6,7 +6,7 @@ local filesystem = require("Filesystem")
 
 local module = {}
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
@@ -14,8 +14,8 @@ local userSettings = system.getUserSettings()
 module.name = localization.localizations
 module.margin = 0
 module.onTouch = function()
-	local comboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
-	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.localizationsInfo}, 1, 0, 0, true, true))
+	local comboBox = window.contentLayout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
+	window.contentLayout:addChild(system.applyThemeToDescriptionTextBox(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.localizationsInfo}, 1, 0, 0, true, true)))
 
 	local list = filesystem.list(paths.system.localizations)
 	for i = 1, #list do
@@ -26,6 +26,7 @@ module.onTouch = function()
 				userSettings.localizationLanguage = name
 				localization = system.getLocalization(paths.system.localizations)
 
+				system.updateSystemLocalization()
 				system.updateWorkspace()
 				system.updateDesktop()
 				workspace:draw()

@@ -9,7 +9,7 @@ local SHA = require("SHA-256")
 
 local module = {}
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
@@ -17,10 +17,10 @@ local userSettings = system.getUserSettings()
 module.name = localization.users
 module.margin = 7
 module.onTouch = function()
-	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.usersList))
+	window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.usersList)))
 
 	local function addButton(parent, x, width, ...)
-		local button = parent:addChild(GUI.button(x, 1, width, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, ...))
+		local button = parent:addChild(system.applyThemeToSecondaryButton(GUI.button(x, 1, width, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, ...)))
 		button.colors.disabled = {
 			background = 0xE1E1E1,
 			text = 0xB4B4B4
@@ -30,11 +30,11 @@ module.onTouch = function()
 	end
 
 	local function addInput(parent, ...)
-		return parent:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, ...))
+		return parent:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, ...)))
 	end
 
 	local function addComboBox(parent, width)
-		return parent:addChild(GUI.comboBox(1, 1, width, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
+		return parent:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, width, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
 	end
 
 	local usersContainer = window.contentLayout:addChild(GUI.container(1, 1, 36, 3))
@@ -50,7 +50,7 @@ module.onTouch = function()
 	local passwordButton = addButton(window.contentLayout, 1, 36, "")
 	local passwordInput = addInput(window.contentLayout, "", localization.usersAddPasswordPlaceholder1, false, "•")
 	local submitPasswordInput = addInput(window.contentLayout, "", localization.usersAddPasswordPlaceholder2, false, "•")
-	local passwordText = window.contentLayout:addChild(GUI.text(1, 1, 0xCC4940, localization.usersPasswordsArentEqual))
+	local passwordText = window.contentLayout:addChild(GUI.text(1, 1, theme.badBackground1, localization.usersPasswordsArentEqual))
 
 	local function updatePasswordText()
 		passwordButton.text = userSettings.securityPassword and localization.usersRemovePassword or localization.usersAddPassword
@@ -182,16 +182,15 @@ module.onTouch = function()
 	end
 	submitPasswordInput.onInputFinished = passwordInput.onInputFinished
 
-	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.usersClaim))
+	window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.usersClaim)))
 
-	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.usersClaimInfo}, 1, 0, 0, true, true))
+	window.contentLayout:addChild(system.applyThemeToDescriptionTextBox(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.usersClaimInfo}, 1, 0, 0, true, true)))
 
 	local claimContainer = window.contentLayout:addChild(GUI.container(1, 1, 36, 3))
 	local claimRemoveButton = addButton(claimContainer, claimContainer.width - 4, 5, "─")
 	local claimComboBox = addComboBox(claimContainer, claimRemoveButton.localX - 2)
 
-	local claimInput = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", localization.usersClaimPlaceholder))
-
+	local claimInput = window.contentLayout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", localization.usersClaimPlaceholder)))
 
 	local function update()
 		local users = {computer.users()}

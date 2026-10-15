@@ -6,7 +6,7 @@ local filesystem = require("Filesystem")
 
 local module = {}
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
@@ -16,28 +16,28 @@ module.margin = 6
 module.onTouch = function()
 	local currentAddress = component.proxy(component.list("eeprom")()).getData()
 
-	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.disksControl))
+	window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.disksControl)))
 
-	local comboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
+	local comboBox = window.contentLayout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
 
-	local input = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", localization.disksRename))
+	local input = window.contentLayout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", localization.disksRename)))
 
-	local button = window.contentLayout:addChild(GUI.button(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, localization.disksFormat))
+	local button = window.contentLayout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, localization.disksFormat)))
 
-	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.disksInfo}, 1, 0, 0, true, true))
+	window.contentLayout:addChild(system.applyThemeToDescriptionTextBox(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.disksInfo}, 1, 0, 0, true, true)))
 
-	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.disksStatistics))
+	window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.disksStatistics)))
 
-	local progressBar = window.contentLayout:addChild(GUI.progressBar(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xA5A5A5, 100, true, true, "", "%"))
+	local progressBar = window.contentLayout:addChild(system.applyThemeToProgressBar(GUI.progressBar(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xA5A5A5, 100, true, true, "", "%")))
 	progressBar.height = 2
 
 	local layout = window.contentLayout:addChild(GUI.layout(1, 1, 36, 1, 1, 1))
 	layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
-	local permissionsKV = layout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0xA5A5A5, localization.disksPermissions, ""))
-	local spaceTotalKV = layout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0xA5A5A5, localization.disksSpaceTotal, ""))
-	local spaceUsedKV = layout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0xA5A5A5, localization.disksSpaceUsed, ""))
-	local spaceFreeKV = layout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0xA5A5A5, localization.disksSpaceFree, ""))
+	local permissionsKV = layout:addChild(GUI.keyAndValue(1, 1, theme.foreground1, theme.foreground9, localization.disksPermissions, ""))
+	local spaceTotalKV = layout:addChild(GUI.keyAndValue(1, 1, theme.foreground1, theme.foreground9, localization.disksSpaceTotal, ""))
+	local spaceUsedKV = layout:addChild(GUI.keyAndValue(1, 1, theme.foreground1, theme.foreground9, localization.disksSpaceUsed, ""))
+	local spaceFreeKV = layout:addChild(GUI.keyAndValue(1, 1, theme.foreground1, theme.foreground9, localization.disksSpaceFree, ""))
 
 	layout.height = (#layout.children * 2) - 1
 

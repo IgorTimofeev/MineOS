@@ -5,7 +5,7 @@ local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 local configureFrom, configureTo
 
@@ -31,9 +31,9 @@ return {
 	name = localization.wallpaper,
 	margin = 0,
 	onTouch = function()
-		window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.wallpaperWallpaper))
+		window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.wallpaperWallpaper)))
 
-		local comboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
+		local comboBox = window.contentLayout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
 		local files = filesystem.list(paths.system.wallpapers)
 
 		for i = 1, #files do

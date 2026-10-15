@@ -7,7 +7,7 @@ local filesystem = require("Filesystem")
 
 local module = {}
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
@@ -16,15 +16,15 @@ module.name = localization.network
 module.margin = 0
 module.onTouch = function()
 	local emptyObject = window.contentLayout:addChild(GUI.object(1, 1, 0, 0))
-	local insertModemText = window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.networkNoModem))
-	local ebloText = window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.networkThis))
-	local networkNameInput = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, userSettings.networkName or "", localization.networkName))
-	local stateSwitchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkEnabled .. ":", userSettings.networkEnabled))
-	local remoteComputersText = window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.networkRemote))	
-	local remoteComputersComboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
-	local allowReadAndWriteSwitchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkFileAccess .. ":", false))
+	local insertModemText = window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.networkNoModem)))
+	local ebloText = window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.networkThis)))
+	local networkNameInput = window.contentLayout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, userSettings.networkName or "", localization.networkName)))
+	local stateSwitchAndLabel = window.contentLayout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkEnabled .. ":", userSettings.networkEnabled)))
+	local remoteComputersText = window.contentLayout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.networkRemote)))
+	local remoteComputersComboBox = window.contentLayout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
+	local allowReadAndWriteSwitchAndLabel = window.contentLayout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkFileAccess .. ":", false)))
 
-	local signalStrengthSlider = window.contentLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 0, 512, userSettings.networkSignalStrength, false, localization.networkRadius ..": ", ""))
+	local signalStrengthSlider = window.contentLayout:addChild(system.applyThemeToSlider(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 0, 512, userSettings.networkSignalStrength, false, localization.networkRadius ..": ", "")))
 	signalStrengthSlider.roundValues = true
 
 	local function check()

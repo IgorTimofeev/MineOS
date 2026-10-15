@@ -24,6 +24,7 @@ local bootUptime = computer.uptime()
 local user
 local userSettings
 local localization
+local theme
 local iconHalfWidth
 local iconTextHeight
 local iconImageHorizontalOffset
@@ -44,6 +45,8 @@ local iconCache = {
 	fileNotExists = image.load(paths.system.icons .. "FileNotExists.pic"),
 	application = image.load(paths.system.icons .. "Application.pic"),
 	script = image.load(paths.system.icons .. "Script.pic"),
+	wallpaper = image.load(paths.system.icons .. "Wallpaper.pic"),
+	theme = image.load(paths.system.icons .. "Theme.pic"),
 }
 
 --------------------------------------------------------------------------------
@@ -68,9 +71,15 @@ function system.getSystemLocalization()
 	return localization
 end
 
+-- Returns current system theme
+function system.getSystemTheme()
+	return theme
+end
+
 function system.getDefaultUserSettings()
 	return {
 		localizationLanguage = "English",
+		theme = "Dark",
 
 		timeFormat = "%d %b %Y %H:%M:%S",
 		timeRealTimestamp = true,
@@ -89,7 +98,6 @@ function system.getDefaultUserSettings()
 		interfaceWallpaperBrightness = 0.9,
 
 		interfaceTransparencyEnabled = true,
-		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
 		interfaceTransparencyContextMenu = 0.2,
 		interfaceBlurEnabled = false,
@@ -185,6 +193,55 @@ end
 
 function system.getCurrentScriptLocalization()
 	return system.getLocalization(filesystem.path(system.getCurrentScript()) .. "Localizations/")
+end
+
+function system.updateSystemLocalization()
+	localization = system.getLocalization(paths.system.localizations)
+end
+
+function system.getTheme(themesFolderPath)
+	local requestedPath = themesFolderPath .. userSettings.theme .. ".thm"
+	local result
+
+	-- Requested theme exists
+	if filesystem.exists(requestedPath) then
+		result = filesystem.readTable(requestedPath)
+
+	-- ...
+	else
+		local defaultThemePath = themesFolderPath .. "Dark.thm"
+
+		-- Default theme exists
+		if filesystem.exists(defaultThemePath) then
+			result = filesystem.readTable(defaultThemePath)
+
+		else
+			local themesList = filesystem.list(themesFolderPath)
+			
+			-- At least one exists
+			if #themesList > 0 then
+				result = filesystem.readTable(themesFolderPath .. themesList[1])
+
+			-- Wtf, no themes?
+			else
+				result = {}
+			end
+		end
+	end
+
+	-- For cases when some colors are missing
+	-- CYKA!!!
+	-- setmetatable(result, {__index=(function(t,k) return 0xFF00FF end)})
+
+	return result
+end
+
+function system.updateSystemTheme()
+	theme = system.getTheme(paths.system.themes)
+end
+
+function system.getCurrentScriptTheme()
+	return system.getTheme(filesystem.path(system.getCurrentScript()) .. "Themes/")
 end
 
 function system.getTemporaryPath()
@@ -458,10 +515,12 @@ end
 --------------------------------------------------------------------------------
 
 local function addMainDesktopMenuItem(menu)
-	local item = menu:addContextMenuItem("💻", 0xF0F0F0)
+	local item = menu:addContextMenuItem("💻", theme.foreground1)
 	
 	item:addItem("🛈", localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
+		system.applyThemeToBackgroundContainer(container)
+
 		container.layout:removeChildren()
 		
 		local lines = {
@@ -500,7 +559,7 @@ local function addMainDesktopMenuItem(menu)
 			"Yana Dmitrieva, vk.com/id155326634",
 		}
 
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, theme.foreground1, lines, 1, 0, 0))
 		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		textBox.eventHandler = container.panel.eventHandler
 
@@ -536,14 +595,14 @@ local function addMainDesktopMenuItem(menu)
 	return item
 end
 
-
 local function addBackgroundContainerInput(parent, ...)
-	return parent:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...))
+	return parent:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...)))
 end
 
 local function addBackgroundContainerWithInput(inputText, title, placeholder)
 	local container = GUI.addBackgroundContainer(workspace, true, true, title)
-	
+	system.applyThemeToBackgroundContainer(container)
+
 	container.input = addBackgroundContainerInput(container.layout, inputText, placeholder, false)
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, localization.file .. " " .. localization.alreadyExists)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	container.label.hidden = true
@@ -602,6 +661,214 @@ local function uploadToPastebin(path)
 	workspace:draw()
 end
 
+local function applyThemeToDropDownMenuColorsTable(colors)
+	colors.default.background = theme.background2
+	colors.default.text = theme.foreground2
+	colors.default.icon = theme.foreground8
+
+	colors.selected.background = theme.accentBackground1
+	colors.selected.text = theme.accentForeground1
+	colors.selected.icon = theme.accentForeground1
+
+	colors.disabled.text = theme.foreground11
+	colors.disabled.icon = theme.foreground11
+
+	colors.separator = theme.background3
+
+	-- menu.colors.transparency.background = 0.5
+	-- menu.colors.transparency.shadow = 0.5
+end
+
+function system.applyThemeToContextMenu(menu)
+	applyThemeToDropDownMenuColorsTable(menu.colors)
+
+	return menu
+end
+
+function system.applyThemeToMenu(menu)
+	menu.colors.default.background = theme.background2
+	menu.colors.default.text = theme.foreground5
+	
+	menu.colors.selected.background = theme.accentBackground1
+	menu.colors.selected.text = theme.accentForeground1
+
+	applyThemeToDropDownMenuColorsTable(menu.colors.contextMenu)
+
+	return menu
+end
+
+function system.applyThemeToInput(input)
+	input.colors.default.background = theme.background2
+	input.colors.default.text = theme.foreground1
+
+	input.colors.focused.background = theme.background2
+	input.colors.focused.text = theme.foreground1
+
+	input.colors.placeholderText = theme.foreground11
+
+	return input
+end
+
+function system.applyThemeToTitleLabel(label)
+	label.colors.text = theme.foreground1
+
+	return label
+end
+
+function system.applyThemeToDescriptionLabel(label)
+	label.colors.text = theme.foreground9
+	
+	return label
+end
+
+function system.applyThemeToTitleText(text)
+	text.color = theme.foreground1
+
+	return text
+end
+
+function system.applyThemeToDescriptionText(text)
+	text.color = theme.foreground9
+	
+	return text
+end
+
+function system.applyThemeToDescriptionTextBox(textBox)
+	textBox.colors.text = theme.foreground9
+	
+	return textBox
+end
+
+function system.applyThemeToPrimaryButton(button)
+	button.colors.default.background = theme.accentBackground1
+	button.colors.default.text = theme.accentForeground1
+
+	button.colors.pressed.background = theme.accentBackground2
+	button.colors.pressed.text = theme.accentForeground2
+
+	button.colors.disabled.background = theme.background2
+	button.colors.disabled.text = theme.foreground13
+	
+	return button
+end
+
+function system.applyThemeToSecondaryButton(button)
+	button.colors.default.background = theme.background2
+	button.colors.default.text = theme.foreground3
+
+	button.colors.pressed.background = theme.accentBackground1
+	button.colors.pressed.text = theme.accentForeground1
+
+	button.colors.disabled.background = theme.background2
+	button.colors.disabled.text = theme.foreground13
+	
+	return button
+end
+
+function system.applyThemeToBackgroundContainer(b)
+	if b.panel then
+		b.panel.colors.background = userSettings.interfaceTransparencyEnabled and 0x0 or theme.altBackground1
+		b.panel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.3
+	end
+
+	if b.label then
+		b.label.colors.text = theme.altForeground1
+	end
+
+	return b
+end
+
+function system.applyThemeToSwitch(sw)
+	sw.colors.active = theme.accentBackground1
+	sw.colors.passive = theme.background3
+	sw.colors.pipe = theme.handleBackground1
+	
+	return sw
+end
+
+function system.applyThemeToSwitchAndLabel(sw)
+	system.applyThemeToSwitch(sw.switch)
+	system.applyThemeToDescriptionLabel(sw.label)
+	
+	return sw
+end
+
+function system.applyThemeToComboBox(cb)
+	cb.colors.default.background = theme.background2
+	cb.colors.default.text = theme.foreground3
+
+	cb.colors.selected.background = theme.background2
+	cb.colors.selected.text = theme.foreground3
+
+	cb.colors.arrow.background = theme.background3
+	cb.colors.arrow.text = theme.foreground8
+
+	system.applyThemeToContextMenu(cb.dropDownMenu)
+	
+	return cb
+end
+
+function system.applyThemeToTree(tree)
+	tree.colors.default.background = theme.background2
+	tree.colors.default.expandable = theme.foreground3
+	tree.colors.default.notExpandable = theme.foreground5
+	tree.colors.default.arrow = theme.foreground11
+	
+	tree.colors.selected.background = theme.accentBackground1
+	tree.colors.selected.any = theme.accentForeground1
+	tree.colors.selected.arrow = theme.accentForeground1
+	
+	tree.colors.scrollBar.background = theme.background3
+	tree.colors.scrollBar.foreground = theme.background9
+
+	tree.colors.disabled = theme.foreground11
+
+	return tree
+end
+
+function system.applyThemeToFilesystemDialog(dialog)
+	dialog.backgroundPanel.colors.background = theme.background3
+
+	system.applyThemeToSecondaryButton(dialog.cancelButton)
+	system.applyThemeToPrimaryButton(dialog.submitButton)
+	system.applyThemeToComboBox(dialog.extensionComboBox)
+	system.applyThemeToInput(dialog.input)
+	system.applyThemeToTree(dialog.filesystemTree)
+
+	return dialog
+end
+
+function system.applyThemeToFilesystemChooser(chooser)
+	chooser.colors.background = theme.background2
+	chooser.colors.text = theme.foreground3
+
+	chooser.colors.tipBackground = theme.background3
+	chooser.colors.tipText = theme.foreground8
+
+	chooser.onFilesystemDialogAdded = function(dialog)
+		system.applyThemeToFilesystemDialog(dialog)
+	end
+		
+	return chooser
+end
+
+function system.applyThemeToSlider(slider)
+	slider.colors.active = theme.accentBackground1
+	slider.colors.passive = theme.background3
+	slider.colors.pipe = theme.handleBackground1
+	slider.colors.value = theme.foreground9
+	
+	return slider
+end
+
+function system.applyThemeToProgressBar(bar)
+	bar.colors.active = theme.accentBackground1
+	bar.colors.passive = theme.background3
+	bar.colors.value = theme.foreground9
+	
+	return bar
+end
+
 function system.addUploadToPastebinMenuItem(menu, path)
 	menu:addItem("⤴", localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 		uploadToPastebin(path)
@@ -649,6 +916,15 @@ end
 local defaultIconLaunchers = {
 	application = function(icon)
 		system.execute(icon.path .. "Main.lua")
+	end,
+
+	wallpaper = function(icon)
+		userSettings.interfaceWallpaperPath = icon.path
+
+		system.updateWallpaper()
+		workspace:draw()
+
+		system.saveUserSettings()
 	end,
 
 	directory = function(icon)
@@ -721,7 +997,8 @@ local function drawSelection(x, y, width, height, color, transparency)
 end
 
 local function iconDraw(icon)
-	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.selectionTransparency
+	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.iconSelectedTransparency or nil
+
 	local xCenter = icon.x + iconHalfWidth
 
 	-- Name
@@ -734,10 +1011,10 @@ local function iconDraw(icon)
 
 			local foreground
 			if icon.selected then
-				foreground = icon.colors.selectionText
-				screen.drawRectangle(x, y, lineLength, 1, icon.colors.selectionBackground, foreground or 0xFF00FF, " ", selectionTransparency)
+				foreground = icon.colors.iconSelectedText
+				screen.drawRectangle(x, y, lineLength, 1, icon.colors.iconSelectedBackground, foreground or 0xFF00FF, " ", selectionTransparency)
 			else
-				foreground = icon.colors.defaultText
+				foreground = icon.colors.iconDefaultText
 			end
 
 			screen.drawText(x, y, foreground or 0xFF00FF, line)
@@ -759,7 +1036,7 @@ local function iconDraw(icon)
 	local xImage = icon.x + iconImageHorizontalOffset
 	
 	if icon.selected then
-		drawSelection(xImage - 1, icon.y - 1, iconImageWidth + 2, iconImageHeight + 2, icon.colors.selectionBackground, selectionTransparency)
+		drawSelection(xImage - 1, icon.y - 1, iconImageWidth + 2, iconImageHeight + 2, icon.colors.iconSelectedBackground, selectionTransparency)
 	end
 
 	if icon.image then
@@ -789,7 +1066,7 @@ local function iconDraw(icon)
 	end
 
 	if icon.windows then
-		screen.drawText(xCenter - 1, icon.y + iconImageHeight, 0x66DBFF, "╺╸")
+		screen.drawText(xCenter - 1, icon.y + iconImageHeight, theme.accentBackground1, "╺╸")
 		
 		if icon.windowCount > 1 then
 			local windowCount = tostring(icon.windowCount)
@@ -854,8 +1131,9 @@ end
 
 local function emptyTrash()
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure)
+	system.applyThemeToBackgroundContainer(container)
 
-	container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK")).onTouch = function()
+	container.layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK"))).onTouch = function()
 		local list = filesystem.list(paths.user.trash)
 		
 		for i = 1, #list do
@@ -889,6 +1167,7 @@ end
 
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
+	system.applyThemeToContextMenu(contextMenu)
 
 	if #selectedIcons > 1 then
 		contextMenu:addItem("📂", localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
@@ -916,25 +1195,25 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		contextMenu:addSeparator()
 	else
 		if icon.isDirectory then
-			if icon.extension == ".app" then
+			if icon.extension == ".app" or icon.extension == ".wlp" then
 				contextMenu:addItem("🖊", localization.edit .. " Main.lua").onTouch = function()
 					system.execute(paths.system.applicationMineCodeIDE, icon.path .. "Main.lua")
 				end
 
 				contextMenu:addItem("📂", localization.showPackageContent).onTouch = function()
 					icon.parent.launchers.showPackageContent(icon)
-				end		
+				end
 
 				contextMenu:addItem("˃", localization.launchWithArguments).onTouch = function()
 					system.launchWithArguments(icon.path .. "Main.lua")
 				end
 
 				contextMenu:addSeparator()
-			end
 
-			if icon.extension ~= ".app" then
+			else
 				contextMenu:addItem("⭐", localization.addToFavourites).onTouch = function()
 					local container = GUI.addBackgroundContainer(workspace, true, true, localization.addToFavourites)
+					system.applyThemeToBackgroundContainer(container)
 
 					local input = addBackgroundContainerInput(container.layout, icon.name, localization.name)
 					container.panel.eventHandler = function(workspace, object, e1)
@@ -1252,19 +1531,33 @@ end
 
 local function anyIconAnalyseExtension(icon, launchers)
 	if icon.isDirectory then
+		-- Application
 		if icon.extension == ".app" then
 			if userSettings.filesShowApplicationIcon then
-				icon.image = image.load(icon.path .. "Icon.pic") or iconCache.fileNotExists
+				icon.image = image.load(icon.path .. "Icon.pic") or iconCache.application
 			else
 				icon.image = iconCache.application
 			end
 
 			icon.launch = launchers.application
+
+		-- Wallpaper
+		elseif icon.extension == ".wlp" then
+			if userSettings.filesShowApplicationIcon then
+				icon.image = image.load(icon.path .. "Icon.pic") or iconCache.wallpaper
+			else
+				icon.image = iconCache.wallpaper
+			end
+
+			icon.launch = launchers.wallpaper
+
+		-- Folder
 		else
 			icon.image = iconCache.directory
 			icon.launch = launchers.directory
 		end
 	else
+		-- Shortcut
 		if icon.extension == ".lnk" then
 			icon.shortcutPath = system.readShortcut(icon.path)
 			icon.shortcutExtension = filesystem.extension(icon.shortcutPath)
@@ -1286,10 +1579,17 @@ local function anyIconAnalyseExtension(icon, launchers)
 			icon.shortcutLaunch = shortcutIcon.launch
 			icon.launch = launchers.shortcut
 		
+		-- Compressed archive
 		elseif icon.extension == ".pkg" then
 			icon.image = iconCache.archive
 			icon.launch = launchers.archive
 		
+		-- Theme
+		elseif icon.extension == ".thm" then
+			icon.image = iconCache.theme
+			icon.launch = launchers.script
+
+		-- Something associated with third-party software
 		elseif userSettings.extensions[icon.extension] then
 			icon.launch = launchers.extension
 
@@ -1332,10 +1632,12 @@ local function anyIconAnalyseExtension(icon, launchers)
 				icon.image = iconCache.fileNotExists
 			end
 
+		-- Something missing (may happen when calling this function recursively for archives)
 		elseif not filesystem.exists(icon.path) then
 			icon.image = iconCache.fileNotExists
 			icon.launch = launchers.corrupted
 		
+		-- Script
 		else
 			icon.image = iconCache.script
 			icon.launch = launchers.script
@@ -1573,6 +1875,9 @@ local function listIconFieldUpdateFileList(iconField)
 			anyIconAddInfo(cell, path)
 			anyIconFieldAddIcon(iconField, cell)
 
+			cell.colors.defaultForeground = theme.foreground1
+			cell.colors.alternativeForeground = theme.foreground1
+
 			cell.draw = firstCell
 
 			return cell
@@ -1581,9 +1886,7 @@ local function listIconFieldUpdateFileList(iconField)
 		local function newOtherCell(text)
 			local cell = GUI.tableTextCell(text)
 
-			cell.colors.defaultForeground = 0xA5A5A5
-			cell.colors.alternativeForeground = 0xA5A5A5
-
+		
 			return cell
 		end
 
@@ -1621,6 +1924,7 @@ end
 
 local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
+	system.applyThemeToContextMenu(contextMenu)
 
 	local subMenu = contextMenu:addSubMenuItem("➕", localization.create)
 
@@ -1718,7 +2022,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 						workspace:draw()
 					else
 						container.layout:removeChildren(2)
-						container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x878787, localization.downloading .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+						container.layout:addChild(system.applyThemeToDescriptionLabel(GUI.label(1, 1, container.width, 1, 0x878787, localization.downloading .. "..."))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 						workspace:draw()
 
 						local success, reason = require("Internet").download(inputURL.text, path)
@@ -1996,6 +2300,8 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundOb
 			-- Если шифт нажат, удаляем перманентно, спросив пидора о его уверенности
 			if keyboard.isKeyDown(42) then
 				local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure .. " " .. tostring(#selectedIcons) .. " " .. localization.filesWillBeRemovedPermanently)
+				system.applyThemeToBackgroundContainer(container)
+
 				local buttonYes = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.yes))
 
 				buttonYes.onTouch = function()
@@ -2041,15 +2347,18 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundOb
 	end
 end
 
-function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, selectionBackgroundColor, selectionTextColor, selectionFrameColor, selectionTransparency)
+function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, iconSelectedBackgroundColor, iconSelectedTextColor, iconSelectedTransparency, selectionFrameBackgroundColor, selectionFrameTransparency)
 	local iconField = GUI.container(x, y, width, height)
 
 	iconField.colors = {
-		defaultText = defaultTextColor,
-		selectionBackground = selectionBackgroundColor,
-		selectionText = selectionTextColor,
-		selectionFrame = selectionFrameColor,
-		selectionTransparency = selectionTransparency,
+		iconDefaultText = defaultTextColor,
+
+		iconSelectedBackground = iconSelectedBackgroundColor,
+		iconSelectedText = iconSelectedTextColor,
+		iconSelectedTransparency = iconSelectedTransparency,
+
+		selectionFrameBackground = selectionFrameBackgroundColor,
+		selectionFrameTransparency = selectionFrameTransparency
 	}
 
 	iconField.iconConfigEnabled = false
@@ -2078,23 +2387,31 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 			return
 		end
 
-		local y1, y2
-		if selection.y1Raw < selection.y2Raw then
-			y1, y2 = selection.y1 + iconField.yOffset - iconField.initialYOffset, selection.y2
-		else
-			y1, y2 = selection.y1, selection.y2 + iconField.yOffset - iconField.initialYOffset
-		end
-
 		if userSettings.interfaceTransparencyEnabled then	
-			screen.drawRectangle(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame, 0x0, " ", 0.6)
+			screen.drawRectangle(
+				selection.x1,
+				selection.y1,
+				selection.x2 - selection.x1 + 1,
+				selection.y2 - selection.y1 + 1,
+
+				iconField.colors.selectionFrameBackground,
+				0x0,
+				" ",
+				iconField.colors.selectionFrameTransparency
+			)
 		else
-			screen.drawFrame(selection.x1, y1, selection.x2 - selection.x1 + 1, y2 - y1 + 1, iconField.colors.selectionFrame)
+			screen.drawFrame(
+				selection.x1,
+				selection.y1,
+				selection.x2 - selection.x1 + 1,
+				selection.y2 - selection.y1 + 1,
+				iconField.colors.selectionFrameBackground
+			)
 		end
 	end
 
 	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
 	iconField.backgroundObject.eventHandler = gridIconFieldBackgroundObjectEventHandler
-
 	anyIconFieldAddInfo(iconField, path)
 
 	return iconField
@@ -2269,7 +2586,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					addMainDesktopMenuItem(window.menu)
 
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
-					local contextMenu = window.menu:addContextMenuItem(name, 0xD2D2D2)
+					local contextMenu = window.menu:addContextMenuItem(name)
 
 					contextMenu:addItem("⛌", localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
 						window:remove()
@@ -2330,7 +2647,7 @@ end
 function system.addPropertiesWindow(x, y, width, icon)
 	local workspace, window = system.addWindow(GUI.filledWindow(x, y, width, 1, 0x1E1E1E), true, true)
 
-	window:addChild(GUI.label(1, 1, width, 1, 0xE1E1E1, localization.properties)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	window:addChild(system.applyThemeToTitleLabel(GUI.label(1, 1, width, 1, 0xE1E1E1, localization.properties))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	window.actionButtons.localY = 1
 	window.actionButtons:moveToFront()
 
@@ -2369,6 +2686,8 @@ function system.copy(fileList, toPath)
 	local applyYes, breakRecursion
 
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.copying)
+	system.applyThemeToBackgroundContainer(container)
+
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x878787, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
@@ -2472,6 +2791,7 @@ end
 
 function system.error(path, line, traceback)
 	local container = GUI.addBackgroundContainer(workspace, true, false, false)
+	system.applyThemeToBackgroundContainer(container)
 
 	local window = container:addChild(GUI.container(1, 1, screen.getWidth(), math.floor(container.height * 0.5)))
 	window.localY = math.floor(container.height / 2 - window.height / 2)
@@ -2677,11 +2997,15 @@ function system.updateDesktop()
 	desktopIconField = workspace:addChild(system.gridIconField(
 		1, 2, 1, 1, 3, 2,
 		paths.user.desktop,
-		0xFFFFFF,
-		0xD2D2D2,
-		0xFFFFFF,
-		0xD2D2D2,
-		0.5
+		
+		theme.iconFieldIconDefaultText,
+		
+		theme.iconFieldIconSelectedBackground,
+		theme.iconFieldIconSelectedText,
+		theme.iconFieldIconSelectedTransparency,
+
+		theme.iconFieldSelectionFrameBackground,
+		theme.iconFieldSelectionFrameTransparency
 	))
 	
 	desktopIconField.iconConfigEnabled = true
@@ -2729,10 +3053,8 @@ function system.updateDesktop()
 	end
 
 	local dockColors = {
-		selectionBackground = 0xD2D2D2,
-		selectionText = 0x2D2D2D,
-		defaultText = 0xE1E1E1,
-		selectionTransparency = 0.5
+		iconSelectedBackground = theme.dockIconSelectedBackground,
+		iconSelectedTransparency = theme.dockIconSelectedTransparency,
 	}
 
 	dockContainer.addIcon = function(path)
@@ -2770,8 +3092,10 @@ function system.updateDesktop()
 
 		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
+
 			local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
-			
+			system.applyThemeToContextMenu(contextMenu)
+
 			contextMenu.onMenuClosed = function()
 				icon.selected = false
 				workspace:draw()
@@ -2857,7 +3181,8 @@ function system.updateDesktop()
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
 		local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
-		
+		system.applyThemeToContextMenu(contextMenu)
+
 		contextMenu.onMenuClosed = function()
 			icon.selected = false
 			workspace:draw()
@@ -2876,7 +3201,7 @@ function system.updateDesktop()
 	local overrideDockContainerDraw = dockContainer.draw
 	
 	dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos = 0x696969, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
+		local color, currentDockTransparency, currentDockWidth, xPos = theme.dockBackground, theme.dockTransparency, dockContainer.width - 2, dockContainer.x
 
 		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 3, -1 do
 			screen.drawText(xPos, y, color, "◢", userSettings.interfaceTransparencyEnabled and currentDockTransparency)
@@ -2895,7 +3220,18 @@ function system.updateDesktop()
 
 	desktopWindowsContainer = workspace:addChild(GUI.container(1, 2, 1, 1))
 
-	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x1E1E1E, 0x787878, 0x3366CC, 0xFFFFFF))
+	desktopMenu = workspace:addChild(GUI.menu(
+		1,
+		1,
+		workspace.width,
+
+		0x0,
+		0x0,
+		0x0,
+		0x0
+	))
+
+	system.applyThemeToMenu(desktopMenu)
 	
 	addMainDesktopMenuItem(desktopMenu)
 		
@@ -2908,12 +3244,12 @@ function system.updateDesktop()
 	local dateWidget, dateWidgetText = system.addMenuWidget(system.menuWidget(1))
 	
 	dateWidget.draw = function(dateWidget)
-		screen.drawText(dateWidget.x, 1, 0x787878, dateWidgetText)
+		screen.drawText(dateWidget.x, 1, theme.altForeground8, dateWidgetText)
 	end
 
 	local batteryWidget, batteryWidgetPercent, batteryWidgetText = system.addMenuWidget(system.menuWidget(1))
 	batteryWidget.draw = function(batteryWidget)
-		screen.drawText(batteryWidget.x, 1, 0x787878, batteryWidgetText)
+		screen.drawText(batteryWidget.x, 1, theme.altForeground8, batteryWidgetText)
 
 		local pixelPercent = math.floor(batteryWidgetPercent * 4 + 0.5)
 		
@@ -2924,7 +3260,7 @@ function system.updateDesktop()
 		local index = screen.getIndex(batteryWidget.x + #batteryWidgetText, 1)
 		
 		for i = 1, 4 do
-			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0x3C3C3C, i < 4 and "⠶" or "╸")
+			screen.rawSet(index, screen.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or theme.altBackground4, i < 4 and "⠶" or "╸")
 			index = index + 1
 		end
 	end
@@ -2935,12 +3271,12 @@ function system.updateDesktop()
 		local barWidth = RAMWidget.width - #text
 		local activeWidth = math.ceil(RAMPercent * barWidth)
 
-		screen.drawText(RAMWidget.x, 1, 0x787878, text)
+		screen.drawText(RAMWidget.x, 1, theme.altForeground8, text)
 		
 		local index = screen.getIndex(RAMWidget.x + #text, 1)
 		
 		for i = 1, barWidth do
-			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0x3C3C3C, "━")
+			screen.rawSet(index, screen.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or theme.altBackground4, "━")
 			index = index + 1
 		end
 	end
@@ -3019,16 +3355,10 @@ function system.updateDesktop()
 	system.menuInitialChildren = desktopMenu.children
 	system.consoleWindow = nil
 
-	system.updateColorScheme()
 	system.updateScreen()
 	system.updateResolution()
 	system.updateWallpaper()
 	system.updateMenuWidgets()
-end
-
-function system.updateColorScheme()
-	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or 0x1E1E1E
-	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
 end
 
 --------------------------------------------------------------------------------
@@ -3057,19 +3387,24 @@ end
 
 local function updateUser(u)
 	system.setUser(u)
-	-- Loading localization
-	localization = system.getLocalization(paths.system.localizations)
-	-- Tasks before UI initialization
+
+	-- Loading localization & theme
+	system.updateSystemLocalization()
+	system.updateSystemTheme()
+
+	-- Runing tasks before UI initialization
 	runTasks(2)
+
 	-- Recalculating icon internal sizes based on user userSettings
 	system.calculateIconProperties()
-	-- Creating desktop widgets
+	-- Creating desktop widgets
 	system.updateDesktop()
+
 	-- Meowing
 	workspace:draw()
 	require("Network").update()
-	
-	-- Tasks after UI initialization
+
+	-- Running tasks after UI initialization
 	runTasks(1)
 end
 
@@ -3301,7 +3636,7 @@ function system.getDockContainer()
 end
 
 function system.addBlurredOrDefaultPanel(container, x, y, width, height)
-	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x1E1E1E))
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, theme.altBackground1))
 end
 
 function system.addConsoleWindow()

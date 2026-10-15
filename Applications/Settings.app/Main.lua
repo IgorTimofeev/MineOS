@@ -12,11 +12,12 @@ local system = require("System")
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local modulesPath = currentScriptDirectory .. "Modules/"
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/")
+local theme = system.getSystemTheme()
 local scrollSpeed = 2
 
 --------------------------------------------------------------------------------
 
-local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 100, 29, 0xF0F0F0))
+local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 100, 29, theme.background1))
 
 local leftPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 1, 1)
 
@@ -30,12 +31,18 @@ modulesLayout:setSpacing(1, 1, 1)
 window.contentLayout = window:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 
 local function moduleDraw(object)
-	local textColor = object.pressed and 0x3C3C3C or 0xE1E1E1
+	local textColor
 
 	if object.pressed then
-		screen.drawRectangle(object.x, object.y, object.width, object.height, 0xF0F0F0, textColor, " ")
-		screen.drawText(object.x, object.y - 1, 0xF0F0F0, string.rep("⣀", object.width))
-		screen.drawText(object.x, object.y + object.height, 0xF0F0F0, string.rep("⠉", object.width))
+		textColor = theme.altForeground1
+
+		screen.drawRectangle(object.x, object.y, object.width, object.height, theme.background1, textColor, " ")
+		
+		for y = object.y, object.y + object.height - 1 do
+			screen.drawText(object.x, y, theme.accentBackground1, "▎ ")
+		end
+	else
+		textColor = theme.altForeground8
 	end
 
 	screen.drawImage(object.x + 1, object.y, object.icon)
@@ -122,7 +129,7 @@ table.sort(modules, function(a, b) return a < b end)
 for i = 1, #modules do
 	local result, reason = loadfile(modulesPath .. modules[i] .. "Main.lua")
 	if result then
-		local success, result = pcall(result, workspace, window, localization)
+		local success, result = pcall(result, workspace, window, localization, theme)
 		if success then
 			local object = modulesLayout:addChild(GUI.object(1, 1, 1, 3))
 

@@ -1,0 +1,113 @@
+{
+	-- Bg/fg
+	background1 =  0x1E1E1E,
+	background2 =  0x2D2D2D,
+	background3 =  0x3C3C3C,
+	background4 =  0x4B4B4B,
+	background5 =  0x5A5A5A,
+	background6 =  0x696969,
+	background7 =  0x787878,
+	background8 =  0x878787,
+	background9 =  0x969696,
+	background10 = 0xA5A5A5,
+	background11 = 0xB4B4B4,
+	background12 = 0xC3C3C3,
+	background13 = 0xD2D2D2,
+	background14 = 0xE1E1E1,
+	background15 = 0xF0F0F0,
+	background16 = 0xFFFFFF,
+
+	foreground1 =  0xF0F0F0,
+	foreground2 =  0xE1E1E1,
+	foreground3 =  0xD2D2D2,
+	foreground4 =  0xC3C3C3,
+	foreground5 =  0xB4B4B4,
+	foreground6 =  0xA5A5A5,
+	foreground7 =  0x969696,
+	foreground8 =  0x878787,
+	foreground9 =  0x787878,
+	foreground10 = 0x696969,
+	foreground11 = 0x5A5A5A,
+	foreground12 = 0x4B4B4B,
+	foreground13 = 0x3C3C3C,
+	foreground14 = 0x2D2D2D,
+	foreground15 = 0x1E1E1E,
+	foreground16 = 0x0F0F0F,
+
+	altBackground1 =  0x2D2D2D,
+	altBackground2 =  0x3C3C3C,
+	altBackground3 =  0x4B4B4B,
+	altBackground4 =  0x5A5A5A,
+	altBackground5 =  0x696969,
+	altBackground6 =  0x787878,
+	altBackground7 =  0x878787,
+	altBackground8 =  0x969696,
+	altBackground9 =  0xA5A5A5,
+	altBackground10 = 0xB4B4B4,
+	altBackground11 = 0xC3C3C3,
+	altBackground12 = 0xD2D2D2,
+	altBackground13 = 0xE1E1E1,
+	altBackground14 = 0xF0F0F0,
+	altBackground15 = 0xFFFFFF,
+	altBackground16 = 0xFFFFFF,
+
+	altForeground1 =  0xF0F0F0,
+	altForeground2 =  0xE1E1E1,
+	altForeground3 =  0xD2D2D2,
+	altForeground4 =  0xC3C3C3,
+	altForeground5 =  0xB4B4B4,
+	altForeground6 =  0xA5A5A5,
+	altForeground7 =  0x969696,
+	altForeground8 =  0x878787,
+	altForeground9 =  0x787878,
+	altForeground10 = 0x696969,
+	altForeground11 = 0x5A5A5A,
+	altForeground12 = 0x4B4B4B,
+	altForeground13 = 0x3C3C3C,
+	altForeground14 = 0x2D2D2D,
+	altForeground15 = 0x1E1E1E,
+	altForeground16 = 0x0F0F0F,
+
+	-- Accent
+	accentBackground1 = 0xFFDB80,
+	accentBackground2 = 0xCCB680,
+	accentBackground3 = 0x996D00,
+
+	accentForeground1 = 0x0F0F0F,
+	accentForeground2 = 0x0F0F0F,
+	accentForeground3 = 0x0F0F0F,
+
+	altAccentBackground1 = 0x00FF80,
+
+	altAccentForeground1 = 0x0F0F0F,
+
+	-- Good / neutral / bad
+	goodBackground1 = 0xFF4940,
+	goodForeground1 = 0xFFFFFF,
+
+	neutralBackground1 = 0xFFB640,
+	neutralForeground1 = 0xFFFFFF,
+
+	badBackground1 = 0xFF2440,
+	badForeground1 = 0xFFFFFF,
+
+	-- Handle
+	handleBackground1 = 0xFFFFFF,
+
+	-- Dock
+	dockBackground = 0xFFFFFF,
+	dockTransparency = 0.7,
+
+	dockIconSelectedBackground = 0xFFFFFF,
+	dockIconSelectedTransparency = 0.8,
+
+	-- Icon field
+	iconFieldIconDefaultText = 0xF0F0F0,
+
+	iconFieldIconSelectedBackground = 0x3C3C3C,
+	iconFieldIconSelectedText = 0xF0F0F0,
+	iconFieldIconSelectedTransparency = nil,
+
+	iconFieldSelectionFrameBackground = 0xFFFFFF,
+	iconFieldSelectionFrameTransparency = 0.8,
+}

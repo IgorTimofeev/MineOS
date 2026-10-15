@@ -5,7 +5,7 @@ local system = require("System")
 
 local module = {}
 
-local workspace, window, localization = table.unpack({...})
+local workspace, window, localization, theme = table.unpack({...})
 local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
@@ -13,18 +13,18 @@ local userSettings = system.getUserSettings()
 module.name = localization.tasks
 module.margin = 0
 module.onTouch = function()
-	local filesystemChooser = window.contentLayout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5, nil, localization.open, localization.cancel, localization.tasksPath, "/"))
+	local filesystemChooser = window.contentLayout:addChild(system.applyThemeToFilesystemChooser(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5, nil, localization.open, localization.cancel, localization.tasksPath, "/")))
 	filesystemChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 
 	local container = window.contentLayout:addChild(GUI.container(1, 1, 36, 3))
-	local tasksComboBox = container:addChild(GUI.comboBox(1, 1, 30, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
-	local removeButton = container:addChild(GUI.button(container.width - 4, 1, 5, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, "-"))
+	local tasksComboBox = container:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 30, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
+	local removeButton = container:addChild(system.applyThemeToSecondaryButton(GUI.button(container.width - 4, 1, 5, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, "-")))
 
-	local modeComboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
+	local modeComboBox = window.contentLayout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5)))
 	modeComboBox:addItem(localization.tasksAfter)
 	modeComboBox:addItem(localization.tasksBefore)
 
-	local switchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.tasksEnabled .. ":", true))
+	local switchAndLabel = window.contentLayout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.tasksEnabled .. ":", true)))
 	
 	local function update()
 		switchAndLabel.hidden = #userSettings.tasks == 0
@@ -84,7 +84,7 @@ module.onTouch = function()
 		end
 	end
 
-	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.tasksInfo}, 1, 0, 0, true, true))
+	window.contentLayout:addChild(system.applyThemeToDescriptionTextBox(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.tasksInfo}, 1, 0, 0, true, true)))
 
 	fill()
 end
