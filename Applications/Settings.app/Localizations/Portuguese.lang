@@ -1,8 +1,8 @@
 {
 	open = "Aberto",
 	cancel = "Cancelar",
-	
 	screen = "Tela",
+	
 	screenResolution = "Resolução",
 	screenAutoScale = "Escalonamento automático",
 	screenWidth = "Largura",
@@ -11,11 +11,11 @@
 	screenScaleInfo = "Usar esta opção permitirá que você selecione a resolução de tela ideal para se livrar do efeito \"retângulos pretos\"",
 	screenInvalidResolution = "O texto nos campos de entrada deve consistir em dígitos, deve ser maior que %d e a resolução máxima não deve exceder %d caracteres",
 	screenPreciseMode = "Modo preciso",
-	
 	wallpaper = "Papel de parede",
 	wallpaperWallpaper = "Papel de parede",
 	wallpaperScreensaver = "Protetor de tela",
 	wallpaperScreensaverPath = "Caminho do script do protetor de tela",
+	
 	wallpaperScreensaverEnabled = "Protetor de tela ativado",
 	wallpaperScreensaverDelay = "Atraso",
 	wallpaperPath = "Caminho da imagem do papel de parede",
@@ -24,11 +24,11 @@
 	wallpaperStretch = "Esticar",
 	wallpaperCenter = "Centro",
 	wallpaperInfo = "Desativar esta opção reduzirá significativamente o consumo de RAM e aumentará o desempenho",
-	
 	appearance = "Aparência",
 	appearanceExtensions = "Extensões de arquivo",
 	appearanceHidden = "Arquivos ocultos",
 	appearanceApplications = "Ícones de aplicativos",
+	
 	appearanceHorizontal = "Por horizontal",
 	appearanceVertical = "Por vertical",
 	appearanceSize = "Tamanhos de ícone",
@@ -44,38 +44,38 @@
 	appearanceDropDownDefaultBackground = "Plano de fundo do menu suspenso",
 	appearanceDropDownDefaultText = "Texto do menu suspenso",
 	appearanceDropDownSeparator = "Separador de menu suspenso",
-	
 	users = "Comercial",
-	
 	localizations = "Linguagem",
 	localizationsInfo = "Você quer mais pacotes de idiomas? ",
-	
 	time = "Data e hora",
+	
 	timeFormat = "Formato de data",
+	
 	timeUseRealTimestamp = "Tempo real",
 	timeInfo = "Desativar esta opção permitirá que você use o tempo do jogo em vez do real. ",
-	timeZone = "Fuso horário",
 	
+	timeZone = "Fuso horário",
 	network = "Rede",
 	networkName = "Nome para outros PCs",
 	networkEnabled = "Visibilidade na rede",
 	networkFileAccess = "Acesso aos arquivos",
+	
 	networkRadius = "Raio de detecção",
 	networkRemote = "Configurações de PC remoto",
 	networkThis = "As configurações deste PC",
 	networkNoModem = "Conecte o modem para usar as funções de rede",
-	
 	tasks = "Começo automático",
 	tasksInfo = "Você pode adicionar quantos scripts quiser para executá-los automaticamente em ordem no horário especificado",
 	tasksBefore = "Executar antes de executar o SO",
 	tasksAfter = "Executar após iniciar o SO",
+	
 	tasksPath = "O caminho para o roteiro",
 	tasksEnabled = "Tarefa ativada",
-	
 	disks = "Discos",
 	disksFormat = "Formato",
 	disksBootable = "Tornar inicializável",
 	disksRename = "Renomear",
+	
 	disksStatistics = "Estatisticas",
 	disksControl = "Ao controle",
 	disksPermissions = "Direitos de acesso",
@@ -85,18 +85,18 @@
 	disksSpaceUsed = "Usado",
 	disksSpaceFree = "Livre",
 	disksInfo = "A formatação excluirá todos os dados do disco selecionado sem a possibilidade de recuperação, seja no jogo ou no host",
-	
 	system = "Sistema",
 	systemArchitecture = "Arquitetura da CPU",
 	systemUnloading = "Descarga automática",
 	systemRAM = "Gerenciamento de memória",
+	
 	systemUnload = "Carregar biblioteca",
 	systemInfo = "Esta opção economiza memória ao descarregar bibliotecas não utilizadas usando o método \"Weak Link\". ",
-	
 	usersList = "Gerenciamento de usuários",
 	usersEditIcon = "Editar ícone",
 	usersChangeName = "Mude o nome",
 	usersChangeNamePlaceholder = "Digite novo nome de usuário",
+	
 	usersRemovePassword = "Remover senha",
 	usersAddPassword = "Adicionar senha",
 	usersAddPasswordPlaceholder1 = "Digite a senha",
@@ -105,4 +105,9 @@
 	usersClaim = "Reivindicar bloco de computador",
 	usersClaimInfo = "Além disso, você pode criar acesso privado ao seu bloco de computador para o jogador com nome próprio. ",
 	usersClaimPlaceholder = "Digite o nome do jogador online",
+	appearanceTheme = "Tema",
+	screenColorDepthAlertTitle = "Alerta",
+	ok = "Ok",
+	screenColorDepth = "Profundidade de cor",
+	screenColorDepthAlertMessage = "Definir a profundidade de cor para 1 bit pode tornar a interface ilegível"
 }

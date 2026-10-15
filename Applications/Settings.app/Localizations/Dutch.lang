@@ -1,8 +1,8 @@
 {
 	open = "Open",
 	cancel = "Annuleer",
-	
 	screen = "Scherm",
+	
 	screenResolution = "Resolutie",
 	screenAutoScale = "Automatisch schalen",
 	screenWidth = "Breedte",
@@ -11,11 +11,11 @@
 	screenScaleInfo = "Met deze optie kunt u de optimale schermresolutie selecteren om het \"zwarte hoeken\" effect weg te halen",
 	screenInvalidResolution = "De tekst in de invoervelden moet uit cijfers bestaan, moet groter zijn dan %d en de maximale resolutie mag niet meer zijn dan %d tekens",
 	screenPreciseMode = "Nauwkeurige modus:",
-	
 	wallpaper = "Achtergrond",
 	wallpaperWallpaper = "Achtergrond",
 	wallpaperScreensaver = "Schermen",
 	wallpaperScreensaverPath = "Screensaver script pad",
+	
 	wallpaperScreensaverEnabled = "Screensaver ingeschakeld",
 	wallpaperScreensaverDelay = "Vertraging",
 	wallpaperPath = "Achtergrond afbeelding pad",
@@ -24,11 +24,11 @@
 	wallpaperStretch = "Uitrekken",
 	wallpaperCenter = "Centreer",
 	wallpaperInfo = "Het uitschakelen van deze optie zal het RAM-verbruik aanzienlijk verminderen en de prestaties verbeteren",
-	
 	appearance = "Uiterlijk",
 	appearanceExtensions = "Bestandsextensies",
 	appearanceHidden = "Verborgen bestanden",
 	appearanceApplications = "Applicatie pictogrammen",
+	
 	appearanceHorizontal = "Op horizontaal",
 	appearanceVertical = "Op verticaal",
 	appearanceSize = "Pictogrammaten",
@@ -44,38 +44,38 @@
 	appearanceDropDownDefaultBackground = "Vervolgkeuzemenu-achtergrond",
 	appearanceDropDownDefaultText = "Vervolgkeuzemenu-tekst",
 	appearanceDropDownSeparator = "Vervolgkeuzemenu-scheidingsteken",
-	
 	users = "Gebruikers",
-	
 	localizations = "Taal",
 	localizationsInfo = "Wil je meer talen? Verzend een pull request naar de MineOS-repository op GitHub",
-	
 	time = "Datum en tijd",
+	
 	timeFormat = "Datum formaat",
+	
 	timeUseRealTimestamp = "Echte tijd",
 	timeInfo = "Als u deze optie uitschakelt, kunt u de speltijd gebruiken in plaats van de echte.",
-	timeZone = "Tijdzone",
 	
+	timeZone = "Tijdzone",
 	network = "Netwerk",
 	networkName = "Naam voor andere PCs",
 	networkEnabled = "Zichtbaarheid in het netwerk",
 	networkFileAccess = "Toegang tot bestanden",
+	
 	networkRadius = "Detectie radius",
 	networkRemote = "Externe PC instellingen",
 	networkThis = "deze PC instellingen",
 	networkNoModem = "Sluit het modem aan om netwerkfuncties te gebruiken",
-	
 	tasks = "Auto-start",
 	tasksInfo = "U kunt zoveel scripts toevoegen als u wilt om ze automatisch op volgorde op het opgegeven tijdstip uit te voeren",
 	tasksBefore = "Voer uit voordat u het besturingssysteem uitvoert",
 	tasksAfter = "Uitvoeren na het starten van het besturingssysteem",
+	
 	tasksPath = "Het pad naar het script",
 	tasksEnabled = "Taken ingeschakeld",
-	
 	disks = "Schijven",
 	disksFormat = "Formatteer",
 	disksBootable = "Maak opstartbaar",
 	disksRename = "Hernoem",
+	
 	disksStatistics = "Statistieken",
 	disksControl = "Controle",
 	disksPermissions = "Toegangsrechten",
@@ -85,18 +85,18 @@
 	disksSpaceUsed = "Gebruikt",
 	disksSpaceFree = "Vrij",
 	disksInfo = "Bij het formatteren worden alle gegevens van de geselecteerde schijf verwijderd zonder de mogelijkheid van herstel, zowel in het spel als op de host",
-	
 	system = "Systeem",
 	systemArchitecture = "CPU architectuur",
 	systemUnloading = "Automatisch uitladen",
 	systemRAM = "Geheugenbeheer",
+	
 	systemUnload = "Upload bibliotheek",
 	systemInfo = "Deze optie bespaart geheugen door ongebruikte bibliotheken te verwijderen met behulp van de \"Zwakke schakel\" -methode. Schakel het uit als u rancors of glitches tegenkomt in het gedrag van complexe onderling afhankelijke systemen",
-	
 	usersList = "Gebruikersbeheer",
 	usersEditIcon = "Bewerk pictogram",
 	usersChangeName = "Verander naam",
 	usersChangeNamePlaceholder = "Voer nieuwe naam in",
+	
 	usersRemovePassword = "Verwijder wachtwoord",
 	usersAddPassword = "Voeg wachtwoord toe",
 	usersAddPasswordPlaceholder1 = "Voer wachtwoord in",
@@ -104,5 +104,10 @@
 	usersPasswordsArentEqual = "Wachtwoorden komen niet overeen",
 	usersClaim = "Claim computerblok",
 	usersClaimInfo = "U kunt privétoegang tot uw computerblok creëren voor de speler met de opgegeven naam. Om dit te doen, moet de speler online zijn",
-	usersClaimPlaceholder = "Voer online speler naam in"
+	usersClaimPlaceholder = "Voer online speler naam in",
+	appearanceTheme = "Thema",
+	ok = "Ok",
+	screenColorDepthAlertMessage = "Als u de kleurdiepte instelt op 1 bit, kan de interface onleesbaar worden",
+	screenColorDepthAlertTitle = "Waarschuw",
+	screenColorDepth = "Kleurdiepte"
 }
