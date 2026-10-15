@@ -1,8 +1,8 @@
 {
 	open = "Aprire",
 	cancel = "Annullare",
-	
 	screen = "Schermo",
+	
 	screenResolution = "Risoluzione",
 	screenAutoScale = "Rilevamento automatico",
 	screenWidth = "Larghezza",
@@ -11,11 +11,11 @@
 	screenScaleInfo = "Utilizzando questa opzione vi permetterà di selezionare la risoluzione ottimale dello schermo per sbarazzarsi dell'effetto \" rettangoli neri\"",
 	screenInvalidResolution = "Il testo nei campi di input dovrebbe essere composto da cifre, dovrebbe essere superiore a %d, e la risoluzione massima non dovrebbe superare %d caratteri",
 	screenPreciseMode = "Modalità precisa",
-	
 	wallpaper = "Sfondo",
 	wallpaperWallpaper = "Sfondo",
 	wallpaperScreensaver = "Salvaschermo",
 	wallpaperScreensaverPath = "Percorso script Screensaver",
+	
 	wallpaperScreensaverEnabled = "Screensaver abilitato",
 	wallpaperScreensaverDelay = "Ritardo",
 	wallpaperPath = "Percorso immagine carta da parati",
@@ -24,11 +24,11 @@
 	wallpaperStretch = "Tratto",
 	wallpaperCenter = "Centro",
 	wallpaperInfo = "Disabilitare questa opzione ridurrà significativamente il consumo di RAM e aumenterà le prestazioni",
-	
 	appearance = "Aspetto",
 	appearanceExtensions = "File con estensione",
 	appearanceHidden = "File nascosti",
 	appearanceApplications = "Icone applicazione",
+	
 	appearanceHorizontal = "Per orizzontale",
 	appearanceVertical = "Per verticale",
 	appearanceSize = "Dimensioni icona",
@@ -44,38 +44,38 @@
 	appearanceDropDownDefaultBackground = "Sfondo menu a discesa",
 	appearanceDropDownDefaultText = "Testo menu a discesa",
 	appearanceDropDownSeparator = "Separatore menu a discesa",
-	
 	users = "Internauti",
-	
 	localizations = "Lingua",
 	localizationsInfo = "Vuoi altri pacchetti linguistici? Invia richiesta pull al repository MineOS su GitHub",
-	
 	time = "Data e ora",
+	
 	timeFormat = "Formato della data",
+	
 	timeUseRealTimestamp = "Tempo reale",
 	timeInfo = "Disabilitare questa opzione ti permetterà di usare il tempo di gioco invece di quello reale. È utile se l'host non permette di ricevere un timestamp dopo il 1970",
-	timeZone = "Fuso orario",
 	
+	timeZone = "Fuso orario",
 	network = "Rete",
 	networkName = "Nome per altri PC",
 	networkEnabled = "Visibilità nella rete",
 	networkFileAccess = "Accesso ai file",
+	
 	networkRadius = "Raggio di rilevamento",
 	networkRemote = "Impostazioni del PC remoto",
 	networkThis = "Impostazioni del PC",
 	networkNoModem = "Allega il modem per utilizzare le funzioni di rete",
-	
 	tasks = "Postart",
 	tasksInfo = "È possibile aggiungere tutti gli script che si desidera eseguire automaticamente in ordine al momento specificato",
 	tasksBefore = "Esegui prima di eseguire il sistema operativo",
 	tasksAfter = "Esegui dopo l'avvio del sistema operativo",
+	
 	tasksPath = "Il percorso dello script",
 	tasksEnabled = "Attività abilitata",
-	
 	disks = "Disco",
 	disksFormat = "Formato",
 	disksBootable = "Avvia",
 	disksRename = "Rinominare",
+	
 	disksStatistics = "Statistica",
 	disksControl = "Controllo",
 	disksPermissions = "Diritti di accesso",
@@ -85,18 +85,18 @@
 	disksSpaceUsed = "Utilizzare",
 	disksSpaceFree = "Libero",
 	disksInfo = "La formattazione eliminerà TUTTI i dati dal disco selezionato senza la possibilità di recupero, sia nel gioco o sull'host",
-	
 	system = "Sistema",
 	systemArchitecture = "Architettura CPU",
 	systemUnloading = "Scarico automatico",
 	systemRAM = "Gestione della memoria",
+	
 	systemUnload = "Carica libreria",
 	systemInfo = "Questa opzione consente di salvare la memoria scaricando le librerie inutilizzate usando il metodo \"Link debole\". Disabilita se si riscontrano rancori o anomalie nel comportamento di sistemi interdipendenti complessi",
-	
 	usersList = "Gestione degli utenti",
 	usersEditIcon = "Modifica icona",
 	usersChangeName = "Cambia nome",
 	usersChangeNamePlaceholder = "Digita nuovo nome utente",
+	
 	usersRemovePassword = "Rimuovi password",
 	usersAddPassword = "Aggiungi password",
 	usersAddPasswordPlaceholder1 = "Digita password",
@@ -104,5 +104,10 @@
 	usersPasswordsArentEqual = "Le password non sono uguali.",
 	usersClaim = "Blocco del computer di reclamo",
 	usersClaimInfo = "Inoltre, è possibile creare un accesso privato al blocco del computer per il giocatore con nome dato. Per farlo, il Giocatore deve essere online",
-	usersClaimPlaceholder = "Digita il nome del giocatore in linea"
+	usersClaimPlaceholder = "Digita il nome del giocatore in linea",
+	appearanceTheme = "Tema",
+	ok = "Ok",
+	screenColorDepthAlertMessage = "L'Impostazione della profondità del colore su 1 bit potrebbe rendere l'interfaccia illeggibile",
+	screenColorDepthAlertTitle = "Avviso",
+	screenColorDepth = "Profondità del colore"
 }
