@@ -157,7 +157,16 @@ end
 
 wallpaper.configure = function(layout)
     local function addColorSelector(configValue, title)
-        layout:addChild(GUI.colorSelector(1, 1, 36, 3, config[configValue], title)).onColorSelected = function(_, object)
+        layout:addChild(
+            GUI.colorSelector(
+                1, 
+                1, 
+                36, 
+                3, 
+                config[configValue], 
+                title
+            )
+        ).onColorSelected = function(_, object)
             config[configValue] = object.color
             saveConfig()
             precalculateValues()
@@ -166,17 +175,21 @@ wallpaper.configure = function(layout)
 
     local function addSlider(configValue, title, minValue, maxValue, roundValues)
         local slider = layout:addChild(
-            GUI.slider(
-                1, 1, 
-                36,
-                0x66DB80, 
-                0xE1E1E1, 
-                0xFFFFFF, 
-                0xA5A5A5, 
-                minValue, maxValue, 
-                config[configValue], 
-                false,
-                title
+            system.applyThemeToSlider(
+                GUI.slider(
+                    1, 
+                    1, 
+                    36,
+                    0x66DB80, 
+                    0xE1E1E1, 
+                    0xFFFFFF, 
+                    0xA5A5A5, 
+                    minValue, 
+                    maxValue, 
+                    config[configValue], 
+                    false,
+                    title
+                )
             )
         )
         

@@ -165,28 +165,48 @@ wallpaper.draw = function(wallpaper)
 end
 
 wallpaper.configure = function(layout)
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1, 
+			36, 
+			3, 
+			config.backgroundColor, 
+			"Background color"
+		)
+	).onColorSelected = function(_, object)
 		config.backgroundColor = object.color
 		saveConfig()
 	end
 
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.snowflakeColor, "Snowflake color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1, 
+			36, 
+			3, 
+			config.snowflakeColor, 
+			"Snowflake color"
+		)
+	).onColorSelected = function(_, object)
 		config.snowflakeColor = object.color
 		saveConfig()
 	end
 
 	local snowflakeAmountSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			5, 50, 
-			config.snowflakeAmount, 
-			false, 
-			"Snowflake amount: "
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				5, 50, 
+				config.snowflakeAmount, 
+				false, 
+				"Snowflake amount: "
+			)
 		)
 	)
 	
@@ -197,17 +217,19 @@ wallpaper.configure = function(layout)
 	end
 
 	local maxStackHeightSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			0, 50, 
-			config.maxStackHeight, 
-			false, 
-			"Stack height limit: "
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				0, 50, 
+				config.maxStackHeight, 
+				false, 
+				"Stack height limit: "
+			)
 		)
 	)
 
@@ -218,18 +240,20 @@ wallpaper.configure = function(layout)
 	end
 
 	local speedSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			20, 1000, 
-			config.speed * 100,
-			false, 
-			"Speed: ",
-			"%"
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				20, 1000, 
+				config.speed * 100,
+				false, 
+				"Speed: ",
+				"%"
+			)
 		)
 	)
 

@@ -162,30 +162,50 @@ wallpaper.draw = function(wallpaper)
 end
 
 wallpaper.configure = function(layout)
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1, 
+			36, 
+			3, 
+			config.backgroundColor, 
+			"Background color"
+		)
+	).onColorSelected = function(_, object)
 		config.backgroundColor = object.color
 		resetColors()
 		saveConfig()
 	end
 
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.starColor, "Star color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1, 
+			36, 
+			3, 
+			config.starColor, 
+			"Star color"
+		)
+	).onColorSelected = function(_, object)
 		config.starColor = object.color
 		resetColors()
 		saveConfig()
 	end
 
 	local starAmountSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			10, 500, 
-			config.starAmount, 
-			false, 
-			"Star amount: "
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				10, 500, 
+				config.starAmount, 
+				false, 
+				"Star amount: "
+			)
 		)
 	)
 	
@@ -196,18 +216,20 @@ wallpaper.configure = function(layout)
 	end
 
 	local starBrightnessSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			50, 300, 
-			config.starBrightness * 100, 
-			false, 
-			"Star brightness: ",
-			"%"
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				50, 300, 
+				config.starBrightness * 100, 
+				false, 
+				"Star brightness: ",
+				"%"
+			)
 		)
 	)
 	
@@ -217,19 +239,24 @@ wallpaper.configure = function(layout)
 		saveConfig()
 	end
 
-	local offsetSlider = layout:addChild(GUI.slider(
-		1, 1, 
-		36,
-		0x66DB80, 
-		0xE1E1E1, 
-		0xFFFFFF, 
-		0xA5A5A5, 
-		0, 100, 
-		config.starOffset * 100,
-		false, 
-		"Offset: ",
-		"%"
-	))
+	local offsetSlider = layout:addChild(
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 
+				1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				0, 100, 
+				config.starOffset * 100,
+				false, 
+				"Offset: ",
+				"%"
+			)
+		)
+	)
 
 	offsetSlider.roundValues = true
 	offsetSlider.onValueChanged = function()

@@ -107,28 +107,48 @@ wallpaper.draw = function(wallpaper)
 end
 
 wallpaper.configure = function(layout)
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1, 
+			36, 
+			3, 
+			config.backgroundColor, 
+			"Background color"
+		)
+	).onColorSelected = function(_, object)
 		config.backgroundColor = object.color
 		saveConfig()
 	end
 
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.dropColor, "Drop color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1,
+			36,
+			3,
+			config.dropColor,
+			"Drop color"
+		)
+	).onColorSelected = function(_, object)
 		config.dropColor = object.color
 		saveConfig()
 	end
 
 	local dropAmountSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			10, 500, 
-			config.dropAmount, 
-			false, 
-			"Drop amount: "
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				10, 500, 
+				config.dropAmount, 
+				false, 
+				"Drop amount: "
+			)
 		)
 	)
 	
@@ -139,18 +159,20 @@ wallpaper.configure = function(layout)
 	end
 
 	local speedSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			20, 200, 
-			config.speed * 100,
-			false, 
-			"Speed: ",
-			"%"
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				20, 200, 
+				config.speed * 100,
+				false, 
+				"Speed: ",
+				"%"
+			)
 		)
 	)
 
@@ -158,5 +180,24 @@ wallpaper.configure = function(layout)
 	speedSlider.onValueChanged = function()
 		config.speed = speedSlider.value / 100
 		saveConfig()
+	end
+
+	layout:addChild(
+		system.applyThemeToPrimaryButton(
+			GUI.button(
+				1, 
+				1, 
+				36, 
+				3, 
+				0x0, 
+				0x0, 
+				0x0, 
+				0x0, 
+				"Change direction"
+			)
+		)
+	).onTouch = function()
+		dropsDirection = ((dropsDirection + 2) % 3) - 1
+		lastDirectionChangeTime = computer.uptime()
 	end
 end

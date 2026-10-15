@@ -65,23 +65,34 @@ wallpaper.draw = function(wallpaper)
 end
 
 wallpaper.configure = function(layout)
-	layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.backgroundColor, "Background color")).onColorSelected = function(_, object)
+	layout:addChild(
+		GUI.colorSelector(
+			1, 
+			1, 
+			36, 
+			3, 
+			config.backgroundColor, 
+			"Background color"
+		)
+	).onColorSelected = function(_, object)
 		config.backgroundColor = object.color
 		saveConfig()
 	end
 
 	local speedSlider = layout:addChild(
-		GUI.slider(
-			1, 1, 
-			36,
-			0x66DB80, 
-			0xE1E1E1, 
-			0xFFFFFF, 
-			0xA5A5A5, 
-			0, 50, 
-			config.speed, 
-			false, 
-			"Speed: "
+		system.applyThemeToSlider(
+			GUI.slider(
+				1, 1, 
+				36,
+				0x66DB80, 
+				0xE1E1E1, 
+				0xFFFFFF, 
+				0xA5A5A5, 
+				0, 50, 
+				config.speed, 
+				false, 
+				"Speed: "
+			)
 		)
 	)
 
