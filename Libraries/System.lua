@@ -98,7 +98,6 @@ function system.getDefaultUserSettings()
 		interfaceWallpaperBrightness = 0.9,
 
 		interfaceTransparencyEnabled = true,
-		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
 		interfaceTransparencyContextMenu = 0.2,
 		interfaceBlurEnabled = false,
@@ -231,7 +230,8 @@ function system.getTheme(themesFolderPath)
 	end
 
 	-- For cases when some colors are missing
-	setmetatable(result, {__index=(function(t,k) return 0xFF00FF end)})
+	-- CYKA!!!
+	-- setmetatable(result, {__index=(function(t,k) return 0xFF00FF end)})
 
 	return result
 end
@@ -559,7 +559,7 @@ local function addMainDesktopMenuItem(menu)
 			"Yana Dmitrieva, vk.com/id155326634",
 		}
 
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, theme.foreground1, lines, 1, 0, 0))
 		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		textBox.eventHandler = container.panel.eventHandler
 
@@ -808,12 +808,46 @@ function system.applyThemeToComboBox(cb)
 	return cb
 end
 
+function system.applyThemeToTree(tree)
+	tree.colors.default.background = theme.background2
+	tree.colors.default.expandable = theme.foreground3
+	tree.colors.default.notExpandable = theme.foreground5
+	tree.colors.default.arrow = theme.foreground11
+	
+	tree.colors.selected.background = theme.accentBackground1
+	tree.colors.selected.any = theme.accentForeground1
+	tree.colors.selected.arrow = theme.accentForeground1
+	
+	tree.colors.scrollBar.background = theme.background3
+	tree.colors.scrollBar.foreground = theme.background9
+
+	tree.colors.disabled = theme.foreground11
+
+	return tree
+end
+
+function system.applyThemeToFilesystemDialog(dialog)
+	dialog.backgroundPanel.colors.background = theme.background3
+
+	system.applyThemeToSecondaryButton(dialog.cancelButton)
+	system.applyThemeToPrimaryButton(dialog.submitButton)
+	system.applyThemeToComboBox(dialog.extensionComboBox)
+	system.applyThemeToInput(dialog.input)
+	system.applyThemeToTree(dialog.filesystemTree)
+
+	return dialog
+end
+
 function system.applyThemeToFilesystemChooser(chooser)
 	chooser.colors.background = theme.background2
 	chooser.colors.text = theme.foreground3
 
 	chooser.colors.tipBackground = theme.background3
 	chooser.colors.tipText = theme.foreground8
+
+	chooser.onFilesystemDialogAdded = function(dialog)
+		system.applyThemeToFilesystemDialog(dialog)
+	end
 		
 	return chooser
 end
@@ -963,7 +997,8 @@ local function drawSelection(x, y, width, height, color, transparency)
 end
 
 local function iconDraw(icon)
-	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.selectionTransparency
+	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.iconSelectedTransparency or nil
+
 	local xCenter = icon.x + iconHalfWidth
 
 	-- Name
@@ -976,10 +1011,10 @@ local function iconDraw(icon)
 
 			local foreground
 			if icon.selected then
-				foreground = icon.colors.selectionText
-				screen.drawRectangle(x, y, lineLength, 1, icon.colors.selectionBackground, foreground or 0xFF00FF, " ", selectionTransparency)
+				foreground = icon.colors.iconSelectedText
+				screen.drawRectangle(x, y, lineLength, 1, icon.colors.iconSelectedBackground, foreground or 0xFF00FF, " ", selectionTransparency)
 			else
-				foreground = icon.colors.defaultText
+				foreground = icon.colors.iconDefaultText
 			end
 
 			screen.drawText(x, y, foreground or 0xFF00FF, line)
@@ -1001,7 +1036,7 @@ local function iconDraw(icon)
 	local xImage = icon.x + iconImageHorizontalOffset
 	
 	if icon.selected then
-		drawSelection(xImage - 1, icon.y - 1, iconImageWidth + 2, iconImageHeight + 2, icon.colors.selectionBackground, selectionTransparency)
+		drawSelection(xImage - 1, icon.y - 1, iconImageWidth + 2, iconImageHeight + 2, icon.colors.iconSelectedBackground, selectionTransparency)
 	end
 
 	if icon.image then
@@ -2312,15 +2347,18 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundOb
 	end
 end
 
-function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, selectionBackgroundColor, selectionTextColor, selectionFrameColor, selectionTransparency)
+function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defaultTextColor, iconSelectedBackgroundColor, iconSelectedTextColor, iconSelectedTransparency, selectionFrameBackgroundColor, selectionFrameTransparency)
 	local iconField = GUI.container(x, y, width, height)
 
 	iconField.colors = {
-		defaultText = defaultTextColor,
-		selectionBackground = selectionBackgroundColor,
-		selectionText = selectionTextColor,
-		selectionFrame = selectionFrameColor,
-		selectionTransparency = selectionTransparency,
+		iconDefaultText = defaultTextColor,
+
+		iconSelectedBackground = iconSelectedBackgroundColor,
+		iconSelectedText = iconSelectedTextColor,
+		iconSelectedTransparency = iconSelectedTransparency,
+
+		selectionFrameBackground = selectionFrameBackgroundColor,
+		selectionFrameTransparency = selectionFrameTransparency
 	}
 
 	iconField.iconConfigEnabled = false
@@ -2356,10 +2394,10 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 				selection.x2 - selection.x1 + 1,
 				selection.y2 - selection.y1 + 1,
 
-				iconField.colors.selectionFrame,
+				iconField.colors.selectionFrameBackground,
 				0x0,
 				" ",
-				0.6
+				iconField.colors.selectionFrameTransparency
 			)
 		else
 			screen.drawFrame(
@@ -2367,7 +2405,7 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 				selection.y1,
 				selection.x2 - selection.x1 + 1,
 				selection.y2 - selection.y1 + 1,
-				iconField.colors.selectionFrame
+				iconField.colors.selectionFrameBackground
 			)
 		end
 	end
@@ -2959,11 +2997,15 @@ function system.updateDesktop()
 	desktopIconField = workspace:addChild(system.gridIconField(
 		1, 2, 1, 1, 3, 2,
 		paths.user.desktop,
-		0xFFFFFF,
-		0xD2D2D2,
-		0xFFFFFF,
-		0xD2D2D2,
-		0.5
+		
+		theme.iconFieldIconDefaultText,
+		
+		theme.iconFieldIconSelectedBackground,
+		theme.iconFieldIconSelectedText,
+		theme.iconFieldIconSelectedTransparency,
+
+		theme.iconFieldSelectionFrameBackground,
+		theme.iconFieldSelectionFrameTransparency
 	))
 	
 	desktopIconField.iconConfigEnabled = true
@@ -3011,10 +3053,8 @@ function system.updateDesktop()
 	end
 
 	local dockColors = {
-		selectionBackground = theme.background1,
-		selectionText = theme.foreground2,
-		defaultText = theme.foreground1,
-		selectionTransparency = userSettings.interfaceTransparencyEnabled and 0.5 or nil
+		iconSelectedBackground = theme.dockIconSelectedBackground,
+		iconSelectedTransparency = theme.dockIconSelectedTransparency,
 	}
 
 	dockContainer.addIcon = function(path)
@@ -3161,7 +3201,7 @@ function system.updateDesktop()
 	local overrideDockContainerDraw = dockContainer.draw
 	
 	dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos = theme.altBackground6, userSettings.interfaceTransparencyDock, dockContainer.width - 2, dockContainer.x
+		local color, currentDockTransparency, currentDockWidth, xPos = theme.dockBackground, theme.dockTransparency, dockContainer.width - 2, dockContainer.x
 
 		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 3, -1 do
 			screen.drawText(xPos, y, color, "◢", userSettings.interfaceTransparencyEnabled and currentDockTransparency)

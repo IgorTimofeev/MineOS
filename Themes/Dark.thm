@@ -93,4 +93,21 @@
 
 	-- Handle
 	handleBackground1 = 0xFFFFFF,
+
+	-- Dock
+	dockBackground = 0xFFFFFF,
+	dockTransparency = 0.7,
+
+	dockIconSelectedBackground = 0xFFFFFF,
+	dockIconSelectedTransparency = 0.8,
+
+	-- Icon field
+	iconFieldIconDefaultText = 0xF0F0F0,
+
+	iconFieldIconSelectedBackground = 0x3C3C3C,
+	iconFieldIconSelectedText = 0xF0F0F0,
+	iconFieldIconSelectedTransparency = nil,
+
+	iconFieldSelectionFrameBackground = 0xFFFFFF,
+	iconFieldSelectionFrameTransparency = 0.8,
 }

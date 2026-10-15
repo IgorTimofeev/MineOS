@@ -539,7 +539,7 @@ local function download(publication)
 		filesystemChooser:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 
 		container.layout:addChild(GUI.text(1, 1, 0xE1E1E1, localization.tree))
-		local tree = container.layout:addChild(GUI.tree(1, 1, 44, 10, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xC3C3C3, 0x444444))
+		local tree = container.layout:addChild(system.applyThemeToTree(GUI.tree(1, 1, 44, 10, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xC3C3C3, 0x444444)))
 
 		local mainFilePath
 		local function updateTree()
@@ -1905,7 +1905,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		local publicationNameInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "MineOS")))
 		local urlInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "")))
 		local pathInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "")))
-		local pathType = container.layout:addChild(system.applyThemeToInput(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.relativePath .. ":", true)))
+		local pathType = container.layout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.relativePath .. ":", true)))
 
 		local button = container.layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.add)))
 		button.onTouch = function()

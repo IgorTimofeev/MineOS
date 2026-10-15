@@ -56,12 +56,12 @@ local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, theme.altBackground2))
 
 local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, "<"))
 prevButton.colors.disabled.background = theme.altBackground3
-prevButton.colors.disabled.text = theme.altForeground11
+prevButton.colors.disabled.text = theme.altForeground10
 
-local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, ">"))
+local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX + prevButton.width + 1, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
-local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, theme.altBackground3, theme.altForeground5, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, true))
+local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, theme.altBackground3, theme.altForeground5, theme.altBackground3, theme.altForeground5, theme.accentBackground1, theme.accentForeground1, true))
 modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
 local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, theme.altBackground3, theme.altForeground5, theme.background1, theme.foreground1, "FTP"))
@@ -77,7 +77,7 @@ sidebarItemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNME
 sidebarItemsLayout:setSpacing(1, 1, 0)
 sidebarItemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 16, 1, theme.altBackground3, theme.altForeground5, theme.altForeground11, theme.altBackground3, theme.altForeground1, nil, localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 16, 1, theme.altBackground3, theme.altForeground5, theme.altForeground10, theme.altBackground3, theme.altForeground1, nil, localization.search, true))
 
 local iconField
 
@@ -468,11 +468,15 @@ local function updateIconField()
 		config.gridMode and
 		system.gridIconField(
 			1, 4, 1, 1, 3, 2, path,
-			theme.foreground3,
-			theme.background4,
-			theme.foreground1,
-			theme.background9,
-			nil
+
+			theme.iconFieldIconDefaultText,
+			
+			theme.iconFieldIconSelectedBackground,
+			theme.iconFieldIconSelectedText,
+			theme.iconFieldIconSelectedTransparency,
+
+			theme.iconFieldSelectionFrameBackground,
+			theme.iconFieldSelectionFrameTransparency
 		) or
 		system.listIconField(
 			1, 4, 1, 1, path,

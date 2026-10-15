@@ -340,6 +340,8 @@ end
 
 local function saveAs()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.save, locale.cancel, locale.fileName, "/")
+	system.applyThemeToFilesystemDialog(filesystemDialog)
+	
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
 	filesystemDialog:addExtensionFilter(".txt")
@@ -402,6 +404,7 @@ end
 
 local function open()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.open, locale.cancel, locale.fileName, "/")
+	system.applyThemeToFilesystemDialog(filesystemDialog)
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
 	filesystemDialog:addExtensionFilter(".txt")
