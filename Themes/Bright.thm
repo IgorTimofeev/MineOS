@@ -98,7 +98,7 @@
 	dockBackground = 0x878787,
 	dockTransparency = 0.5,
 
-	dockIconSelectedBackground = 0x2D2D2D,
+	dockIconSelectedBackground = 0xD2D2D2,
 	dockIconSelectedTransparency = 0.5,
 
 	-- Icon field
