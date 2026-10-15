@@ -95,17 +95,17 @@
 	handleBackground1 = 0xFFFFFF,
 
 	-- Dock
-	dockBackground = 0xFFFFFF,
-	dockTransparency = 0.7,
+	dockBackground = 0x878787,
+	dockTransparency = 0.5,
 
-	dockIconSelectedBackground = 0xFFFFFF,
-	dockIconSelectedTransparency = 0.8,
+	dockIconSelectedBackground = 0x2D2D2D,
+	dockIconSelectedTransparency = 0.5,
 
 	-- Icon field
-	iconFieldIconDefaultText = 0x2D2D2D,
+	iconFieldIconDefaultText = 0x1E1E1E,
 
-	iconFieldIconSelectedBackground = 0x2D2D2D,
-	iconFieldIconSelectedText = 0x2D2D2D,
+	iconFieldIconSelectedBackground = 0xD2D2D2,
+	iconFieldIconSelectedText = 0x1E1E1E,
 	iconFieldIconSelectedTransparency = nil,
 
 	iconFieldSelectionFrameBackground = 0x2D2D2D,
