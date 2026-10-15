@@ -71,9 +71,11 @@
 	-- Accent
 	accentBackground1 = 0xFFFFFF,
 	accentBackground2 = 0xFFFFFF,
+	accentBackground3 = 0xFFFFFF,
 
 	accentForeground1 = 0x000000,
 	accentForeground2 = 0x000000,
+	accentForeground3 = 0x000000,
 
 	altAccentBackground1 = 0x000000,
 
@@ -88,4 +90,7 @@
 
 	badBackground1 = 0xFFFFFF,
 	badForeground1 = 0x000000,
+
+	-- Handle
+	handleBackground1 = 0xFFFFFF,
 }

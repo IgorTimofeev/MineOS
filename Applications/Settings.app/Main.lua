@@ -36,7 +36,7 @@ local function moduleDraw(object)
 	if object.pressed then
 		textColor = theme.altForeground1
 
-		screen.drawRectangle(object.x, object.y, object.width, object.height, theme.altBackground2, textColor, " ")
+		screen.drawRectangle(object.x, object.y, object.width, object.height, theme.background1, textColor, " ")
 		
 		for y = object.y, object.y + object.height - 1 do
 			screen.drawText(object.x, y, theme.accentBackground1, "▎ ")

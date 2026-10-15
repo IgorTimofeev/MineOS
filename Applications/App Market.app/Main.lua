@@ -26,6 +26,7 @@ local cachePath = appMarketPath .. "Cache/"
 
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/") 
+local theme = system.getSystemTheme()
 
 local hosts = {
 	{ localization.hostDirect, "http://mineos.buttex.ru/MineOSAPI/2.04/"       },
@@ -119,16 +120,16 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 	1,
 	math.min(127, windowsContainer.width),
 	math.min(33, windowsContainer.height),
-	0xF0F0F0
+	theme.background1
 ))
 
 local leftListPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 23, 1)
 
-local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, 0x787878, nil, 0x787878, 0x2D2D2D, 0xE1E1E1, false))
+local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, theme.foreground7, nil, theme.foreground7, theme.background1, theme.foreground1, false))
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x996D00, 0xFFDB40))
+local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, theme.background3, theme.accentBackground3, theme.accentBackground1))
 
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
@@ -377,7 +378,7 @@ end
 
 local function showLabelAsContent(container, text)
 	container:removeChildren()
-	container:addChild(GUI.label(1, 1, container.width, container.height, 0x2D2D2D, text)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+	container:addChild(system.applyThemeToTitleLabel(GUI.label(1, 1, container.width, container.height, 0x2D2D2D, text))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 end
 
 local function newButtonsLayout(x, y, width, spacing)
@@ -427,8 +428,8 @@ local function newRatingWidget(x, y, rating, firstColor, secondColor)
 	local object = GUI.object(x, y, 9, 1)
 	
 	object.colors = {
-		first = firstColor or 0xFFB600,
-		second = secondColor or 0xC3C3C3
+		first = firstColor or theme.neutralBackground1,
+		second = secondColor or theme.foreground12
 	}
 	object.spacing = 2
 	object.draw = ratingWidgetDraw
@@ -438,10 +439,10 @@ local function newRatingWidget(x, y, rating, firstColor, secondColor)
 end
 
 local function deletePublication(publication)
-	local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure)
+	local container = system.applyThemeToBackgroundContainer(GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure))
 	local buttonsLayout = container.layout:addChild(newButtonsLayout(1, 1, container.layout.width, 3))
 	
-	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
+	buttonsLayout:addChild(system.applyThemeToPrimaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes))).onTouch = function()
 		local success, reason = RawAPIRequest("delete", {
 			token = user.token,
 			file_id = publication.file_id,
@@ -455,7 +456,7 @@ local function deletePublication(publication)
 		end
 	end
 
-	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
+	buttonsLayout:addChild(system.applyThemeToPrimaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no))).onTouch = function()
 		container:remove()
 		workspace:draw()
 	end
@@ -519,7 +520,7 @@ local function download(publication)
 	end
 
 	if publication then
-		local container = GUI.addBackgroundContainer(workspace, true, true, localization.choosePath)
+		local container = system.applyThemeToBackgroundContainer(GUI.addBackgroundContainer(workspace, true, true, localization.choosePath))
 
 		local versionsTable = getVersionsTable(publication.file_id)
 		
@@ -534,7 +535,7 @@ local function download(publication)
 			end
 		end
 
-		local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 44, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, filesystemChooserPath, localization.save, localization.cancel, localization.fileName, "/"))
+		local filesystemChooser = container.layout:addChild(system.applyThemeToFilesystemChooser(GUI.filesystemChooser(1, 1, 44, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, filesystemChooserPath, localization.save, localization.cancel, localization.fileName, "/")))
 		filesystemChooser:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 
 		container.layout:addChild(GUI.text(1, 1, 0xE1E1E1, localization.tree))
@@ -602,10 +603,10 @@ local function download(publication)
 			pizda(dependencyTree, 1, "")
 		end
 
-		local shortcutSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 44, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true))
+		local shortcutSwitchAndLabel = container.layout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 44, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true)))
 		shortcutSwitchAndLabel.hidden = publication.category_id == 2 or publication.category_id == 4
 
-		container.layout:addChild(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download)).onTouch = function()
+		container.layout:addChild(system.applyThemeToPrimaryButton(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download))).onTouch = function()
 			if user.token then
 				RawAPIRequest("download", {
 					token = user.token,
@@ -614,7 +615,7 @@ local function download(publication)
 			end
 
 			container.layout:removeChildren(2)
-			local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
+			local progressBar = container.layout:addChild(system.applyThemeToProgressBar(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%")))
 				
 			local countOfShit = 1 + (publication.all_dependencies and #publication.all_dependencies or 0)
 			
@@ -671,7 +672,7 @@ local function download(publication)
 end
 
 local function addPanel(container, color)
-	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, color or 0xFFFFFF))
+	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, color or theme.background2))
 end
 
 local function loadImage(path)
@@ -740,24 +741,24 @@ end
 local function addApplicationInfo(container, publication, limit)
 	addPanel(container)
 	container.image = container:addChild(GUI.image(3, 2, getPublicationIcon(publication)))
-	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, text.limit(publication.publication_name, limit, "right")))
-	container.developerLabel = container:addChild(GUI.text(13, 3, 0x878787, text.limit("©" .. publication.user_name, limit, "right")))
+	container.nameLabel = container:addChild(GUI.text(13, 2, theme.foreground1, text.limit(publication.publication_name, limit, "right")))
+	container.developerLabel = container:addChild(GUI.text(13, 3, theme.foreground8, text.limit("©" .. publication.user_name, limit, "right")))
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and number.round(publication.average_rating) or 0))
 	
 	local updateState = getUpdateState(publication.file_id, publication.version)
 	
-	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
+	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 2, 0, theme.background3, theme.foreground1, theme.accentBackground1, theme.accentForeground1, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
 	
 	container.downloadButton.onTouch = function()
 		download(publication)
 	end
 
-	container.downloadButton.colors.disabled.background = 0xE1E1E1
-	container.downloadButton.colors.disabled.text = 0xFFFFFF
+	container.downloadButton.colors.disabled.background = theme.background3
+	container.downloadButton.colors.disabled.text = theme.foreground11
 	container.downloadButton.disabled = updateState == 4
 
 	if updateState > 2 then
-		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width - 2, container.downloadButton.localY, 1, 0, 0xF0F0F0, 0x969696, 0x969696, 0xFFFFFF, "  x")).onTouch = function()
+		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width - 2, container.downloadButton.localY, 1, 0, theme.background1, theme.foreground11, theme.accentBackground1, theme.accentForeground1, "  x")).onTouch = function()
 			local versionsTable = getVersionsTable(publication.file_id)
 			filesystem.remove(getApplicationPathFromVersions(versionsTable[publication.file_id].path))
 			filesystem.remove(paths.user.desktop .. publication.publication_name .. ".lnk")
@@ -798,7 +799,7 @@ local newApplicationPreview, newPublicationInfo
 
 local function applicationWidgetEventHandler(workspace, object, e1)
 	if e1 == "touch" then
-		object.parent.panel.colors.background = 0xE1E1E1
+		object.parent.panel.colors.background = theme.background3
 		workspace:draw()
 		newPublicationInfo(object.parent.file_id)
 	end
@@ -846,7 +847,7 @@ local function overview()
 
 			local width = appWidth + 4
 			local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
-			container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
+			container:addChild(GUI.panel(1, 1, container.width, container.height, theme.background2))
 			
 			local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
 
@@ -856,7 +857,7 @@ local function overview()
 			textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
 			local function add(key, value)
-				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, key, ": " .. value))
+				textLayout:addChild(GUI.keyAndValue(1, 1, theme.foreground3, theme.foreground9, key, ": " .. value))
 			end
 
 			add(localization.statisticsUsersCount, statistics.users_count)
@@ -869,8 +870,8 @@ local function overview()
 			textLayout.height = #textLayout.children * 2
 
 			local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
-			applicationPreview.panel.colors.background = 0xF0F0F0
-			statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+			applicationPreview.panel.colors.background = theme.background1
+			statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, theme.foreground9, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 
 			workspace:draw()
 
@@ -981,9 +982,9 @@ local function settings()
 	end
 
 	local function addHostZalupa(layout)
-		layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.host))
+		layout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.host)))
 
-		local hostComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+		local hostComboBox = layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1)))
 		hostComboBox:addItem(localization.hostAuto).onTouch = function(workspace, item)
 			config.hostId = nil
 			updateHost()
@@ -1010,15 +1011,15 @@ local function settings()
 		
 		addHostZalupa(layout)
 
-		layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-		local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
-		local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
-		local currentPasswordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*"))
-		local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", recover and localization.newPassword or localization.password, false, "*"))
+		layout:addChild(system.applyThemeToTitleLabel(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+		local nameInput = layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname)))
+		local emailInput = layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail")))
+		local currentPasswordInput = layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*")))
+		local passwordInput = layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", recover and localization.newPassword or localization.password, false, "*")))
 
-		local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
+		local singleSessionSwitchAndLabel = layout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession)))
 
-		layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
+		layout:addChild(system.applyThemeToPrimaryButton(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK"))).onTouch = function()
 			if login then
 				local result = fieldAPIRequest("result", "login", {
 					[(string.find(emailInput.text, "@") and "email" or "name")] = emailInput.text,
@@ -1070,8 +1071,8 @@ local function settings()
 		if login then
 			local registerLayout = layout:addChild(GUI.layout(1, 1, layout.width, 1, 1, 1))
 			registerLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-			registerLayout:addChild(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered))
-			registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, localization.createAccount)).onTouch = function()
+			registerLayout:addChild(system.applyThemeToDescriptionText(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered)))
+			registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, theme.accentBackground1, nil, theme.foreground1, localization.createAccount)).onTouch = function()
 				addAccountShit(false, true, false)
 			end
 		end
@@ -1097,50 +1098,50 @@ local function settings()
 
 			addHostZalupa(layout)
 			
-			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
+			layout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.profile)))
 
 			local textLayout = layout:addChild(GUI.layout(1, 1, 36, 5, 1, 1))
 			textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 			
-			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.nickname, ": " .. user.name))
-			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
-			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp + system.getUserSettings().timeTimezone)))
+			textLayout:addChild(GUI.keyAndValue(1, 1, theme.foreground3, theme.foreground9, localization.nickname, ": " .. user.name))
+			textLayout:addChild(GUI.keyAndValue(1, 1, theme.foreground3, theme.foreground9, "E-Mail", ": " .. user.email))
+			textLayout:addChild(GUI.keyAndValue(1, 1, theme.foreground3, theme.foreground9, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp + system.getUserSettings().timeTimezone)))
 			textLayout.height = #textLayout.children * 2 - 1
 
-			local hideApplicationIconsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons)).switch
+			local hideApplicationIconsSwitch = layout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons))).switch
 
 			hideApplicationIconsSwitch.onStateChanged = function()
 				config.hideApplicationIcons = hideApplicationIconsSwitch.state
 				saveConfig()
 			end
 
-			local hideApplicationPewviewsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationPreviews .. ":", config.hideApplicationPreviews)).switch
+			local hideApplicationPreviewsSwitch = layout:addChild(system.applyThemeToSwitchAndLabel(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationPreviews .. ":", config.hideApplicationPreviews))).switch
 
-			hideApplicationPewviewsSwitch.onStateChanged = function()
-				config.hideApplicationPreviews = hideApplicationPewviewsSwitch.state
+			hideApplicationPreviewsSwitch.onStateChanged = function()
+				config.hideApplicationPreviews = hideApplicationPreviewsSwitch.state
 				saveConfig()
 			end
 
 			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
 			
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
+			buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword))).onTouch = function()
 				addAccountShit(false, false, true)
 			end
 
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit)).onTouch = function()
+			buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit))).onTouch = function()
 				logout()
 			end
 
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache)).onTouch = function()
+			buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache))).onTouch = function()
 				local list = filesystem.list(cachePath)
 				for i = 1, #list do
 					filesystem.remove(cachePath .. list[i])
 				end
 			end
 
-			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.language))
+			layout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.language)))
 
-			local languageComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+			local languageComboBox = layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1)))
 			for key, value in pairs(languages) do
 				languageComboBox:addItem(value).onTouch = function()
 					config.language_id = key
@@ -1153,19 +1154,19 @@ local function settings()
 			end
 
 			if #result > 0 then
-				layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.publications))
+				layout:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0x2D2D2D, localization.publications)))
 
-				local comboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+				local comboBox = layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1)))
 				for i = 1, #result do
 					comboBox:addItem(result[i].publication_name)
 				end
 
 				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
+				buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open))).onTouch = function()
 					newPublicationInfo(result[comboBox.selectedItem].file_id)
 				end
 
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+				buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit))).onTouch = function()
 					local result = fieldAPIRequest("result", "publication", {
 						file_id = result[comboBox.selectedItem].file_id,
 						language_id = config.language_id,
@@ -1203,13 +1204,11 @@ local function dialogGUI(to_user_name)
 
 	contentContainer:removeChildren()
 
-	local button = contentContainer:addChild(GUI.adaptiveButton(1, contentContainer.height - 2, 2, 1, 0x4B4B4B, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, localization.send))
+	local button = contentContainer:addChild(system.applyThemeToPrimaryButton(GUI.adaptiveButton(1, contentContainer.height - 2, 2, 1, 0x4B4B4B, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, localization.send)))
 	button.localX = contentContainer.width - button.width + 1
-	button.colors.disabled.background = 0xB4B4B4
-	button.colors.disabled.text = 0xFFFFFF
 	button.disabled = true
 
-	local input = contentContainer:addChild(GUI.input(1, button.localY, contentContainer.width - button.width, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.typeMessageText))
+	local input = contentContainer:addChild(system.applyThemeToInput(GUI.input(1, button.localY, contentContainer.width - button.width, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.typeMessageText)))
 
 	local function check()
 		button.disabled = not (to_user_name and #input.text > 0)
@@ -1234,23 +1233,23 @@ local function dialogGUI(to_user_name)
 	local messagesContainer = contentContainer:addChild(GUI.container(1, 4, contentContainer.width, contentContainer.height - 6))
 	messagesContainer.eventHandler = containerScrollEventHandler
 
-	local panel = contentContainer:addChild(GUI.panel(1, 1, contentContainer.width, 3, 0xFFFFFF))
+	local panel = contentContainer:addChild(GUI.panel(1, 1, contentContainer.width, 3, theme.background3))
 	if not to_user_name then
 		panel.colors.transparency = nil
-		local text = contentContainer:addChild(GUI.text(3, 2, 0x0, localization.toWho))
-		local input = contentContainer:addChild(GUI.input(text.localX + text.width, 1, contentContainer.width - text.width - 4, 3, 0xFFFFFF, 0x878787, 0xC3C3C3, 0xFFFFFF, 0x878787, to_user_name or "", localization.typeUserName))
+		local text = contentContainer:addChild(GUI.text(3, 2, theme.foreground1, localization.toWho))
+		local input = contentContainer:addChild(system.applyThemeToInput(GUI.input(text.localX + text.width + 1, 1, contentContainer.width - text.width - 4, 3, 0xFFFFFF, 0x878787, 0xC3C3C3, 0xFFFFFF, 0x878787, to_user_name or "", localization.typeUserName)))
 		input.onInputFinished = function()
 			to_user_name = input.text
 			check()
 		end
 	else
-		local keyAndValue = contentContainer:addChild(GUI.keyAndValue(1, 2, 0x878787, 0x0, localization.dialogWith, to_user_name))
+		local keyAndValue = contentContainer:addChild(GUI.keyAndValue(1, 2, theme.foreground1, theme.foreground4, localization.dialogWith, to_user_name))
 		keyAndValue.localX = math.floor(contentContainer.width / 2 - (keyAndValue.keyLength + keyAndValue.valueLength) / 2)
 		-- contentContainer:addChild(GUI.label(1, 2, contentContainer.width, 1, 0x2D2D2D, to_user_name)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 	end
 
 	local function cloudDraw(object)
-		local backgroundColor, textColor = object.me and 0x6692FF or 0xFFFFFF, object.me and 0xFFFFFF or 0x4B4B4B
+		local backgroundColor, textColor = object.me and theme.accentBackground1 or theme.background2, object.me and theme.accentForeground1 or theme.foreground4
 		
 		screen.drawRectangle(object.x, object.y, object.width, object.height, backgroundColor, textColor, " ")
 		screen.drawText(object.x, object.y - 1, backgroundColor, "⢀" .. string.rep("⣀", object.width - 2) .. "⡀")
@@ -1258,10 +1257,10 @@ local function dialogGUI(to_user_name)
 
 		local date = os.date("%d.%m.%Y, %H:%M", object.timestamp + system.getUserSettings().timeTimezone)
 		if object.me then
-			screen.drawText(object.x - #date - 1, object.y, 0xC3C3C3, date)
+			screen.drawText(object.x - #date - 1, object.y, theme.foreground9, date)
 			screen.drawText(object.x + object.width, object.y + object.height - 1, backgroundColor, "◤")
 		else
-			screen.drawText(object.x + object.width + 1, object.y, 0xC3C3C3, date)
+			screen.drawText(object.x + object.width + 1, object.y, theme.foreground9, date)
 			screen.drawText(object.x - 1, object.y + object.height - 1, backgroundColor, "◥")
 		end
 
@@ -1305,7 +1304,7 @@ local function dialogs()
 		local dialogsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
 		dialogsContainer.eventHandler = containerScrollEventHandler
 
-		local sendMessageButton = dialogsContainer:addChild(GUI.adaptiveRoundedButton(1, #dialogs > 0 and 2 or math.floor(dialogsContainer.height / 2 + 1), 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessage))
+		local sendMessageButton = dialogsContainer:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, #dialogs > 0 and 2 or math.floor(dialogsContainer.height / 2 + 1), 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessage)))
 		sendMessageButton.localX = math.floor(dialogsContainer.width / 2 - sendMessageButton.width / 2)
 		sendMessageButton.onTouch = function()
 			dialogGUI()
@@ -1321,9 +1320,9 @@ local function dialogs()
 					messagesItem.showIndicator = dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_id ~= user.id
 				end
 
-				local backgroundColor, nicknameColor, timestampColor, textColor = 0xFFFFFF, 0x0, 0xD2D2D2, 0x969696
+				local backgroundColor, nicknameColor, timestampColor, textColor = theme.background2, theme.foreground1, theme.foreground11, theme.foreground9
 				if dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_name ~= user.name then
-					backgroundColor, nicknameColor, timestampColor, textColor = 0xCCDBFF, 0x0, 0xB4B4B4, 0x878787
+					backgroundColor, nicknameColor, timestampColor, textColor = theme.background2, theme.accentBackground1, theme.foreground11, theme.foreground9
 				end
 
 				local dialogContainer = dialogsContainer:addChild(GUI.container(3, y, dialogsContainer.width - 4, 4))
@@ -1336,7 +1335,7 @@ local function dialogs()
 
 				dialogContainer.eventHandler = function(workspace, object, e1)
 					if e1 == "touch" then
-						dialogContainer.panel.colors.background = 0xE1E1E1
+						dialogContainer.panel.colors.background = theme.accentBackground1
 						dialogGUI(dialogs[i].dialog_user_name)
 					end
 				end
@@ -1344,7 +1343,7 @@ local function dialogs()
 				y = y + dialogContainer.height + 1
 			end
 		else
-			dialogsContainer:addChild(GUI.label(1, sendMessageButton.localY - 2, dialogsContainer.width, 1, 0xA5A5A5, localization.hereBeYourDialogs)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+			dialogsContainer:addChild(system.applyThemeToDescriptionLabel(GUI.label(1, sendMessageButton.localY - 2, dialogsContainer.width, 1, 0xA5A5A5, localization.hereBeYourDialogs)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER))
 		end
 	end
 end
@@ -1447,12 +1446,12 @@ newPublicationInfo = function(file_id)
 			-- Тут будут находиться ваще пизда подробности о публикации
 			local ratingsContainer = detailsContainer:addChild(GUI.container(1, 1, 28, 6))
 			ratingsContainer.localX = detailsContainer.width - ratingsContainer.width + 1
-			addPanel(ratingsContainer, 0xE1E1E1)
+			addPanel(ratingsContainer, theme.background3)
 			
 			local y = 2
 
 			local function addKeyAndValue(key, value)
-				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, key .. ": ", value)); 
+				ratingsContainer:addChild(GUI.keyAndValue(2, y, theme.foreground3, theme.foreground9, key .. ": ", value)); 
 				y = y + 1
 			end
 
@@ -1477,9 +1476,14 @@ newPublicationInfo = function(file_id)
 				for i = #ratings, 1, -1 do
 					local text = tostring(ratings[i])
 					local textLength = #text
-					ratingsContainer:addChild(newRatingWidget(2, y, i, nil, 0xC3C3C3))
-					ratingsContainer:addChild(GUI.progressBar(12, y, ratingsContainer.width - textLength - 13, 0x2D2D2D, 0xC3C3C3, 0xC3C3C3, ratings[i] / #reviews * 100, true))
-					ratingsContainer:addChild(GUI.text(ratingsContainer.width - textLength, y, 0x2D2D2D, text))
+					
+					ratingsContainer:addChild(newRatingWidget(2, y, i, nil, theme.background1))
+
+					local progressBar = ratingsContainer:addChild(system.applyThemeToProgressBar(GUI.progressBar(12, y, ratingsContainer.width - textLength - 13, 0x2D2D2D, 0xC3C3C3, 0xC3C3C3, ratings[i] / #reviews * 100, true)))
+					progressBar.colors.passive = theme.background1
+
+					ratingsContainer:addChild(system.applyThemeToTitleText(GUI.text(ratingsContainer.width - textLength, y, 0x2D2D2D, text)))
+					
 					y = y + 1
 				end
 			end
@@ -1491,15 +1495,15 @@ newPublicationInfo = function(file_id)
 				local buttonsLayout = ratingsContainer:addChild(GUI.layout(1, y, ratingsContainer.width, 3, 1, 1))
 
 				if publication.user_name == user.name then
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+					buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit))).onTouch = function()
 						editPublication(publication)
 					end
 
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
+					buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove))).onTouch = function()
 						deletePublication(publication)
 					end
 				else
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper)).onTouch = function()
+					buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(2, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper))).onTouch = function()
 						dialogGUI(publication.user_name)
 					end
 
@@ -1513,13 +1517,13 @@ newPublicationInfo = function(file_id)
 						end
 					end
 
-					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
-						local container = GUI.addBackgroundContainer(workspace, true, true, existingReviewText and localization.changeReview or localization.writeReview)
+					buttonsLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview))).onTouch = function()
+						local container = system.applyThemeToBackgroundContainer(GUI.addBackgroundContainer(workspace, true, true, existingReviewText and localization.changeReview or localization.writeReview))
 
-						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
+						local input = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere)))
 						
 						local pizda = container.layout:addChild(GUI.container(1, 1, 1, 1))
-						local eblo = pizda:addChild(GUI.text(1, 1, 0xE1E1E1, localization.yourRating .. ": "))
+						local eblo = pizda:addChild(system.applyThemeToTitleText(GUI.text(1, 1, 0xE1E1E1, localization.yourRating .. ": ")))
 						pizda.width = eblo.width + 9
 						
 						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
@@ -1530,7 +1534,7 @@ newPublicationInfo = function(file_id)
 							end
 						end
 						
-						local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
+						local govno = container.layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK")))
 						govno.disabled = true
 						govno.colors.disabled.background = 0xA5A5A5
 						govno.colors.disabled.text = 0xC3C3C3
@@ -1579,13 +1583,13 @@ newPublicationInfo = function(file_id)
 			local x, y = 3, 7
 
 			local function addLabel(text)
-				textDetailsContainer:addChild(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, text)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+				textDetailsContainer:addChild(system.applyThemeToTitleLabel(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, text))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 				y = y + 2
 			end
 			
 			local function addTextBox(t)
 				local lines = text.wrap(t, textDetailsContainer.width - 4)
-				local textBox = textDetailsContainer:addChild(GUI.textBox(3, y, textDetailsContainer.width - 4, #lines, nil, 0x969696, lines, 1, 0, 0))
+				local textBox = textDetailsContainer:addChild(system.applyThemeToDescriptionTextBox(GUI.textBox(3, y, textDetailsContainer.width - 4, #lines, nil, 0x969696, lines, 1, 0, 0)))
 				textBox.eventHandler = nil
 				y = y + textBox.height + 1
 			end
@@ -1619,7 +1623,7 @@ newPublicationInfo = function(file_id)
 								x, y = 3, y + 2
 							end
 							
-							local button = textDetailsContainer:addChild(GUI.tagButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
+							local button = textDetailsContainer:addChild(GUI.tagButton(x, y, textLength + 2, 1, theme.background3, theme.foreground3, theme.accentBackground1, theme.accentForeground1, dependency.publication_name))
 							button.onTouch = function()
 								newPublicationInfo(publication.all_dependencies[i])
 							end
@@ -1662,7 +1666,7 @@ newPublicationInfo = function(file_id)
 					previewContainer.x + (alignRight and (previewContainer.width - width - 1) or 1),
 					previewContainer.y + math.floor(previewContainer.height / 2 - height / 2),
 					width, height,
-					0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF,
+					theme.background3, theme.foreground3, theme.accentBackground1, theme.accentForeground1,
 					text
 				))
 			end
@@ -1694,15 +1698,15 @@ newPublicationInfo = function(file_id)
 					addPanel(reviewContainer)
 
 					local y = 2
-					local nameLabel = reviewContainer:addChild(GUI.text(3, y, 0x2D2D2D, reviews[i].user_name))
-					reviewContainer:addChild(GUI.text(nameLabel.localX + nameLabel.width + 1, y, 0xC3C3C3, "(" .. os.date("%d.%m.%Y", reviews[i].timestamp + system.getUserSettings().timeTimezone) .. ")"))
+					local nameLabel = reviewContainer:addChild(system.applyThemeToTitleText(GUI.text(3, y, 0x2D2D2D, reviews[i].user_name)))
+					reviewContainer:addChild(system.applyThemeToDescriptionText(GUI.text(nameLabel.localX + nameLabel.width + 1, y, 0xC3C3C3, "(" .. os.date("%d.%m.%Y", reviews[i].timestamp + system.getUserSettings().timeTimezone) .. ")")))
 					y = y + 1
 
 					reviewContainer:addChild(newRatingWidget(3, y, reviews[i].rating))
 					y = y + 1
 
 					local lines = text.wrap(tostring(reviews[i].comment), reviewContainer.width - 4)
-					local textBox = reviewContainer:addChild(GUI.textBox(3, y, reviewContainer.width - 4, #lines, nil, 0x878787, lines, 1, 0, 0))
+					local textBox = reviewContainer:addChild(system.applyThemeToDescriptionTextBox(GUI.textBox(3, y, reviewContainer.width - 4, #lines, nil, 0x878787, lines, 1, 0, 0)))
 					textBox.eventHandler = nil
 					y = y + #lines
 
@@ -1711,12 +1715,12 @@ newPublicationInfo = function(file_id)
 					end
 
 					if reviews[i].votes then
-						reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, reviews[i].votes.positive .. " " .. localization.of .. " " .. reviews[i].votes.total .. " " .. localization.usersLoveReview))
+						reviewContainer:addChild(system.applyThemeToDescriptionText(GUI.text(3, y, 0xC3C3C3, reviews[i].votes.positive .. " " .. localization.of .. " " .. reviews[i].votes.total .. " " .. localization.usersLoveReview)))
 						y = y + 1
 					end
 
 					if user.token and user.name ~= reviews[i].user_name then
-						local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
+						local wasHelpText = reviewContainer:addChild(system.applyThemeToDescriptionText(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful)))
 						
 						local layout = reviewContainer:addChild(GUI.layout(wasHelpText.localX + wasHelpText.width + 1, y, reviewContainer.width - wasHelpText.localX - wasHelpText.width - 1, 1, 1, 1))
 						layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
@@ -1731,20 +1735,20 @@ newPublicationInfo = function(file_id)
 
 							if success then
 								wasHelpText.text = localization.thanksForVote
-								wasHelpText.color = 0x696969
+								wasHelpText.color = theme.accentBackground1
 								layout:remove()
 							end
 						end
 
-						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.yes)).onTouch = function()
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, theme.foreground3, nil, theme.accentBackground1, localization.yes)).onTouch = function()
 							go(1)
 						end
-						layout:addChild(GUI.text(1, 1, 0xC3C3C3, "|"))
-						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.no)).onTouch = function()
+						layout:addChild(GUI.text(1, 1, theme.foreground11, "|"))
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, theme.foreground3, nil, theme.accentBackground1, localization.no)).onTouch = function()
 							go(0)
 						end
-						layout:addChild(GUI.text(1, 1, 0xC3C3C3, "|"))
-						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.newMessagePersonal)).onTouch = function()
+						layout:addChild(GUI.text(1, 1, theme.foreground11, "|"))
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, theme.foreground3, nil, theme.accentBackground1, localization.newMessagePersonal)).onTouch = function()
 							dialogGUI(reviews[i].user_name.user_name)
 						end
 
@@ -1777,10 +1781,10 @@ local function newPlusMinusCyka(width, disableLimit)
 	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 	layout:setDirection(2, 1, GUI.DIRECTION_HORIZONTAL)
 
-	layout.comboBox = layout:addChild(GUI.comboBox(1, 1, width - 7, 1, 0xFFFFFF, 0x878787, 0x969696, 0xE1E1E1))
+	layout.comboBox = layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, width - 7, 1, 0xFFFFFF, 0x878787, 0x969696, 0xE1E1E1)))
 	layout.defaultColumn = 2
-	layout.addButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "+"))
-	layout.removeButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "-"))
+	layout.addButton = layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 3, 1, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "+")))
+	layout.removeButton = layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 3, 1, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "-")))
 
 	local overrideRemoveButtonDraw = layout.removeButton.draw
 	layout.removeButton.draw = function(...)
@@ -1810,15 +1814,15 @@ editPublication = function(initialPublication, initialCategoryID)
 	layout:setMargin(1, 1, 1, 0)
 
 	local function addText(text)
-		return layout:addChild(GUI.text(1, 1, 0x4B4B4B, text))
+		return layout:addChild(system.applyThemeToDescriptionText(GUI.text(1, 1, 0x4B4B4B, text)))
 	end
 
 	local function addInput(...)
-		return layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x878787, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, ...))
+		return layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x878787, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, ...)))
 	end
 
 	local function addComboBox()
-		return layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x878787, 0x969696, 0xE1E1E1))
+		return layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x878787, 0x969696, 0xE1E1E1)))
 	end
 
 	addText(localization.category .. ":")
@@ -1833,7 +1837,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 	layout.defaultColumn = 2
 
-	layout:addChild(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.edit or localization.publish)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	layout:addChild(system.applyThemeToTitleLabel(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.edit or localization.publish))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 	local categoryComboBox = addComboBox()
 	for i = 1, #categories do
@@ -1889,21 +1893,21 @@ editPublication = function(initialPublication, initialCategoryID)
 
 	local lastDependencyType = 1
 	dependenciesLayout.addButton.onTouch = function()
-		local container = GUI.addBackgroundContainer(workspace, true, true, localization.addDependency)
+		local container = system.applyThemeToBackgroundContainer(GUI.addBackgroundContainer(workspace, true, true, localization.addDependency))
 		
-		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x4B4B4B, 0x969696, 0xE1E1E1))
+		local dependencyTypeComboBox = container.layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x4B4B4B, 0x969696, 0xE1E1E1)))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
 		dependencyTypeComboBox:addItem(localization.localizationDependency)
 		dependencyTypeComboBox:addItem(localization.existingPublication)
 		dependencyTypeComboBox:addItem(localization.previewDepencency)
 		dependencyTypeComboBox.selectedItem = lastDependencyType
 
-		local publicationNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "MineOS"))
-		local urlInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", ""))
-		local pathInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", ""))
-		local pathType = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.relativePath .. ":", true))
+		local publicationNameInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "MineOS")))
+		local urlInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "")))
+		local pathInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "")))
+		local pathType = container.layout:addChild(system.applyThemeToInput(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.relativePath .. ":", true)))
 
-		local button = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.add))
+		local button = container.layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.add)))
 		button.onTouch = function()
 			if lastDependencyType == 4 then
 				local result, reason = checkImage(
@@ -1996,7 +2000,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		workspace:draw()
 	end
 
-	local publishButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.save))
+	local publishButton = layout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.save)))
 
 	local function checkFields()
 		publishButton.disabled = not (#nameInput.text > 0 and #mainUrlInput.text > 0 and #descriptionInput.text > 0 and (iconUrlInput.hidden and true or #iconUrlInput.text > 0) and (mainPathInput.hidden and true or #mainPathInput.text > 0))
@@ -2115,10 +2119,10 @@ updateFileList = function(category_id, updates)
 	if not updates or updates and #result > 0 then
 		if updates then
 			if #result > 0 then
-				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
-					local container = GUI.addBackgroundContainer(workspace, true, true, "")
+				layout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll))).onTouch = function()
+					local container = system.applyThemeToBackgroundContainer(GUI.addBackgroundContainer(workspace, true, true, ""))
 
-					local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
+					local progressBar = container.layout:addChild(system.applyThemeToProgressBar(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%")))
 
 					for i = 1, #result do
 						container.label.text = localization.downloading .. " " .. result[i].publication_name
@@ -2166,7 +2170,7 @@ updateFileList = function(category_id, updates)
 				end
 			end
 		else
-			local input = layout:addChild(GUI.input(1, 1, 20, layout.height, 0xFFFFFF, 0x2D2D2D, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, search or "", localization.search, true))
+			local input = layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 20, layout.height, 0xFFFFFF, 0x2D2D2D, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, search or "", localization.search, true)))
 			input.onInputFinished = function()
 				if #input.text == 0 then
 					search = nil
@@ -2178,7 +2182,7 @@ updateFileList = function(category_id, updates)
 				updateFileList(category_id, updates)
 			end
 
-			local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 20, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+			local orderByComboBox = layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 20, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1)))
 			orderByComboBox:addItem(localization.byPopularity)
 			orderByComboBox:addItem(localization.byRating)
 			orderByComboBox:addItem(localization.byName)
@@ -2186,7 +2190,7 @@ updateFileList = function(category_id, updates)
 			
 			orderByComboBox.selectedItem = config.orderBy
 
-			local orderDirectionComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+			local orderDirectionComboBox = layout:addChild(system.applyThemeToComboBox(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1)))
 			orderDirectionComboBox:addItem(localization.desc)
 			orderDirectionComboBox:addItem(localization.asc)
 			orderDirectionComboBox.selectedItem = config.orderDirection
@@ -2200,7 +2204,7 @@ updateFileList = function(category_id, updates)
 			orderDirectionComboBox.onItemSelected = orderByComboBox.onItemSelected
 
 			if user.token then
-				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
+				layout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish))).onTouch = function()
 					editPublication(nil, category_id)
 				end
 			end
@@ -2217,17 +2221,14 @@ updateFileList = function(category_id, updates)
 			updateFileList(category_id, updates)
 		end
 
-		local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
-		backButton.colors.disabled.background = 0xE1E1E1
-		backButton.colors.disabled.text = 0xC3C3C3
+		local backButton = navigationLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<")))
 		backButton.disabled = currentPage == 0
 		backButton.onTouch = function()
 			switchPage(false)
 		end
 
 		navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
-		local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
-		nextButton.colors.disabled = backButton.colors.disabled
+		local nextButton = navigationLayout:addChild(system.applyThemeToSecondaryButton(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">")))
 		nextButton.disabled = #result <= appsPerPage
 		nextButton.onTouch = function()
 			switchPage(true)
@@ -2267,18 +2268,20 @@ local function leftListItemDraw(pressable)
 	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.colors.default.text
 
 	if pressable.pressed then
-		screen.drawRectangle(pressable.x, pressable.y, 1, pressable.height, backgroundColor, 0xFFDB80, "▎")
+		screen.drawRectangle(pressable.x, pressable.y, 1, pressable.height, backgroundColor, theme.accentBackground1, "▎")
 		screen.drawRectangle(pressable.x + 1, pressable.y, pressable.width - 1, pressable.height, backgroundColor, textColor, " ")
 	end
 
 	-- Рисуем синюю писечку, просящую прочитать сообщения
+	-- О ГОСПОДИ, ОНА БОЛЕЕ НЕ СИНЯЯ
+	-- ...
 	if pressable.showIndicator then
-		screen.drawText(pressable.x + pressable.width - 3, pressable.y + 1, 0xFFDB80, "●")
+		screen.drawText(pressable.x + pressable.width - 3, pressable.y + 1, theme.accentBackground1, "●")
 	end
 
 	local y = math.floor(pressable.y + pressable.height / 2)
 
-	screen.drawText(pressable.x + 3, y, textColor, pressable.icon)
+	screen.drawText(pressable.x + 3, y, pressable.pressed and textColor or theme.foreground11, pressable.icon)
 	screen.drawText(pressable.x + 7, y, textColor, pressable.text)
 end
 

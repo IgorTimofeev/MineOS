@@ -30,6 +30,7 @@
 	wallpaperInfo = "Disabling this option will significantly reduce the consumption of RAM and increase performance",
 
 	appearance = "Appearance",
+	appearanceTheme = "Theme",
 	appearanceExtensions = "File extensions",
 	appearanceHidden = "Hidden files",
 	appearanceApplications = "Application icons",
@@ -44,7 +45,6 @@
 	appearanceMenu = "Menu background",
 	appearanceBlurEnabled = "Interface blurring",
 	appearanceTransparencyEnabled = "Interface transparency",
-	appearanceTransparencyInfo = "Disabling the last three options will significantly reduce the number of direct calls to the CPU / GPU and increase performance",
 	appearanceDropDownDefaultBackground = "Drop down menu background",
 	appearanceDropDownDefaultText = "Drop down menu text",
 	appearanceDropDownSeparator = "Drop down menu separator",

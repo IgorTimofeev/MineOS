@@ -177,7 +177,7 @@ local function sidebarItemDraw(object)
 	if object.path == iconField.path then
 		textColor = theme.altForeground3
 
-		screen.drawRectangle(object.x, object.y, object.width, 1, theme.altBackground2, textColor, " ")
+		screen.drawRectangle(object.x, object.y, object.width, 1, theme.background1, textColor, " ")
 		screen.drawText(object.x, object.y, theme.accentBackground1, "▎ ")
 
 		if object.onRemove then
@@ -214,11 +214,11 @@ local function addSidebarObject(textColor, text, path)
 end
 
 local function addSidebarTitle(...)
-	return addSidebarObject(theme.altForeground3, ...)
+	return addSidebarObject(theme.altForeground2, ...)
 end
 
 local function addSidebarItem(...)
-	return addSidebarObject(theme.altForeground11, ...)
+	return addSidebarObject(theme.altForeground9, ...)
 end
 
 local function addSidebarSeparator()
@@ -379,11 +379,11 @@ FTPButton.onTouch = function()
 		ad, po, us, pa = la.address, tostring(la.port), la.user, la.password
 	end
 
-	local addressInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, ad, localization.networkFTPAddress, true)))
-	local portInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, po, localization.networkFTPPort, true)))
-	local userInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, us, localization.networkFTPUser, true)))
-	local passwordInput = container.layout:addChild(system.applyThemeToBackgroundContainerInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, pa, localization.networkFTPPassword, true, "*")))
-	container.layout:addChild(system.applyThemeToBackgroundContainerPrimaryButton(GUI.button(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, "OK"))).onTouch = function()
+	local addressInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, ad, localization.networkFTPAddress, true)))
+	local portInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, po, localization.networkFTPPort, true)))
+	local userInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, us, localization.networkFTPUser, true)))
+	local passwordInput = container.layout:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, 0x0, pa, localization.networkFTPPassword, true, "*")))
+	container.layout:addChild(system.applyThemeToPrimaryButton(GUI.button(1, 1, 36, 3, 0x0, 0x0, 0x0, 0x0, "OK"))).onTouch = function()
 		container:remove()
 
 		local port = tonumber(portInput.text)
@@ -542,7 +542,7 @@ local function updateIconField()
 		local x, path = 2, "/"
 
 		local function addNode(text, path)
-			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, theme.altForeground3, nil, theme.altForeground1, text)).onTouch = function()
+			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, theme.altForeground3, nil, theme.accentBackground1, text)).onTouch = function()
 				addPath(path)
 				updateFileListAndDraw()
 			end
@@ -553,7 +553,7 @@ local function updateIconField()
 		addNode("root", "/")
 
 		for node in iconField.path:gsub("/$", ""):gmatch("[^/]+") do
-			statusContainer:addChild(GUI.text(x, 1, theme.altForeground11, " ► "))
+			statusContainer:addChild(GUI.text(x, 1, theme.altForeground9, " ► "))
 			x = x + 3
 			
 			path = path .. node .. "/"

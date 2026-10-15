@@ -79,7 +79,7 @@ end
 function system.getDefaultUserSettings()
 	return {
 		localizationLanguage = "English",
-		theme = "Default",
+		theme = "Dark",
 
 		timeFormat = "%d %b %Y %H:%M:%S",
 		timeRealTimestamp = true,
@@ -210,7 +210,7 @@ function system.getTheme(themesFolderPath)
 
 	-- ...
 	else
-		local defaultThemePath = themesFolderPath .. "Default.thm"
+		local defaultThemePath = themesFolderPath .. "Dark.thm"
 
 		-- Default theme exists
 		if filesystem.exists(defaultThemePath) then
@@ -221,7 +221,7 @@ function system.getTheme(themesFolderPath)
 			
 			-- At least one exists
 			if #themesList > 0 then
-				tryToLoadColorDepth(themesFolderPath .. themesList[1])
+				result = filesystem.readTable(themesFolderPath .. themesList[1])
 
 			-- Wtf, no themes?
 			else
@@ -515,10 +515,12 @@ end
 --------------------------------------------------------------------------------
 
 local function addMainDesktopMenuItem(menu)
-	local item = menu:addContextMenuItem("💻", theme.altForeground1)
+	local item = menu:addContextMenuItem("💻", theme.foreground1)
 	
 	item:addItem("🛈", localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
+		system.applyThemeToBackgroundContainer(container)
+
 		container.layout:removeChildren()
 		
 		local lines = {
@@ -593,14 +595,14 @@ local function addMainDesktopMenuItem(menu)
 	return item
 end
 
-
 local function addBackgroundContainerInput(parent, ...)
-	return parent:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...))
+	return parent:addChild(system.applyThemeToInput(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...)))
 end
 
 local function addBackgroundContainerWithInput(inputText, title, placeholder)
 	local container = GUI.addBackgroundContainer(workspace, true, true, title)
-	
+	system.applyThemeToBackgroundContainer(container)
+
 	container.input = addBackgroundContainerInput(container.layout, inputText, placeholder, false)
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, localization.file .. " " .. localization.alreadyExists)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	container.label.hidden = true
@@ -659,60 +661,178 @@ local function uploadToPastebin(path)
 	workspace:draw()
 end
 
-local function applyThemeToContextMenuColorsTable(colors)
-	colors.default.background = theme.altBackground1
-	colors.default.text = theme.altForeground3
-	colors.default.icon = theme.altForeground10
+local function applyThemeToDropDownMenuColorsTable(colors)
+	colors.default.background = theme.background2
+	colors.default.text = theme.foreground2
+	colors.default.icon = theme.foreground8
 
 	colors.selected.background = theme.accentBackground1
 	colors.selected.text = theme.accentForeground1
 	colors.selected.icon = theme.accentForeground1
 
-	colors.disabled.text = theme.altForeground11
-	colors.disabled.icon = theme.altForeground11
+	colors.disabled.text = theme.foreground11
+	colors.disabled.icon = theme.foreground11
 
-	colors.separator = theme.altBackground2
+	colors.separator = theme.background3
 
 	-- menu.colors.transparency.background = 0.5
 	-- menu.colors.transparency.shadow = 0.5
 end
 
-
 function system.applyThemeToContextMenu(menu)
-	applyThemeToContextMenuColorsTable(menu.colors)
+	applyThemeToDropDownMenuColorsTable(menu.colors)
 
 	return menu
 end
 
 function system.applyThemeToMenu(menu)
-	applyThemeToContextMenuColorsTable(menu.colors.contextMenu)
+	menu.colors.default.background = theme.background2
+	menu.colors.default.text = theme.foreground5
+	
+	menu.colors.selected.background = theme.accentBackground1
+	menu.colors.selected.text = theme.accentForeground1
+
+	applyThemeToDropDownMenuColorsTable(menu.colors.contextMenu)
 
 	return menu
 end
 
-function system.applyThemeToBackgroundContainerInput(input)
+function system.applyThemeToInput(input)
 	input.colors.default.background = theme.background2
-	input.colors.default.foreground = theme.foreground1
+	input.colors.default.text = theme.foreground1
 
 	input.colors.focused.background = theme.background2
-	input.colors.focused.foreground = theme.foreground1
+	input.colors.focused.text = theme.foreground1
 
 	input.colors.placeholderText = theme.foreground11
 
 	return input
 end
 
-function system.applyThemeToBackgroundContainerPrimaryButton(button)
-	button.colors.default.background = theme.altBackground6
-	button.colors.default.text = theme.altForeground3
+function system.applyThemeToTitleLabel(label)
+	label.colors.text = theme.foreground1
 
-	button.colors.pressed.background = theme.altBackground4
-	button.colors.pressed.text = theme.altForeground1
+	return label
+end
 
-	button.colors.disabled.background = theme.altBackground2
-	button.colors.disabled.text = theme.altForeground8
+function system.applyThemeToDescriptionLabel(label)
+	label.colors.text = theme.foreground9
+	
+	return label
+end
+
+function system.applyThemeToTitleText(text)
+	text.color = theme.foreground1
+
+	return text
+end
+
+function system.applyThemeToDescriptionText(text)
+	text.color = theme.foreground9
+	
+	return text
+end
+
+function system.applyThemeToDescriptionTextBox(textBox)
+	textBox.colors.text = theme.foreground9
+	
+	return textBox
+end
+
+function system.applyThemeToPrimaryButton(button)
+	button.colors.default.background = theme.accentBackground1
+	button.colors.default.text = theme.accentForeground1
+
+	button.colors.pressed.background = theme.accentBackground2
+	button.colors.pressed.text = theme.accentForeground2
+
+	button.colors.disabled.background = theme.background2
+	button.colors.disabled.text = theme.foreground13
 	
 	return button
+end
+
+function system.applyThemeToSecondaryButton(button)
+	button.colors.default.background = theme.background2
+	button.colors.default.text = theme.foreground3
+
+	button.colors.pressed.background = theme.accentBackground1
+	button.colors.pressed.text = theme.accentForeground1
+
+	button.colors.disabled.background = theme.background2
+	button.colors.disabled.text = theme.foreground13
+	
+	return button
+end
+
+function system.applyThemeToBackgroundContainer(b)
+	if b.panel then
+		b.panel.colors.background = userSettings.interfaceTransparencyEnabled and 0x0 or theme.altBackground1
+		b.panel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.3
+	end
+
+	if b.label then
+		b.label.colors.text = theme.altForeground1
+	end
+
+	return b
+end
+
+function system.applyThemeToSwitch(sw)
+	sw.colors.active = theme.accentBackground1
+	sw.colors.passive = theme.background3
+	sw.colors.pipe = theme.handleBackground1
+	
+	return sw
+end
+
+function system.applyThemeToSwitchAndLabel(sw)
+	system.applyThemeToSwitch(sw.switch)
+	system.applyThemeToDescriptionLabel(sw.label)
+	
+	return sw
+end
+
+function system.applyThemeToComboBox(cb)
+	cb.colors.default.background = theme.background2
+	cb.colors.default.text = theme.foreground3
+
+	cb.colors.selected.background = theme.background2
+	cb.colors.selected.text = theme.foreground3
+
+	cb.colors.arrow.background = theme.background3
+	cb.colors.arrow.text = theme.foreground8
+
+	system.applyThemeToContextMenu(cb.dropDownMenu)
+	
+	return cb
+end
+
+function system.applyThemeToFilesystemChooser(chooser)
+	chooser.colors.background = theme.background2
+	chooser.colors.text = theme.foreground3
+
+	chooser.colors.tipBackground = theme.background3
+	chooser.colors.tipText = theme.foreground8
+		
+	return chooser
+end
+
+function system.applyThemeToSlider(slider)
+	slider.colors.active = theme.accentBackground1
+	slider.colors.passive = theme.background3
+	slider.colors.pipe = theme.handleBackground1
+	slider.colors.value = theme.foreground9
+	
+	return slider
+end
+
+function system.applyThemeToProgressBar(bar)
+	bar.colors.active = theme.accentBackground1
+	bar.colors.passive = theme.background3
+	bar.colors.value = theme.foreground9
+	
+	return bar
 end
 
 function system.addUploadToPastebinMenuItem(menu, path)
@@ -976,8 +1096,9 @@ end
 
 local function emptyTrash()
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure)
+	system.applyThemeToBackgroundContainer(container)
 
-	container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK")).onTouch = function()
+	container.layout:addChild(system.applyThemeToSecondaryButton(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK"))).onTouch = function()
 		local list = filesystem.list(paths.user.trash)
 		
 		for i = 1, #list do
@@ -1057,6 +1178,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 			else
 				contextMenu:addItem("⭐", localization.addToFavourites).onTouch = function()
 					local container = GUI.addBackgroundContainer(workspace, true, true, localization.addToFavourites)
+					system.applyThemeToBackgroundContainer(container)
 
 					local input = addBackgroundContainerInput(container.layout, icon.name, localization.name)
 					container.panel.eventHandler = function(workspace, object, e1)
@@ -1865,7 +1987,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 						workspace:draw()
 					else
 						container.layout:removeChildren(2)
-						container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x878787, localization.downloading .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+						container.layout:addChild(system.applyThemeToDescriptionLabel(GUI.label(1, 1, container.width, 1, 0x878787, localization.downloading .. "..."))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 						workspace:draw()
 
 						local success, reason = require("Internet").download(inputURL.text, path)
@@ -2143,6 +2265,8 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, backgroundOb
 			-- Если шифт нажат, удаляем перманентно, спросив пидора о его уверенности
 			if keyboard.isKeyDown(42) then
 				local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure .. " " .. tostring(#selectedIcons) .. " " .. localization.filesWillBeRemovedPermanently)
+				system.applyThemeToBackgroundContainer(container)
+
 				local buttonYes = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.yes))
 
 				buttonYes.onTouch = function()
@@ -2485,7 +2609,7 @@ end
 function system.addPropertiesWindow(x, y, width, icon)
 	local workspace, window = system.addWindow(GUI.filledWindow(x, y, width, 1, 0x1E1E1E), true, true)
 
-	window:addChild(GUI.label(1, 1, width, 1, 0xE1E1E1, localization.properties)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	window:addChild(system.applyThemeToTitleLabel(GUI.label(1, 1, width, 1, 0xE1E1E1, localization.properties))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	window.actionButtons.localY = 1
 	window.actionButtons:moveToFront()
 
@@ -2524,6 +2648,8 @@ function system.copy(fileList, toPath)
 	local applyYes, breakRecursion
 
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.copying)
+	system.applyThemeToBackgroundContainer(container)
+
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x878787, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
@@ -2627,6 +2753,7 @@ end
 
 function system.error(path, line, traceback)
 	local container = GUI.addBackgroundContainer(workspace, true, false, false)
+	system.applyThemeToBackgroundContainer(container)
 
 	local window = container:addChild(GUI.container(1, 1, screen.getWidth(), math.floor(container.height * 0.5)))
 	window.localY = math.floor(container.height / 2 - window.height / 2)
@@ -3058,10 +3185,10 @@ function system.updateDesktop()
 		1,
 		workspace.width,
 
-		theme.altBackground1,
-		theme.altForeground5,
-		theme.accentBackground1,
-		theme.accentForeground1
+		0x0,
+		0x0,
+		0x0,
+		0x0
 	))
 
 	system.applyThemeToMenu(desktopMenu)
@@ -3188,16 +3315,10 @@ function system.updateDesktop()
 	system.menuInitialChildren = desktopMenu.children
 	system.consoleWindow = nil
 
-	system.updateColorScheme()
 	system.updateScreen()
 	system.updateResolution()
 	system.updateWallpaper()
 	system.updateMenuWidgets()
-end
-
-function system.updateColorScheme()
-	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or theme.altBackground1
-	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
 end
 
 --------------------------------------------------------------------------------
