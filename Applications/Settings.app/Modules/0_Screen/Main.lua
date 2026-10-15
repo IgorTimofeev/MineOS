@@ -148,7 +148,7 @@ module.onTouch = function()
 		local layout = container.layout:addChild(GUI.layout(1, 1, 40, 6, 1, 2))
 
 		layout:addChild(
-			system.applyThemeToTextBox(
+			system.applyThemeToDescriptionTextBox(
 				GUI.textBox(1, 1, 36, 1, nil, 0x0, {localization.screenColorDepthAlertMessage}, 1, 0, 0, true, true)
 			)
 		):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
