@@ -2,12 +2,24 @@ local screen = require("Screen")
 local filesystem = require("Filesystem")
 local system = require("System")
 local GUI = require("GUI")
+local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
 local workspace, wallpaper = select(1, ...), select(2, ...)
 
-local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
+local configPath = table.concat {
+    paths.user.applicationData,
+    "Wallpapers/",
+    filesystem.hideExtension(
+        filesystem.name(
+            filesystem.path(
+                system.getCurrentScript()
+            )
+        )
+    ),
+    ".cfg"
+}
 
 local config = {
 	backgroundColor = 0x161616,
@@ -16,13 +28,13 @@ local config = {
 }
 
 if filesystem.exists(configPath) then
-	for key, value in pairs(filesystem.readTable(configPath)) do
-		config[key] = value
-	end
+    for key, value in pairs(filesystem.readTable(configPath)) do
+        config[key] = value
+    end
 end
 
 local function saveConfig()
-	filesystem.writeTable(configPath, config)
+    filesystem.writeTable(configPath, config)
 end
 
 --------------------------------------------------------------------------------

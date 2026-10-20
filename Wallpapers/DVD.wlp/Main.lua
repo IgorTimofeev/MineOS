@@ -4,12 +4,24 @@ local filesystem = require("Filesystem")
 local system = require("System")
 local GUI = require("GUI")
 local image = require("Image")
+local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
 local workspace, wallpaper = select(1, ...), select(2, ...)
 
-local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
+local configPath = table.concat {
+    paths.user.applicationData,
+    "Wallpapers/",
+    filesystem.hideExtension(
+        filesystem.name(
+            filesystem.path(
+                system.getCurrentScript()
+            )
+        )
+    ),
+    ".cfg"
+}
 
 local config = {
 	backgroundColor = 0x000000,
@@ -27,6 +39,10 @@ local function saveConfig()
 end
 
 --------------------------------------------------------------------------------
+
+local function clamp(value, min, max)
+	return math.min(math.max(value, min), max)
+end
 
 local logo = image.load(filesystem.path(system.getCurrentScript()) .. "Logo.pic")
 
@@ -56,14 +72,15 @@ wallpaper.draw = function(wallpaper)
 	logoPosition.y = logoPosition.y + logoSpeed.y * config.speed * deltaTime
 
 	if logoPosition.x < 1 or logoPosition.x >= wallpaper.width - image.getWidth(logo) then
+		logoPosition.x = clamp(logoPosition.x, 1, wallpaper.width - image.getWidth(logo))
 		logoSpeed.x = -logoSpeed.x
 	end
 
 	if logoPosition.y < 1 or logoPosition.y >= wallpaper.height - image.getHeight(logo) then
+		logoPosition.y = clamp(logoPosition.y, 1, wallpaper.height - image.getHeight(logo))
 		logoSpeed.y = -logoSpeed.y
 	end
 end
-
 wallpaper.configure = function(layout)
 	layout:addChild(
 		GUI.colorSelector(
@@ -88,7 +105,7 @@ wallpaper.configure = function(layout)
 				0xE1E1E1, 
 				0xFFFFFF, 
 				0xA5A5A5, 
-				0, 50, 
+				0, 20, 
 				config.speed, 
 				false, 
 				"Speed: "

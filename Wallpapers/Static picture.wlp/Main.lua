@@ -3,12 +3,24 @@ local filesystem = require("Filesystem")
 local screen = require("Screen")
 local GUI = require("GUI")
 local image = require("Image")
+local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
 local workspace, wallpaper = select(1, ...), select(2, ...)
 
-local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
+local configPath = table.concat {
+    paths.user.applicationData,
+    "Wallpapers/",
+    filesystem.hideExtension(
+        filesystem.name(
+            filesystem.path(
+                system.getCurrentScript()
+            )
+        )
+    ),
+    ".cfg"
+}
 
 local config = {
     path = filesystem.path(system.getCurrentScript()) .. "Pictures/Girl.pic"

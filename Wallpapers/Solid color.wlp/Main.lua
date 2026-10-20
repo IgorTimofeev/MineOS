@@ -1,13 +1,26 @@
 local system = require("System")
 local filesystem = require("Filesystem")
 local screen = require("Screen")
+local paths = require("Paths")
 local GUI = require("GUI")
+local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
 local workspace, wallpaper = select(1, ...), select(2, ...)
 
-local configPath = filesystem.path(system.getCurrentScript()) .. "Config.cfg"
+local configPath = table.concat {
+    paths.user.applicationData,
+    "Wallpapers/",
+    filesystem.hideExtension(
+        filesystem.name(
+            filesystem.path(
+                system.getCurrentScript()
+            )
+        )
+    ),
+    ".cfg"
+}
 
 local config = {
     color = 0x161616,
