@@ -3565,7 +3565,7 @@ function system.authorize()
 				passwordLayout:addChild(newUserObject(userName))
 				
 				local passwordContainer = passwordLayout:addChild(GUI.container(1, 1, 36, 3))
-				local input = addBackgroundContainerInput(passwordContainer, "", "Password", false, "•")
+				local input = passwordContainer:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "Password", false, "•"))
 
 				-- Adding "select user again" button only if there's more than 1 user
 				if #userList > 1 then
